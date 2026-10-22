@@ -1,0 +1,44 @@
+@import "tailwindcss";
+
+/* Custom Tiny Green Scrollbar */
+.scrollbar-hide::-webkit-scrollbar {
+  height: 6px; /* Manipis na height para sa horizontal scroll */
+}
+
+.scrollbar-hide::-webkit-scrollbar-track {
+  background: transparent; /* Walang pangit na gray background */
+}
+
+.scrollbar-hide::-webkit-scrollbar-thumb {
+  background-color: #bdd1ca; /* Emerald-500 Green na kulay */
+  border-radius: 10px; /* Rounded yung dulo para modern */
+}
+
+/* Para sa Firefox browsers */
+.scrollbar-hide {
+  scrollbar-width: thin;
+  scrollbar-color: #ccdfd9 transparent;
+}
+
+
+html {
+  overflow-y: scroll; /* Force vertical scrollbar to always show */
+}
+
+
+
+
+
+
+
+/* EDIT MO ITO PARA SA SIDEBAR SCROLLBAR */
+.custom-sidebar-scroll::-webkit-scrollbar {
+  width: 6px; /* Dito mo baguhin yung nipis/kapal */
+}
+.custom-sidebar-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-sidebar-scroll::-webkit-scrollbar-thumb {
+  background-color: #b2d4c9; /* Dito mo palitan yung kulay (Emerald Green to) */
+  border-radius: 10px;
+}
