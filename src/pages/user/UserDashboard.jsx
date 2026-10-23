@@ -189,15 +189,15 @@ function Swimlane({ icon: SectionIcon, iconColor, title, subtitle, skills, saved
 ​
   return (
     <section className="mb-10">
-      <div className="flex items-center justify-between mb-4">
-        <div>
+      <div className="dashboard-swimlane-header flex items-center justify-between mb-4">
+        <div className="dashboard-swimlane-title min-w-0">
           <h2 className="text-[18px] font-bold text-gray-900 tracking-tight flex items-center gap-2">
             {SectionIcon && <SectionIcon className={`w-5 h-5 ${iconColor || 'text-emerald-600'}`} />}
             {title}
           </h2>
           {subtitle && <p className="text-[12px] text-gray-400 font-medium mt-0.5 pl-7">{subtitle}</p>}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="dashboard-swimlane-controls flex items-center gap-2">
           {showSeeAll && (
             <div className="flex gap-1.5">
               <button onClick={() => scroll(-1)} disabled={!canLeft}
@@ -244,7 +244,7 @@ function HeroBanner({ skill, isSaved, onSave, onView }) {
 ​
   return (
     <div onClick={() => onView(skill.id)}
-      className="relative w-full rounded-2xl overflow-hidden cursor-pointer group mb-10"
+      className="dashboard-hero relative w-full rounded-2xl overflow-hidden cursor-pointer group mb-10"
       style={{ height: 280 }}>
       {skill.cover_image_url ? (
         <img src={skill.cover_image_url} alt={skill.title}
@@ -256,7 +256,7 @@ function HeroBanner({ skill, isSaved, onSave, onView }) {
       )}
       <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/30 to-transparent" />
 ​
-      <div className="absolute top-5 left-6 flex gap-2">
+      <div className="dashboard-hero-tags absolute top-5 left-6 flex gap-2">
         <span className="flex items-center gap-1.5 bg-emerald-500 text-white text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-full">
           <Flame className="w-3 h-3" /> Top Pick
         </span>
@@ -266,17 +266,17 @@ function HeroBanner({ skill, isSaved, onSave, onView }) {
       </div>
 ​
       <button onClick={e => { e.stopPropagation(); onSave(skill.id); }}
-        className="absolute top-5 right-6 w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 flex items-center justify-center hover:bg-white/40 hover:scale-110 transition-all">
+        className="dashboard-hero-save absolute top-5 right-6 w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 flex items-center justify-center hover:bg-white/40 hover:scale-110 transition-all">
         {isSaved
           ? <BookmarkCheck className="w-5 h-5 text-emerald-400" />
           : <Bookmark className="w-5 h-5 text-white" />}
       </button>
 ​
-      <div className="absolute bottom-0 left-0 right-0 p-6">
-        <h2 className="text-white font-bold text-[22px] leading-snug tracking-tight line-clamp-2 mb-3 max-w-[65%]">
+      <div className="dashboard-hero-content absolute bottom-0 left-0 right-0 p-6">
+        <h2 className="dashboard-hero-title text-white font-bold text-[22px] leading-snug tracking-tight line-clamp-2 mb-3 max-w-[65%]">
           {skill.title}
         </h2>
-        <div className="flex items-center flex-wrap gap-3">
+        <div className="dashboard-hero-details flex items-center flex-wrap gap-3">
           <span className="text-white/70 text-[13px] font-medium">by {name}</span>
           {skill.totalReviews > 0 && (
             <div className="flex items-center gap-1">
@@ -285,7 +285,7 @@ function HeroBanner({ skill, isSaved, onSave, onView }) {
               <span className="text-white/60 text-[12px]">({skill.totalReviews})</span>
             </div>
           )}
-          <div className="ml-auto flex items-center gap-2">
+          <div className="dashboard-hero-actions ml-auto flex items-center gap-2">
             <span className="flex items-center gap-1.5 bg-white/20 backdrop-blur-sm text-white text-[12px] font-medium px-3 py-1.5 rounded-full border border-white/20">
               <Clock className="w-3 h-3" /> {skill.duration}
             </span>
@@ -453,7 +453,42 @@ export default function UserDashboard() {
   const ActiveSortIcon = activeSortOption.icon;
 ​
   return (
-    <div className="min-h-full" style={{ background: '#faf9f6' }}>
+    <div className="user-dashboard min-h-full" style={{ background: '#faf9f6' }}>
+      <style>{`
+        .user-dashboard { width:100%; min-width:0; }
+        .user-dashboard main { min-width:0; }
+        .user-dashboard .dashboard-main { min-width:0; }
+        @media(max-width:640px){
+          .user-dashboard .dashboard-main { padding:20px 16px!important; }
+          .user-dashboard .dashboard-hero { height:clamp(230px,72vw,280px)!important; min-height:220px; margin-bottom:28px!important; }
+          .user-dashboard .dashboard-hero-tags { top:12px!important; left:12px!important; right:58px; max-width:calc(100% - 70px); flex-wrap:wrap; gap:6px!important; }
+          .user-dashboard .dashboard-hero-save { top:12px!important; right:12px!important; }
+          .user-dashboard .dashboard-hero-content { padding:16px!important; }
+          .user-dashboard .dashboard-hero-title { max-width:100%!important; font-size:19px!important; line-height:1.2!important; margin-bottom:8px!important; }
+          .user-dashboard .dashboard-hero-details { align-items:flex-start!important; gap:8px!important; }
+          .user-dashboard .dashboard-hero-actions { flex:1 0 100%; width:100%; margin-left:0!important; flex-wrap:wrap; gap:6px!important; }
+          .user-dashboard .dashboard-hero-actions > span { padding-left:10px!important; padding-right:10px!important; font-size:11px!important; }
+          .user-dashboard .dashboard-toolbar { align-items:stretch!important; flex-direction:column; gap:8px!important; }
+          .user-dashboard .dashboard-toolbar > label { width:100%; min-width:0!important; }
+          .user-dashboard .dashboard-toolbar > div { width:100%!important; }
+          .user-dashboard .dashboard-toolbar details,
+          .user-dashboard .dashboard-toolbar summary { width:100%; }
+          .user-dashboard .dashboard-swimlane-header { align-items:flex-start!important; flex-wrap:wrap; gap:8px!important; }
+          .user-dashboard .dashboard-swimlane-title { flex:1 1 150px; }
+          .user-dashboard .dashboard-swimlane-controls { margin-left:auto; flex:0 0 auto; }
+          .user-dashboard .dashboard-filter-header { align-items:flex-start!important; flex-wrap:wrap; gap:8px!important; }
+          .user-dashboard .dashboard-filter-title { flex:1 1 100%; min-width:0; overflow-wrap:anywhere; }
+          .user-dashboard .dashboard-filter-reset { margin-left:auto; white-space:nowrap; }
+        }
+        @media(max-width:380px){
+          .user-dashboard .dashboard-main { padding-left:12px!important; padding-right:12px!important; }
+          .user-dashboard .dashboard-hero { height:230px!important; }
+          .user-dashboard .dashboard-hero-content { padding:13px!important; }
+          .user-dashboard .dashboard-hero-actions > span { padding-left:8px!important; padding-right:8px!important; }
+          .user-dashboard .dashboard-swimlane-controls { gap:4px!important; }
+          .user-dashboard .dashboard-swimlane-controls > button { padding-left:10px!important; padding-right:10px!important; }
+        }
+      `}</style>
       <div className="max-w-[1440px] mx-auto flex gap-0">
 ​
         <aside className="hidden lg:flex flex-col w-[240px] shrink-0 border-r border-gray-200/80 min-h-full bg-white">
@@ -519,9 +554,9 @@ export default function UserDashboard() {
           </div>
         </aside>
 ​
-        <main className="flex-1 min-w-0 px-6 md:px-8 py-6">
+        <main className="dashboard-main flex-1 min-w-0 px-6 md:px-8 py-6">
 ​
-          <div className="flex items-center gap-3 mb-6 flex-wrap">
+          <div className="dashboard-toolbar flex items-center gap-3 mb-6 flex-wrap">
             <label className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-2.5 flex-1 min-w-[200px] shadow-sm focus-within:border-emerald-400 focus-within:ring-2 focus-within:ring-emerald-100 transition cursor-text">
               <Search className="w-4 h-4 text-gray-400 shrink-0" />
               <input type="text" value={searchQuery}
@@ -645,8 +680,8 @@ export default function UserDashboard() {
 ​
           {isFiltered && (
             <>
-              <div className="flex items-center justify-between mb-5">
-                <div>
+              <div className="dashboard-filter-header flex items-center justify-between mb-5">
+                <div className="dashboard-filter-title">
                   <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400">
                     {activeCategory !== 'All' && sortBy !== 'default' ? `Sorted by ${sortBy}` : (showSaved ? 'Saved' : activeCategory !== 'All' ? activeCategory : 'Search Results')}
                   </p>
@@ -656,7 +691,7 @@ export default function UserDashboard() {
                     {searchQuery && <span className="text-gray-400 font-normal text-[14px]"> for &ldquo;{searchQuery}&rdquo;</span>}
                   </p>
                 </div>
-                <button onClick={handleReset} className="flex items-center gap-1.5 text-[13px] font-medium text-emerald-700 hover:text-emerald-900">
+                <button onClick={handleReset} className="dashboard-filter-reset flex items-center gap-1.5 text-[13px] font-medium text-emerald-700 hover:text-emerald-900">
                   <ChevronLeft className="w-4 h-4" /> Back to home
                 </button>
               </div>
