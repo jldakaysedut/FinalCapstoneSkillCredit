@@ -29,10 +29,26 @@ export default function MainLayout() {
         .nav-link:hover { color: #2d6a4f !important; background: #eef6ee !important; }
         .cta-btn { transition: transform .2s, box-shadow .2s; }
         .cta-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 32px rgba(45,106,79,0.4) !important; }
+        .main-nav { box-sizing:border-box; width:100%; gap:12px; }
+        .main-nav-logo { flex:0 0 auto; }
+        .main-nav-logo a { white-space:nowrap; }
+        .main-nav-auth { flex:0 0 auto; white-space:nowrap; }
+        .main-nav-auth a { box-sizing:border-box; display:inline-flex; flex:0 0 auto; min-height:40px; align-items:center; justify-content:center; white-space:nowrap; }
+        @media(max-width:480px){
+          .main-nav { height:60px!important; padding:0 14px!important; gap:6px!important; }
+          .main-nav-logo span { font-size:clamp(16px,4.8vw,20px)!important; }
+          .main-nav-auth { gap:6px!important; }
+          .main-nav-auth a { padding:8px 10px!important; font-size:12px!important; }
+        }
+        @media(max-width:360px){
+          .main-nav { padding:0 10px!important; gap:4px!important; }
+          .main-nav-logo span { font-size:17px!important; }
+          .main-nav-auth a { padding:7px 8px!important; font-size:11px!important; }
+        }
       `}</style>
 ​
       {/* ── PREMIUM STICKY NAVBAR ── */}
-      <nav style={{ 
+      <nav className="main-nav" style={{ 
         position: "sticky", top: 0, zIndex: 200, 
         background: scrolled ? "rgba(250,248,244,0.97)" : "transparent", 
         backdropFilter: scrolled ? "blur(16px)" : "none", 
@@ -41,7 +57,7 @@ export default function MainLayout() {
         justifyContent: "space-between", transition: "all .3s ease" 
       }}>
         {/* LOGO (Scroll to top) */}
-        <div style={{ display: "flex", alignItems: "center" }}>
+        <div className="main-nav-logo" style={{ display: "flex", alignItems: "center" }}>
           <a href="/#" style={{ display: "flex", alignItems: "center", textDecoration: "none" }}>
             <span style={{ fontFamily: "'Fraunces', serif", fontSize: 22, fontWeight: 900, color: "#2d6a4f" }}>Skill</span>
             <span style={{ fontFamily: "'Fraunces', serif", fontSize: 22, fontWeight: 900, color: "#111" }}>Credit</span>
@@ -79,11 +95,11 @@ export default function MainLayout() {
         </div>
 ​
         {/* AUTH BUTTONS */}
-        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          <Link to="/login" style={{ padding: "8px 16px", borderRadius: 10, border: "1.5px solid #ccc", color: "#444", fontWeight: 600, fontSize: 13, textDecoration: "none" }}>
+        <div className="main-nav-auth" style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <Link className="main-nav-login" to="/login" style={{ padding: "8px 16px", borderRadius: 10, border: "1.5px solid #ccc", color: "#444", fontWeight: 600, fontSize: 13, textDecoration: "none" }}>
             Log in
           </Link>
-          <Link to="/register" className="cta-btn" style={{ padding: "8px 18px", borderRadius: 10, background: "#2d6a4f", color: "#fff", fontWeight: 800, fontSize: 13, boxShadow: "0 4px 14px rgba(45,106,79,0.28)", textDecoration: "none" }}>
+          <Link to="/register" className="cta-btn main-nav-signup" style={{ padding: "8px 18px", borderRadius: 10, background: "#2d6a4f", color: "#fff", fontWeight: 800, fontSize: 13, boxShadow: "0 4px 14px rgba(45,106,79,0.28)", textDecoration: "none" }}>
             Sign up free
           </Link>
         </div>

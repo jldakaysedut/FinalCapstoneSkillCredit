@@ -192,6 +192,9 @@ export default function Home() {
         .home-page .leaderboard-display-grid > div > div:last-child > div > div:first-child { min-width:0; }
         .home-page .leaderboard-display-grid > div > div:last-child > div > div:first-child > div:last-child { min-width:0; overflow-wrap:anywhere; }
         .home-page .footer-inner > div { min-width:0; }
+        .home-page .footer-inner { display:grid!important; grid-template-columns:minmax(0,1fr) auto minmax(0,1fr); align-items:center; gap:16px; }
+        .home-page .footer-inner > div:nth-child(2) { justify-self:center; transform:none!important; max-width:100%; }
+        .home-page .footer-inner > div:last-child { justify-self:end; flex-wrap:wrap; align-items:center; }
         .home-page a.cta-btn { white-space:normal; text-align:center; justify-content:center; line-height:1.35; }
 ​
         @media(max-width:768px){
@@ -205,6 +208,10 @@ export default function Home() {
           .home-page .problem-grid > div:nth-child(2) { transform:rotate(90deg); justify-self:center; }
           .home-page .leaderboard-display-grid > div { padding:22px!important; }
           .home-page footer { padding:28px 24px!important; }
+          .home-page .footer-inner { grid-template-columns:minmax(0,1fr); justify-items:center; text-align:center; }
+          .home-page .footer-inner > div:first-child,
+          .home-page .footer-inner > div:nth-child(2),
+          .home-page .footer-inner > div:last-child { justify-self:center; }
           .home-page footer .footer-inner > div:nth-child(2) { transform:none!important; }
           .home-page footer .footer-inner > div:last-child { flex-wrap:wrap; justify-content:center; }
         }
@@ -240,6 +247,7 @@ export default function Home() {
           .home-page footer .footer-inner { gap:18px; }
           .home-page footer .footer-inner > div:nth-child(2) { width:100%; }
           .home-page footer .footer-inner > div:nth-child(2) > div { gap:10px!important; flex-wrap:wrap; justify-content:center; }
+          .home-page footer .footer-inner > div:nth-child(2) > div { max-width:100%; border-radius:16px!important; }
           .home-page footer .footer-inner > div:last-child { gap:14px; }
         }
 ​
