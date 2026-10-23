@@ -16,11 +16,22 @@ export default function ForgotPassword() {
     setError('');
 
     try {
+      // 1. Supabase BaaS handles the actual security and email sending
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/reset-password`,
       });
 
       if (error) throw error;
+
+      // 2. Custom Audit Log para sa Capstone Panel Defense
+      const { error: dbError } = await supabase
+        .from('password_reset_requests')
+        .insert([{ email: email, status: 'link_sent' }]);
+
+      if (dbError) {
+        console.error("Audit log error:", dbError.message);
+      }
+
       setMessage('Password reset link sent! Please check your email inbox or spam folder.');
     } catch (err) {
       setError(err.message || 'An error occurred while sending the reset link.');
