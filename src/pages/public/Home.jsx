@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import supabase from "../../supabaseClient";
-​
+
 // 🚨 ADDED: Imported all necessary modern Lucide Icons
 import {
   GraduationCap, MessageSquare, CheckCircle, ShieldCheck,
@@ -11,7 +11,7 @@ import {
   CalendarCheck, Award, Trophy, Star, Rocket, Code2, 
   MessageCircleQuestion, Music, Smartphone, Globe, Heart
 } from "lucide-react";
-​
+
 // 🚨 REPLACED emojis with Lucide Icons and added them to data arrays
 const mockCards = [
   { type:"listing",   title:"Python for Absolute Beginners",               teacher:"Maria S.",  credits:15, rating:4.9, color:"#e8f4e8", accent:"#2d6a4f", Icon: Code2 },
@@ -21,14 +21,14 @@ const mockCards = [
   { type:"community", title:"Best practices for React Native folder structure?", upvotes:32, answers:8,  color:"#f0f4ff", accent:"#3730a3", Icon: Smartphone },
   { type:"listing",   title:"English Conversation Practice — Job-ready fluency", teacher:"Lisa M.",  credits:8,  rating:4.8, color:"#f0fdf4", accent:"#166534", Icon: Globe },
 ];
-​
+
 const features = [
   { Icon: GraduationCap, title:"1-on-1 Sessions",   desc:"Book private sessions with verified skill teachers. Credits held in escrow until you're satisfied.", color:"#2d6a4f", bg:"#e8f4e8" },
   { Icon: MessageSquare, title:"Community Forum",   desc:"Ask questions, share knowledge, and build connections with other learners.", color:"#3730a3", bg:"#f0f4ff" },
   { Icon: CheckCircle,   title:"Skill Verification",desc:"Quality learning through peer reviews and rating systems so you know who's qualified.", color:"#d97706", bg:"#fef3c7" },
   { Icon: ShieldCheck,   title:"Escrow Protection", desc:"Credits are locked safely until both parties confirm the session is fully complete.", color:"#0f766e", bg:"#ccfbf1" },
 ];
-​
+
 const learnTopics = [
   { Icon: ChefHat,   label:"Cooking & Baking", accent:"#ea580c", soft:"#fff7ed" },
   { Icon: Leaf,      label:"Gardening & Farming", accent:"#16a34a", soft:"#f0fdf4" },
@@ -48,15 +48,15 @@ const learnTopics = [
   { Icon: Layout,    label:"UI/UX Design", accent:"#0284c7", soft:"#f0f9ff" },
   { Icon: Code,      label:"Coding & Tech", accent:"#4d7c0f", soft:"#f7fee7" },
 ];
-​
+
 function getInitials(name) {
   return name?.split(" ").map(n => n[0]).join("").toUpperCase().slice(0,2) || "U";
 }
-​
+
 export default function Home() {
   const [topSessions, setTopSessions] = useState([]);
   const [topRated, setTopRated] = useState([]);
-​
+
   useEffect(() => {
     const observer = new IntersectionObserver(
       entries => entries.forEach(e => {
@@ -67,7 +67,7 @@ export default function Home() {
     document.querySelectorAll(".reveal").forEach(el => observer.observe(el));
     return () => observer.disconnect();
   }, []);
-​
+
   // Fetching Logic for Weekly Leaderboards
   useEffect(() => {
     const fetchLeaderboards = async () => {
@@ -75,14 +75,14 @@ export default function Home() {
         const sevenDaysAgo = new Date();
         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
         const isoDate = sevenDaysAgo.toISOString();
-​
+
         // 1. Aggregate Weekly Top Sessions
         const { data: sessionData } = await supabase
           .from("sessions")
           .select("instructor_id, instructor:user_profiles!sessions_instructor_id_fkey(id, full_name, avatar_url)")
           .eq("status", "completed")
           .gte("created_at", isoDate);
-​
+
         if (sessionData) {
           const counts = {};
           sessionData.forEach(s => {
@@ -97,13 +97,13 @@ export default function Home() {
             .map(u => ({ ...u, metric_value: `${u.count} sessions` }));
           setTopSessions(topS);
         }
-​
+
         // 2. Aggregate Weekly Top Rated
         const { data: reviewData } = await supabase
           .from("reviews")
           .select("instructor_id, rating, instructor:user_profiles!reviews_instructor_id_fkey(id, full_name, avatar_url)")
           .gte("created_at", isoDate);
-​
+
         if (reviewData) {
           const ratings = {};
           reviewData.forEach(r => {
@@ -126,23 +126,23 @@ export default function Home() {
     };
     fetchLeaderboards();
   }, []);
-​
+
   return (
-    <div className="home-page" style={{ background:"#faf8f4", fontFamily:"'DM Sans',sans-serif", overflowX:"hidden", width: "100%" }}>
+    <div style={{ background:"#faf8f4", fontFamily:"'DM Sans',sans-serif", overflowX:"hidden", width: "100%" }}>
       <style>{`
         @keyframes fadeUp      {from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
         @keyframes pulse       {0%,100%{opacity:1}50%{opacity:0.4}}
         
         .reveal{opacity:0;transform:translateY(36px);transition:opacity .7s ease,transform .7s ease}
         .reveal.visible{opacity:1;transform:none}
-​
+
         .hero-tag{animation:fadeUp .5s ease both}
         .hero-h1{animation:fadeUp .5s .08s ease both}
         .hero-p{animation:fadeUp .5s .16s ease both}
         .hero-btns{animation:fadeUp .5s .24s ease both}
         .hero-proof{animation:fadeUp .5s .32s ease both}
         .preview-col{animation:fadeUp .6s .18s ease both}
-​
+
         .feature-card{transition:transform .2s,box-shadow .2s}
         .feature-card:hover{transform:translateY(-5px);box-shadow:0 14px 40px rgba(0,0,0,0.06)!important}
         .topic-pill{transition:all .2s}
@@ -151,7 +151,7 @@ export default function Home() {
         .explore-pill-v1{max-width:100%;transition:transform .2s,box-shadow .2s}
         .explore-pill-v1:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(45,106,79,.10)!important}
         @media(max-width:480px){.explore-pill-cloud-v1{gap:8px}.explore-pill-v1{padding:8px 11px!important;font-size:12px!important}}
-​
+
         .hero-grid{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:center}
         .features-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
         .steps-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
@@ -159,7 +159,7 @@ export default function Home() {
         .problem-grid{display:grid;grid-template-columns:1fr auto 1fr;gap:24px;align-items:center;max-width:700px;margin:0 auto}
         .leaderboard-display-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:24px;max-width:960px;margin:0 auto}
         .footer-inner{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px}
-​
+
         @media(max-width:1024px){
           .features-grid{grid-template-columns:repeat(2,1fr)}
         }
@@ -179,95 +179,11 @@ export default function Home() {
           .hero-btns-wrap{flex-direction:column}
           .hero-btns-wrap a{width:100%;text-align:center;justify-content:center}
         }
-​
-        /* Responsive refinements: presentation only; component/data logic is unchanged. */
-        .home-page, .home-page * { box-sizing:border-box; }
-        .home-page { min-width:0; }
-        .home-page img { max-width:100%; }
-        .home-page .hero-container { min-width:0; }
-        .home-page .hero-proof { width:100%; max-width:420px; }
-        .home-page .hero-proof > div:last-child { min-width:0; }
-        .home-page .leaderboard-display-grid > div { min-width:0; }
-        .home-page .leaderboard-display-grid > div > div:last-child > div { min-width:0; }
-        .home-page .leaderboard-display-grid > div > div:last-child > div > div:first-child { min-width:0; }
-        .home-page .leaderboard-display-grid > div > div:last-child > div > div:first-child > div:last-child { min-width:0; overflow-wrap:anywhere; }
-        .home-page .footer-inner > div { min-width:0; }
-        .home-page .footer-inner { display:grid!important; grid-template-columns:minmax(0,1fr) auto minmax(0,1fr); align-items:center; gap:16px; }
-        .home-page .footer-inner > div:nth-child(2) { justify-self:center; transform:none!important; max-width:100%; }
-        .home-page .footer-inner > div:last-child { justify-self:end; flex-wrap:wrap; align-items:center; }
-        .home-page a.cta-btn { white-space:normal; text-align:center; justify-content:center; line-height:1.35; }
-​
-        @media(max-width:768px){
-          .home-page .hero-section { min-height:auto!important; padding:48px 0!important; }
-          .home-page .hero-container { padding-left:24px!important; padding-right:24px!important; }
-          .home-page .section-pad { padding:56px 24px!important; }
-          .home-page section h2 { font-size:clamp(28px,5.4vw,38px)!important; line-height:1.15!important; }
-          .home-page .hero-h1-text { font-size:clamp(38px,8vw,54px)!important; }
-          .home-page .hero-grid { gap:32px; }
-          .home-page .hero-proof { max-width:100%; }
-          .home-page .problem-grid > div:nth-child(2) { transform:rotate(90deg); justify-self:center; }
-          .home-page .leaderboard-display-grid > div { padding:22px!important; }
-          .home-page footer { padding:28px 24px!important; }
-          .home-page .footer-inner { grid-template-columns:minmax(0,1fr); justify-items:center; text-align:center; }
-          .home-page .footer-inner > div:first-child,
-          .home-page .footer-inner > div:nth-child(2),
-          .home-page .footer-inner > div:last-child { justify-self:center; }
-          .home-page footer .footer-inner > div:nth-child(2) { transform:none!important; }
-          .home-page footer .footer-inner > div:last-child { flex-wrap:wrap; justify-content:center; }
-        }
-​
-        @media(max-width:480px){
-          .home-page .hero-section { padding:40px 0!important; }
-          .home-page .hero-container { padding-left:20px!important; padding-right:20px!important; }
-          .home-page .section-pad { padding:48px 20px!important; }
-          .home-page section h2 { font-size:clamp(26px,7.2vw,32px)!important; line-height:1.16!important; }
-          .home-page .hero-h1-text { font-size:clamp(36px,10vw,42px)!important; line-height:1.08!important; }
-          .home-page .hero-p { font-size:16px!important; }
-          .home-page .hero-btns-wrap { width:100%; gap:10px; }
-          .home-page .hero-btns-wrap a { width:100%; min-height:50px; padding:14px 16px!important; }
-          .home-page .hero-proof { align-items:flex-start!important; padding:12px!important; gap:10px!important; }
-          .home-page .hero-proof > div:last-child > div:first-child { font-size:12px!important; }
-          .home-page .hero-proof > div:last-child > div:last-child { font-size:10px!important; line-height:1.45; }
-          .home-page .problem-grid { gap:12px; }
-          .home-page .problem-grid > div:not(:nth-child(2)) { padding:22px 18px!important; }
-          .home-page .steps-grid { gap:12px; }
-          .home-page .steps-grid > div { padding:24px 20px!important; }
-          .home-page .features-grid { gap:12px; }
-          .home-page .feature-card { padding:22px!important; }
-          .home-page .leaderboard-display-grid { gap:14px; }
-          .home-page .leaderboard-display-grid > div { padding:18px!important; }
-          .home-page .leaderboard-display-grid > div > div:first-child { gap:10px!important; margin-bottom:18px!important; }
-          .home-page .leaderboard-display-grid > div > div:last-child > div { gap:8px; padding:11px 10px!important; }
-          .home-page .leaderboard-display-grid > div > div:last-child > div > div:first-child { gap:8px!important; }
-          .home-page .leaderboard-display-grid > div > div:last-child > div > div:last-child { font-size:11px!important; padding:4px 7px!important; white-space:nowrap; }
-          .home-page .explore-pill-cloud-v1 { gap:8px; }
-          .home-page .explore-pill-v1 { padding:8px 11px!important; font-size:12px!important; }
-          .home-page .cta-btn { width:100%; min-height:50px; padding:14px 16px!important; font-size:15px!important; }
-          .home-page footer { padding:26px 20px!important; }
-          .home-page footer .footer-inner { gap:18px; }
-          .home-page footer .footer-inner > div:nth-child(2) { width:100%; }
-          .home-page footer .footer-inner > div:nth-child(2) > div { gap:10px!important; flex-wrap:wrap; justify-content:center; }
-          .home-page footer .footer-inner > div:nth-child(2) > div { max-width:100%; border-radius:16px!important; }
-          .home-page footer .footer-inner > div:last-child { gap:14px; }
-        }
-​
-        @media(max-width:360px){
-          .home-page .hero-container { padding-left:16px!important; padding-right:16px!important; }
-          .home-page .section-pad { padding-left:16px!important; padding-right:16px!important; }
-          .home-page section h2 { font-size:26px!important; }
-          .home-page .hero-proof { gap:8px!important; }
-          .home-page .leaderboard-display-grid > div { padding:15px!important; }
-          .home-page .leaderboard-display-grid > div > div:last-child > div > div:first-child > div:first-child { width:20px!important; }
-        }
-​
-        @media(prefers-reduced-motion:reduce){
-          .home-page *, .home-page *::before, .home-page *::after { animation-duration:.01ms!important; animation-iteration-count:1!important; scroll-behavior:auto!important; transition-duration:.01ms!important; }
-        }
       `}</style>
-​
+
       {/* ── HERO ── */}
-      <section className="hero-section" style={{ minHeight:"calc(100vh - 64px)", display:"flex", alignItems:"center", width:"100%", padding:"40px 0" }}>
-        <div className="hero-container" style={{ maxWidth:1200, margin:"0 auto", padding:"0 48px", width:"100%" }}>
+      <section style={{ minHeight:"calc(100vh - 64px)", display:"flex", alignItems:"center", width:"100%", padding:"40px 0" }}>
+        <div style={{ maxWidth:1200, margin:"0 auto", padding:"0 48px", width:"100%" }}>
           <div className="hero-grid">
             <div>
               <div className="hero-tag" style={{ display:"inline-flex", alignItems:"center", gap:8, background:"#e8f4e8", border:"1.5px solid #b7e4c7", padding:"6px 16px", borderRadius:999, marginBottom:24 }}>
@@ -293,7 +209,7 @@ export default function Home() {
                 </div>
                 <p style={{ fontSize:12, color:"#aaa", marginBottom:28 }}>No credit card required · Free forever to start</p>
               </div>
-​
+
               <div className="hero-proof" style={{ display:"flex", alignItems:"center", gap:12, background:"#fff", border:"1.5px solid #e8e2d9", borderRadius:16, padding:"14px 18px", boxShadow:"0 2px 12px rgba(0,0,0,.04)", maxWidth:420 }}>
                 <div style={{ display:"flex", marginRight:4 }}>
                   {["#2d6a4f","#b45309","#9d174d","#3730a3","#166534"].map((c,i) => (
@@ -308,7 +224,7 @@ export default function Home() {
                 </div>
               </div>
             </div>
-​
+
             {/* Right — preview */}
             <div className="preview-col" style={{ position:"relative" }}>
               <div style={{ position:"absolute", top:"10%", left:"10%", width:"80%", height:"80%", background:"radial-gradient(ellipse,rgba(45,106,79,0.1) 0%,transparent 70%)", pointerEvents:"none", borderRadius:"50%" }} />
@@ -322,7 +238,7 @@ export default function Home() {
                   </div>
                   <div style={{ flex:1, background:"#fff", borderRadius:6, padding:"4px 12px", fontSize:11, color:"#aaa", fontWeight:600 }}>skillcredit.ph</div>
                 </div>
-​
+
                 {/* Container for Cards */}
                 <div style={{ padding: 14 }}>
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
@@ -346,11 +262,11 @@ export default function Home() {
                 </div>
               </div>
             </div>
-​
+
           </div>
         </div>
       </section>
-​
+
       {/* ── WHY THIS EXISTS (ABOUT) ── */}
       <section id="about" className="section-pad reveal" style={{ background:"#111", padding:"80px 48px" }}>
         <div style={{ maxWidth:900, margin:"0 auto", textAlign:"center" }}>
@@ -380,7 +296,7 @@ export default function Home() {
           </div>
         </div>
       </section>
-​
+
       {/* ── WHAT CAN YOU LEARN (EXPLORE) ── */}
       <section id="explore" className="section-pad reveal" style={{ background:"#faf8f4", padding:"72px 48px" }}>
         <div style={{ maxWidth:1080, margin:"0 auto", textAlign:"center" }}>
@@ -400,7 +316,7 @@ export default function Home() {
           </div>
         </div>
       </section>
-​
+
       {/* ── HOW IT WORKS ── */}
       <section id="how-it-works" className="section-pad reveal" style={{ background:"#fff", padding:"80px 48px", borderTop:"1px solid #e8e2d9", borderBottom:"1px solid #e8e2d9" }}>
         <div style={{ maxWidth:1000, margin:"0 auto" }}>
@@ -427,7 +343,7 @@ export default function Home() {
           </div>
         </div>
       </section>
-​
+
       {/* ── FEATURES ── */}
       <section id="features" className="section-pad reveal" style={{ padding:"80px 48px", background:"#faf8f4" }}>
         <div style={{ maxWidth:1100, margin:"0 auto" }}>
@@ -448,7 +364,7 @@ export default function Home() {
           </div>
         </div>
       </section>
-​
+
       {/* ── CLEAN CORPORATE LEADERBOARD ── */}
       <section className="section-pad reveal" style={{ background:"#ffffff", padding:"80px 48px", borderTop:"1px solid #e8e2d9", borderBottom:"1px solid #e8e2d9" }}>
         <div style={{ maxWidth:960, margin:"0 auto" }}>
@@ -459,7 +375,7 @@ export default function Home() {
             </h2>
             <p style={{ fontSize:15, color:"#666", marginTop:12 }}>Recognizing the most active and highly-rated teachers on SkillCredit.</p>
           </div>
-​
+
           <div className="leaderboard-display-grid">
             {/* Column 1: Most Sessions Taught */}
             <div style={{ background:"#fff", borderRadius:20, padding:"28px", border:"1px solid #e2e8f0", boxShadow:"0 4px 20px rgba(0,0,0,0.03)" }}>
@@ -496,7 +412,7 @@ export default function Home() {
                 )}
               </div>
             </div>
-​
+
             {/* Column 2: Highest Rated */}
             <div style={{ background:"#fff", borderRadius:20, padding:"28px", border:"1px solid #e2e8f0", boxShadow:"0 4px 20px rgba(0,0,0,0.03)" }}>
               <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:24, paddingBottom:16, borderBottom:"1px solid #f1f5f9" }}>
@@ -508,7 +424,7 @@ export default function Home() {
                   <div style={{ fontSize:12, color:"#64748b", fontWeight:600 }}>Highest rated by learners this week</div>
                 </div>
               </div>
-​
+
               <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
                 {topRated.length === 0 ? (
                   <p style={{ color:"#94a3b8", fontSize:13, textAlign:"center", padding:"20px 0" }}>Calculating scores...</p>
@@ -535,7 +451,7 @@ export default function Home() {
           </div>
         </div>
       </section>
-​
+
       {/* ── FINAL CTA ── */}
       <section className="section-pad reveal" style={{ background:"linear-gradient(135deg,#1a3d2e 0%,#2d6a4f 50%,#1a4a35 100%)", padding:"96px 48px", textAlign:"center", position:"relative", overflow:"hidden" }}>
         <div style={{ position:"absolute", top:-60, left:"10%", width:300, height:300, borderRadius:"50%", background:"rgba(255,255,255,0.04)" }} />
@@ -558,7 +474,7 @@ export default function Home() {
           <p style={{ color:"rgba(255,255,255,0.35)", fontSize:13 }}>No credit card required · 20 free credits on signup · Cancel anytime</p>
         </div>
       </section>
-​
+
       {/* ── FOOTER ── */}
       <footer style={{ background:"#111", padding:"32px 48px" }}>
         <div className="footer-inner">
@@ -570,7 +486,7 @@ export default function Home() {
             <p style={{ fontSize: 12, color: "#444", marginBottom: 6 }}>
               Built with ❤️ for learners and teachers
             </p>
-​
+
             <div
               style={{
                 display: "inline-flex",
