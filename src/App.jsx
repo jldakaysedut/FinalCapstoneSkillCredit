@@ -1,16 +1,19 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
-// 1. Import Layouts (Ang mga Picture Frames)
+// 1. Import Layouts
 import MainLayout from './layouts/MainLayout';
 import UserLayout from './layouts/UserLayout';
 import AdminLayout from './layouts/AdminLayout'; 
 import ModLayout from './layouts/ModLayout';
 import SupportLayout from './layouts/SupportLayout';
 
-// 2. Import Pages (Ang mga Pictures)
+// 2. Import Pages
 import Home from './pages/public/Home';
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
+// 🚨 IDINAGDAG: Forgot and Reset Password Pages
+import ForgotPassword from './pages/auth/ForgotPassword';
+import ResetPassword from './pages/auth/ResetPassword';
 
 import UserDashboard from './pages/user/UserDashboard';
 import CreateSkill from './pages/user/CreateSkill';
@@ -26,7 +29,7 @@ import Community from './pages/user/Community';
 import MyListings from './pages/user/MyListings';
 import Payments from './pages/user/Payments';
 import Settings from './pages/user/Settings';
-import SetupInterests from './pages/user/SetupInterests'; // 🚨 IDINAGDAG: Bagong Onboarding Page
+import SetupInterests from './pages/user/SetupInterests';
 
 // ADMIN PAGES
 import AdminDashboard from './pages/admin/AdminDashboard';
@@ -65,8 +68,10 @@ export default function App() {
         {/* AUTH ROUTES */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        {/* 🚨 IDINAGDAG: Auth Routes para sa password recovery */}
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
         
-        {/* 🚨 IDINAGDAG: Standalone Route para sa Onboarding */}
         <Route path="/setup-interests" element={<SetupInterests />} /> 
 
         {/* USER ROUTES */}
