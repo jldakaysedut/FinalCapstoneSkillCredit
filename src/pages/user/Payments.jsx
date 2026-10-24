@@ -192,8 +192,8 @@ export default function Payments() {
 
   const handleCheckout = async () => {
     const amountPHP = getActiveAmountPHP();
-    if (amountPHP < 50) {
-      alert("Minimum top-up amount is ₱50.");
+    if (amountPHP < 10) {
+      alert("Minimum top-up amount is ₱10.");
       return;
     }
     if (amountPHP % 10 !== 0) {
@@ -206,7 +206,7 @@ export default function Payments() {
     try {
       const credits = getCalculatedCredits();
       
-      // 1. Insert pending transaction in DB[cite: 16]
+      // 1. Insert pending transaction in DB
       const { data: tx, error: txError } = await supabase
         .from('topup_transactions')
         .insert({
@@ -452,7 +452,7 @@ export default function Payments() {
                 })}
               </div>
               <label htmlFor="custom-topup-amount" className="mb-1.5 block text-[10px] font-bold uppercase tracking-widest text-gray-500">Custom amount (₱)</label>
-              <input id="custom-topup-amount" type="number" min="50" step="10" placeholder="Minimum ₱50" value={customAmount} onChange={(e) => { setCustomAmount(e.target.value); setSelectedPackage(null); }} className="mb-4 w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2.5 text-[12px] font-semibold outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100" />
+              <input id="custom-topup-amount" type="number" min="10" step="10" placeholder="Minimum ₱10" value={customAmount} onChange={(e) => { setCustomAmount(e.target.value); setSelectedPackage(null); }} className="mb-4 w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2.5 text-[12px] font-semibold outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100" />
               <p className="flex items-center gap-1.5 text-[10px] text-gray-500"><ShieldCheck className="h-3.5 w-3.5 text-emerald-600" /> Payments are securely prepared through PayMongo.</p>
             </div>
 
@@ -478,7 +478,7 @@ export default function Payments() {
                 {isProcessing ? 'Preparing Payment...' : `Continue to payment · ₱${getActiveAmountPHP().toLocaleString()}`}
                 <ArrowRight className="h-4 w-4" />
               </button>
-              <p className="mt-3 text-center text-[9px] text-gray-400">Minimum ₱50 · Amount must be in multiples of ₱10</p>
+              <p className="mt-3 text-center text-[9px] text-gray-400">Minimum ₱10 · Amount must be in multiples of ₱10</p>
             </aside>
           </section>
         )}

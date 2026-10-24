@@ -373,7 +373,7 @@ const FloatingHelpButton = () => {
             : {}),
           touchAction: 'none',
         }}
-        className="user-support-fab fixed bottom-6 right-6 z-40 inline-flex items-center gap-2 rounded-full border border-emerald-100 bg-white/95 py-2 pl-2 pr-3 text-emerald-900 shadow-[0_8px_24px_rgba(15,23,42,0.12)] backdrop-blur-sm transition-[transform,box-shadow,border-color] duration-150 hover:border-emerald-200 hover:shadow-[0_12px_30px_rgba(15,23,42,0.16)] active:scale-[0.98] cursor-grab active:cursor-grabbing"
+        className="fixed bottom-6 right-6 z-40 inline-flex items-center gap-2 rounded-full border border-emerald-100 bg-white/95 py-2 pl-2 pr-3 text-emerald-900 shadow-[0_8px_24px_rgba(15,23,42,0.12)] backdrop-blur-sm transition-[transform,box-shadow,border-color] duration-150 hover:border-emerald-200 hover:shadow-[0_12px_30px_rgba(15,23,42,0.16)] active:scale-[0.98] cursor-grab active:cursor-grabbing"
         title="Drag to move · Click to get help"
         aria-label="Drag support button to move, or click to contact support"
       >
@@ -391,7 +391,7 @@ const FloatingHelpButton = () => {
             role="dialog"
             aria-modal="true"
             aria-labelledby="support-dialog-title"
-            className="user-support-dialog relative z-10 flex max-h-[90vh] w-full max-w-xl flex-col overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-[0_24px_80px_rgba(15,23,42,0.28)] animate-in zoom-in-95 duration-200"
+            className="relative z-10 flex max-h-[90vh] w-full max-w-xl flex-col overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-[0_24px_80px_rgba(15,23,42,0.28)] animate-in zoom-in-95 duration-200"
           >
             <div className="flex items-center gap-3 border-b border-gray-100 bg-white px-5 py-4 sm:px-6">
               <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-emerald-100 bg-emerald-50 text-emerald-700">
@@ -490,7 +490,7 @@ const FloatingHelpButton = () => {
                 </div>
               </div>
 ​
-              <div className="user-support-actions flex items-center justify-end gap-2 border-t border-gray-100 bg-white px-5 py-4 sm:px-6">
+              <div className="flex items-center justify-end gap-2 border-t border-gray-100 bg-white px-5 py-4 sm:px-6">
                 <button
                   type="button"
                   onClick={handleClose}
@@ -746,31 +746,11 @@ export default function UserLayout() {
   const ToastIcon = toastMeta?.Icon;
 ​
   return (
-    <div className="user-layout min-h-screen bg-[#faf9f6] font-sans text-gray-900 relative">
-      <style>{`
-        .user-layout { min-width:0; }
-        .user-layout .user-nav-inner { min-width:0; }
-        .user-layout .user-nav-actions { min-width:0; }
-        .user-layout .user-notification-panel { box-sizing:border-box; max-width:calc(100vw - 24px); }
-        @media(max-width:640px){
-          .user-layout .user-nav-inner { grid-template-columns:auto minmax(0,1fr)!important; gap:8px!important; }
-          .user-layout .user-nav-actions { justify-self:end; gap:6px!important; }
-          .user-layout .user-nav-profile { gap:5px!important; }
-          .user-layout .user-notification-panel { position:fixed!important; top:72px!important; left:12px!important; right:12px!important; width:auto!important; max-width:none!important; max-height:calc(100dvh - 88px); border-radius:20px!important; }
-        }
-        @media(max-width:380px){
-          .user-layout .user-nav-inner { padding-left:12px!important; padding-right:12px!important; gap:6px!important; }
-          .user-layout .user-nav-actions { gap:4px!important; }
-          .user-layout .user-nav-profile { gap:4px!important; padding-right:7px!important; }
-          .user-layout .user-nav-profile-name { display:none!important; }
-          .user-layout .user-support-actions { flex-wrap:wrap; padding:12px!important; }
-          .user-layout .user-support-actions > button { flex:1 1 100%; min-width:0!important; }
-        }
-      `}</style>
+    <div className="min-h-screen bg-[#faf9f6] font-sans text-gray-900 relative">
 ​
       {/* ══ NAVBAR */}
       <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-gray-200/60">
-        <div className="user-nav-inner max-w-[1600px] mx-auto px-4 md:px-6 h-16 grid grid-cols-[1fr_auto_1fr] items-center gap-4">
+        <div className="max-w-[1600px] mx-auto px-4 md:px-6 h-16 grid grid-cols-[1fr_auto_1fr] items-center gap-4">
 ​
           {/* Logo */}
           <Link to="/dashboard" className="flex items-center gap-2.5 shrink-0">
@@ -797,13 +777,13 @@ export default function UserLayout() {
           </div>
 ​
           {/* Right controls */}
-          <div className="user-nav-actions flex items-center justify-end gap-2 shrink-0">
+          <div className="flex items-center justify-end gap-2 shrink-0">
 ​
             {/* ── NOTIFICATIONS BELL */}
             <div className="relative" ref={notifRef}>
               <button
                 onClick={() => { setIsNotifOpen(v => !v); setIsProfileOpen(false); }}
-                className={`user-nav-notifications relative p-2.5 rounded-full transition cursor-pointer ${
+                className={`relative p-2.5 rounded-full transition cursor-pointer ${
                   isNotifOpen ? 'bg-emerald-50 text-emerald-800' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100'
                 }`}
               >
@@ -817,7 +797,7 @@ export default function UserLayout() {
               </button>
 ​
               {isNotifOpen && (
-                <div className="user-notification-panel absolute right-0 mt-3 w-[360px] bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray-100 overflow-hidden z-50">
+                <div className="absolute right-0 mt-3 w-[360px] bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray-100 overflow-hidden z-50">
 ​
                   {/* Notif header */}
                   <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
@@ -902,7 +882,7 @@ export default function UserLayout() {
             <div className="relative" ref={profileRef}>
               <button
                 onClick={() => { setIsProfileOpen(v => !v); setIsNotifOpen(false); }}
-                className={`user-nav-profile flex items-center gap-2 border rounded-full pl-1.5 pr-3 py-1.5 transition cursor-pointer ${
+                className={`flex items-center gap-2 border rounded-full pl-1.5 pr-3 py-1.5 transition cursor-pointer ${
                   isProfileOpen ? 'border-emerald-200 bg-emerald-50/80' : 'border-gray-200 hover:border-gray-300 bg-white shadow-sm'
                 }`}
               >
@@ -911,7 +891,7 @@ export default function UserLayout() {
                     ? <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" />
                     : initial}
                 </div>
-                <span className="user-nav-profile-name max-w-[64px] truncate text-xs font-semibold text-gray-800 sm:max-w-[80px] sm:text-sm">{firstName}</span>
+                <span className="max-w-[64px] truncate text-xs font-semibold text-gray-800 sm:max-w-[80px] sm:text-sm">{firstName}</span>
                 <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform duration-300 ${isProfileOpen ? 'rotate-180' : ''}`} />
               </button>
 ​
@@ -997,7 +977,7 @@ export default function UserLayout() {
       )}
 ​
       {/* ══ PAGE CONTENT */}
-      <main className="user-layout-main max-w-[1600px] mx-auto w-full">
+      <main className="max-w-[1600px] mx-auto w-full">
         <Outlet />
       </main>
 ​
@@ -1007,7 +987,7 @@ export default function UserLayout() {
       {/* Live alert for new messages and community activity. Clicking it uses
           the same exact message/post/comment deep link as the bell item. */}
       {toastNotification && toastMeta && ToastIcon && (
-        <div className="user-layout-toast fixed bottom-5 right-5 z-[100] w-[calc(100vw-2.5rem)] max-w-[390px]" role="status" aria-live="polite">
+        <div className="fixed bottom-5 right-5 z-[100] w-[calc(100vw-2.5rem)] max-w-[390px]" role="status" aria-live="polite">
           <div className="flex items-start gap-3 rounded-2xl border border-gray-200 bg-white p-4 shadow-[0_12px_40px_rgba(0,0,0,0.18)]">
             <div className={`shrink-0 w-10 h-10 rounded-xl flex items-center justify-center border ${toastMeta.iconBg}`}>
               <ToastIcon className={`h-5 w-5 ${toastMeta.iconColor}`} />
