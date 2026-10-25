@@ -18,14 +18,14 @@ import {
   TrendingDown,
   Activity
 } from 'lucide-react';
-
+ 
 const TOPUP_PACKAGES = [
   { phpAmount: 100,  bonusCredits: 0 },
   { phpAmount: 500,  bonusCredits: 5 },
   { phpAmount: 1000, bonusCredits: 15 },
   { phpAmount: 2000, bonusCredits: 40 },
 ];
-
+ 
 export default function Payments() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
@@ -45,7 +45,8 @@ export default function Payments() {
   const [selectedPackage, setSelectedPackage] = useState(TOPUP_PACKAGES[1]);
   const [customAmount, setCustomAmount] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
-
+  const [paymentNotice, setPaymentNotice] = useState(null);
+ 
   useEffect(() => {
     const fetchPaymentData = async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -54,7 +55,7 @@ export default function Payments() {
         return;
       }
       setCurrentUser(user);
-
+ 
       // 1. Fetch Balance
       const { data: profile } = await supabase
         .from('user_profiles')
@@ -63,30 +64,33 @@ export default function Payments() {
         .single();
       
       if (profile) setBalance(profile.credits_balance || 0);
-
+ 
       // 2. Fetch Top-up History
       const { data: topups } = await supabase
         .from('topup_transactions')
         .select('*')
         .eq('user_id', user.id);
-
+ 
       // 3. Fetch Sessions
       const { data: sessions } = await supabase
         .from('sessions')
         .select(`id, status, credit_amount, created_at, student_id, instructor_id, skill:skills(title)`)
         .or(`student_id.eq.${user.id},instructor_id.eq.${user.id}`);
-
+ 
       let combinedLedger = [];
       let totalEarned = 0;
       let totalSpent = 0;
-
+ 
       // A. Process Top-ups
       if (topups) {
         topups.forEach(t => {
           combinedLedger.push({
             id: `topup-${t.id}`,
             type: 'TOPUP',
-            title: 'PayMongo top-up',
+            title:
+  t.payment_method === 'gcash' ? 'GCash top-up'
+  : t.payment_method === 'paymaya' ? 'Maya top-up'
+  : 'PayMongo top-up',
             amount: t.credits_added,
             isPositive: true,
             date: t.created_at,
@@ -95,7 +99,7 @@ export default function Payments() {
           });
         });
       }
-
+ 
       // B. Process Sessions
       if (sessions) {
         sessions.forEach(s => {
@@ -111,12 +115,12 @@ export default function Payments() {
               status: 'paid',
               meta: 'Payment for session'
             });
-
+ 
             // Calculate active spending (money currently held or completed)
             if (['active', 'completed', 'upcoming', 'reschedule_proposed'].includes(s.status)) {
               totalSpent += s.credit_amount;
             }
-
+ 
             if (s.status === 'cancelled') {
               combinedLedger.push({
                 id: `refund-${s.id}`,
@@ -130,7 +134,7 @@ export default function Payments() {
               });
             }
           }
-
+ 
           // As Instructor (Earned)
           if (s.instructor_id === user.id && s.status === 'completed') {
             combinedLedger.push({
@@ -147,7 +151,7 @@ export default function Payments() {
           }
         });
       }
-
+ 
       combinedLedger.sort((a, b) => {
         // 1. Sort by Date first (Latest at the top)
         const dateDiff = new Date(b.date).getTime() - new Date(a.date).getTime();
@@ -168,15 +172,50 @@ export default function Payments() {
       });
       setLoading(false);
     };
-
+ 
     fetchPaymentData();
   }, [navigate]);
-
+ 
+  // Handles the redirect back from PayMongo (?status=success&tx=...)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const status = params.get('status');
+    const txId = params.get('tx');
+    if (!status || !txId) return;
+ 
+    if (status === 'cancelled') {
+      setPaymentNotice('Payment cancelled. No credits were added.');
+      return;
+    }
+ 
+    // The webhook can arrive a few seconds after the redirect, so we poll.
+    setPaymentNotice('Confirming your payment…');
+    let tries = 0;
+    const timer = setInterval(async () => {
+      tries++;
+      const { data } = await supabase
+        .from('topup_transactions')
+        .select('status')
+        .eq('id', txId)
+        .single();
+ 
+      if (data?.status === 'paid') {
+        clearInterval(timer);
+        window.location.replace(window.location.pathname); // reload balance + ledger
+      } else if (tries >= 12) {
+        clearInterval(timer);
+        setPaymentNotice('Payment is still processing. Your credits will appear shortly. Refresh in a minute.');
+      }
+    }, 1500);
+ 
+    return () => clearInterval(timer);
+  }, []);
+ 
   const getActiveAmountPHP = () => {
     if (customAmount) return Number(customAmount);
     return selectedPackage ? selectedPackage.phpAmount : 0;
   };
-
+ 
   const getCalculatedCredits = () => {
     const phpAmount = getActiveAmountPHP();
     const baseCredits = Math.floor(phpAmount / 10);
@@ -189,7 +228,7 @@ export default function Payments() {
     }
     return selectedPackage ? (baseCredits + selectedPackage.bonusCredits) : 0;
   };
-
+ 
   const handleCheckout = async () => {
     const amountPHP = getActiveAmountPHP();
     if (amountPHP < 10) {
@@ -200,52 +239,29 @@ export default function Payments() {
       alert("Top-up amount must be a multiple of ₱10.");
       return;
     }
-
+ 
     setIsProcessing(true);
-
+ 
     try {
-      const credits = getCalculatedCredits();
-      
-      // 1. Insert pending transaction in DB
-      const { data: tx, error: txError } = await supabase
-        .from('topup_transactions')
-        .insert({
-          user_id: currentUser.id,
-          amount_php: amountPHP,
-          credits_added: credits,
-          status: 'pending',
-          payment_method: 'paymongo_checkout'
-        })
-        .select()
-        .single();
-
-      if (txError) throw txError;
-
-      // 2. Call Supabase Edge Function to get PayMongo Checkout URL
-      const { data: paymongoData, error: functionError } = await supabase.functions.invoke('create-paymongo-checkout', {
-        body: { 
-          transaction_id: tx.id,
-          amount: amountPHP,
-          description: `SkillCredit Top-up: ${credits} credits`
-        }
+      // The server computes the credits and creates the pending transaction.
+      // We only send the amount, so the browser can't fake credits.
+      const { data, error } = await supabase.functions.invoke('create-paymongo-checkout', {
+        body: { amount: amountPHP, return_path: window.location.pathname }
       });
-
-      if (functionError) throw functionError;
-      if (!paymongoData || !paymongoData.checkout_url) {
-        throw new Error("Invalid response from payment gateway.");
+ 
+      if (error) throw error;
+      if (!data?.checkout_url) {
+        throw new Error(data?.error || "Invalid response from payment gateway.");
       }
-
-      // 3. Redirect user to PayMongo Link
-      window.location.href = paymongoData.checkout_url;
-      
+ 
+      window.location.href = data.checkout_url;
     } catch (error) {
       console.error("Checkout Error:", error);
       alert("Something went wrong preparing your checkout. Please try again.");
-    } finally {
       setIsProcessing(false);
     }
   };
-
+ 
   if (loading) return (
     <div role="status" aria-live="polite" aria-label="Loading payments" className="min-h-[calc(100vh-64px)] bg-[#faf9f6] text-[#202522]">
       <main className="mx-auto max-w-[1000px] animate-pulse space-y-3.5 px-6 py-6 md:px-8">
@@ -268,7 +284,7 @@ export default function Payments() {
       </main>
     </div>
   );
-
+ 
   const renderTransactions = (items) => {
     if (items.length === 0) {
       return (
@@ -281,7 +297,7 @@ export default function Payments() {
         </div>
       );
     }
-
+ 
     return (
       <div className="divide-y divide-gray-100">
         {items.map((tx) => {
@@ -309,7 +325,7 @@ export default function Payments() {
             textClass = 'text-sky-600';
             iconRender = <RefreshCcw className="h-4 w-4" />;
           }
-
+ 
           return (
             <div key={tx.id} className="flex items-center justify-between gap-3 px-4 py-3.5 transition hover:bg-gray-50 sm:px-5">
               <div className="flex min-w-0 items-center gap-3">
@@ -334,14 +350,14 @@ export default function Payments() {
       </div>
     );
   };
-
+ 
   const tabs = [
     { key: 'overview', label: 'Overview', icon: Activity },
     { key: 'topup', label: 'Add credits', icon: CreditCard },
     { key: 'history', label: 'Transactions', icon: History },
   ];
   const cardClass = 'rounded-2xl border border-gray-200 bg-white shadow-sm';
-
+ 
   return (
     <div className="min-h-[calc(100vh-64px)] bg-[#faf9f6] text-[#202522]">
       <main className="mx-auto max-w-[1000px] space-y-3.5 px-6 py-6 md:px-8">
@@ -368,7 +384,13 @@ export default function Payments() {
             </div>
           </div>
         </header>
-
+ 
+        {paymentNotice && (
+          <div role="status" className="rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-[12px] font-semibold text-emerald-800">
+            {paymentNotice}
+          </div>
+        )}
+ 
         <nav aria-label="Payments sections" className="flex w-fit max-w-full flex-wrap gap-1 rounded-xl border border-gray-100 bg-gray-100/80 p-1">
           {tabs.map(({ key, label, icon: Icon }) => {
             const isActive = activePaymentTab === key;
@@ -386,7 +408,7 @@ export default function Payments() {
             );
           })}
         </nav>
-
+ 
         {activePaymentTab === 'overview' && (
           <section className="grid items-start gap-4 lg:grid-cols-[0.82fr_1.18fr]">
             <div className={`${cardClass} overflow-hidden`}>
@@ -411,7 +433,7 @@ export default function Payments() {
                 </div>
               </div>
             </div>
-
+ 
             <section className={`${cardClass} overflow-hidden`}>
               <div className="flex items-center justify-between border-b border-gray-100 px-4 py-4 sm:px-5">
                 <div className="flex items-center gap-3">
@@ -426,7 +448,7 @@ export default function Payments() {
             </section>
           </section>
         )}
-
+ 
         {activePaymentTab === 'topup' && (
           <section className="grid items-start gap-4 lg:grid-cols-[1.15fr_0.85fr]">
             <div className={`${cardClass} p-5 sm:p-6`}>
@@ -455,7 +477,7 @@ export default function Payments() {
               <input id="custom-topup-amount" type="number" min="10" step="10" placeholder="Minimum ₱10" value={customAmount} onChange={(e) => { setCustomAmount(e.target.value); setSelectedPackage(null); }} className="mb-4 w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2.5 text-[12px] font-semibold outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100" />
               <p className="flex items-center gap-1.5 text-[10px] text-gray-500"><ShieldCheck className="h-3.5 w-3.5 text-emerald-600" /> Payments are securely prepared through PayMongo.</p>
             </div>
-
+ 
             <aside className={`${cardClass} p-5 sm:p-6`}>
               <h2 className="text-[15px] font-bold text-gray-900">Payment summary</h2>
               <p className="mt-1 text-[10px] text-gray-500">Review your payment and credits before continuing.</p>
@@ -468,7 +490,7 @@ export default function Payments() {
                 <p className="text-[10px] font-bold text-emerald-900">Credit conversion</p>
                 <p className="mt-1 text-[10px] leading-relaxed text-emerald-800/75">₱10 = 1 credit. Any package bonus is included in the total above.</p>
               </div>
-
+ 
               <button 
                 type="button" 
                 onClick={handleCheckout} 
@@ -482,7 +504,7 @@ export default function Payments() {
             </aside>
           </section>
         )}
-
+ 
         {activePaymentTab === 'history' && (
           <section className={`${cardClass} overflow-hidden`}>
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 px-4 py-4 sm:px-5">
