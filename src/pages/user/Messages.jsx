@@ -1,18 +1,14 @@
 // ─────────────────────────────────────────────────────────────────────
-// MESSAGES V4 — "Messenger Clean" (FINAL)
-// All previous changes preserved +
-//  5. Scrollable message area (auto-scrolls to bottom, overscroll-contain)
-//  6. Long-press (500 ms) on any bubble → Reply  |  Right-click on desktop
-//     Reply preview bar shows above input; replied quote embedded in message
+// MESSAGES V10 — "Global Live Updates + Unrestricted Role Filters"
 // ─────────────────────────────────────────────────────────────────────
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   ArrowLeft, Bell, BellOff, BookOpen, Briefcase, CheckCircle2, ChefHat, ChevronDown,
   Code2, Dumbbell, FileText, Film, Gamepad2, Hammer, Hand, Heart, ImagePlus,
-  Info, Leaf, Lock, MessageCircle, MessageSquare, Monitor, Music2, Palette,
+  PanelRight, Leaf, Lock, MessageCircle, MessageSquare, Monitor, Music2, Palette,
   PenLine, PiggyBank, Reply, Scissors, Search, Send, Shield, Smile, Star,
-  ThumbsUp, UserRound, Wrench, X, Flame, Laugh, Lightbulb, PartyPopper
+  ThumbsUp, UserRound, Wrench, X, Flame, Laugh, Lightbulb, PartyPopper, CalendarDays
 } from 'lucide-react';
 import supabase from '../../supabaseClient';
 
@@ -56,7 +52,23 @@ const CategoryIcon = ({ category, className = 'w-4 h-4' }) => {
   return <Icon className={`${className} ${meta.color}`} />;
 };
 
-// ── Reply helpers ──────────────────────────────────────────────────────
+const renderTextWithLinks = (text, isMe) => {
+  if (!text) return null;
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  return text.split(urlRegex).map((part, i) => 
+    urlRegex.test(part) ? (
+      <a key={i} href={part} target="_blank" rel="noopener noreferrer" 
+         className={`underline font-bold break-all hover:opacity-80 transition-opacity ${
+           isMe ? 'text-emerald-100' : 'text-emerald-600'
+         }`}>
+        {part}
+      </a>
+    ) : (
+      <span key={i}>{part}</span>
+    )
+  );
+};
+
 const REPLY_PREFIX = '__REPLY__:';
 const REPLY_SUFFIX = '::__\n';
 
@@ -71,7 +83,7 @@ function parseReply(content) {
     const end = content.indexOf(REPLY_SUFFIX);
     if (end === -1) return null;
     const json = content.slice(REPLY_PREFIX.length, end);
-    return JSON.parse(json); // { id, snippet, name }
+    return JSON.parse(json); 
   } catch { return null; }
 }
 
@@ -81,17 +93,16 @@ function stripReplyPrefix(content) {
   if (end === -1) return content;
   return content.slice(end + REPLY_SUFFIX.length);
 }
-// ──────────────────────────────────────────────────────────────────────
 
 export default function Messages() {
   const navigate          = useNavigate();
   const location          = useLocation();
   const messagesEndRef    = useRef(null);
-  const messagesAreaRef   = useRef(null); // scroll container
+  const messagesAreaRef   = useRef(null);
   const fileInputRef      = useRef(null);
   const typingTimeoutRef  = useRef(null);
-  const longPressRef      = useRef(null); // long-press timer
-  const replyInputRef     = useRef(null); // focus input on reply
+  const longPressRef      = useRef(null);
+  const replyInputRef     = useRef(null);
 
   const [currentUserId,      setCurrentUserId]      = useState(null);
   const [contacts,           setContacts]           = useState([]);
@@ -111,12 +122,12 @@ export default function Messages() {
   const [chatChannel,        setChatChannel]        = useState(null);
   const [showInfoPanel,      setShowInfoPanel]      = useState(true);
   const [mutedContacts,      setMutedContacts]      = useState({});
-  // ── Reply state ──
-  const [replyingTo,         setReplyingTo]         = useState(null); // { id, content, senderName }
+  const [replyingTo,         setReplyingTo]         = useState(null); 
+  const [isProcessingDone,   setIsProcessingDone]   = useState(false);
+
   const focusedMessageRef = useRef(null);
   const focusMessageId = new URLSearchParams(location.search).get('message');
 
-  // ── Data fetching ─────────────────────────────────────────────────────
   useEffect(() => {
     const initUserAndContacts = async () => {
       setLoadingContacts(true);
@@ -124,13 +135,12 @@ export default function Messages() {
       if (!user) { navigate('/login'); return; }
       setCurrentUserId(user.id);
       
-      // 🚨 FIX ONLY APPLIED HERE: Added 'upcoming' to the list of statuses fetched
       const { data: sessionData } = await supabase.from('sessions')
-        .select(`id, status, skill:skills(title,category), student_id, instructor_id,
+        .select(`id, status, skill:skills(title,category), student_id, instructor_id, instructor_completed, student_completed,
           student:user_profiles!student_id(id,full_name,avatar_url),
           instructor:user_profiles!instructor_id(id,full_name,avatar_url)`)
         .or(`student_id.eq.${user.id},instructor_id.eq.${user.id}`)
-        .in('status', ['pending', 'reschedule_proposed', 'upcoming', 'active', 'completed', 'disputed']).order('created_at', { ascending: false });
+        .in('status', ['pending', 'reschedule_proposed', 'upcoming', 'active', 'completed', 'disputed', 'cancelled']).order('created_at', { ascending: false });
         
       const { data: ticketData } = await supabase.from('support_tickets')
         .select('id, subject, status, created_at, rating')
@@ -149,6 +159,9 @@ export default function Messages() {
             skillCategory: session.skill?.category || 'Uncategorized',
             sessionStatus: session.status,
             sortDate: session.created_at || new Date().toISOString(),
+            instructorCompleted: session.instructor_completed,
+            studentCompleted: session.student_completed,
+            isInstructor: isInstructor
           });
         });
       }
@@ -168,7 +181,6 @@ export default function Messages() {
       combinedContacts.sort((a, b) => new Date(b.sortDate) - new Date(a.sortDate));
       setContacts(combinedContacts);
       
-      // ── ITO YUNG CATCH-ALL FIX PARA SA URL PARAMETERS ──
       const queryParams = new URLSearchParams(location.search);
       const targetId = 
         queryParams.get('session') || 
@@ -190,9 +202,48 @@ export default function Messages() {
     initUserAndContacts();
   }, [location.search]);
 
+  // ✨ GLOBAL SESSION LISTENER: Ensures any update (like canceling in Sessions.jsx) reflects live here!
+  useEffect(() => {
+    if (!currentUserId) return;
+    
+    const sessionChannel = supabase.channel('global_sessions_rt_messages')
+      .on('postgres_changes', 
+        { event: 'UPDATE', schema: 'public', table: 'sessions' }, 
+        (payload) => {
+          const updatedSession = payload.new;
+          
+          setContacts(prev => prev.map(c => {
+            if (c.id === updatedSession.id) {
+              return {
+                ...c,
+                sessionStatus: updatedSession.status,
+                instructorCompleted: updatedSession.instructor_completed,
+                studentCompleted: updatedSession.student_completed
+              };
+            }
+            return c;
+          }));
+          
+          setSelectedContact(prev => {
+            if (prev && prev.id === updatedSession.id) {
+              return {
+                ...prev,
+                sessionStatus: updatedSession.status,
+                instructorCompleted: updatedSession.instructor_completed,
+                studentCompleted: updatedSession.student_completed
+              };
+            }
+            return prev;
+          });
+        }
+      ).subscribe();
+
+    return () => { supabase.removeChannel(sessionChannel); };
+  }, [currentUserId]);
+
   useEffect(() => {
     if (!currentUserId || !selectedContact) return;
-    setReplyingTo(null); // clear reply when switching chats
+    setReplyingTo(null); 
     
     const fetchMessages = async () => {
       setLoadingMessages(true);
@@ -235,12 +286,10 @@ export default function Messages() {
     return () => { if (channel) supabase.removeChannel(channel); clearTimeout(typingTimeoutRef.current); };
   }, [currentUserId, selectedContact]);
 
-  // ── Auto-scroll to bottom ─────────────────────────────────────────────
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isContactTyping]);
 
-  // ── Scroll-to-quoted message ──────────────────────────────────────────
   const scrollToMessage = (msgId) => {
     const el = document.getElementById(`msg-${msgId}`);
     if (el) {
@@ -250,7 +299,6 @@ export default function Messages() {
     }
   };
 
-  // Resolve ?message=<id> after the target conversation has loaded.
   useEffect(() => {
     if (!focusMessageId || !selectedContact || loadingMessages) return;
     const key = `${selectedContact.id}:${focusMessageId}`;
@@ -261,7 +309,6 @@ export default function Messages() {
     return () => window.cancelAnimationFrame(frame);
   }, [focusMessageId, selectedContact, loadingMessages, messages]);
 
-  // ── Long-press / right-click to reply ────────────────────────────────
   const startLongPress = useCallback((msg) => {
     longPressRef.current = setTimeout(() => {
       const isMe      = msg.sender_id === currentUserId;
@@ -284,7 +331,6 @@ export default function Messages() {
     replyInputRef.current?.focus();
   }, [currentUserId, selectedContact]);
 
-  // ── File select ───────────────────────────────────────────────────────
   const handleFileSelect = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -293,7 +339,6 @@ export default function Messages() {
     setFilePreviewUrl(URL.createObjectURL(file));
   };
 
-  // ── Typing indicator ──────────────────────────────────────────────────
   const handleTyping = (e) => {
     setNewMessage(e.target.value);
     if (chatChannel) {
@@ -305,10 +350,9 @@ export default function Messages() {
     }
   };
 
-  // ── Send message ──────────────────────────────────────────────────────
   const executeMessageSend = async (contentString) => {
     if (!selectedContact || !currentUserId) return;
-    if (['completed', 'resolved'].includes(selectedContact.sessionStatus)) {
+    if (['completed', 'resolved', 'cancelled'].includes(selectedContact.sessionStatus)) {
       alert('This conversation is closed/resolved.'); return;
     }
     setUploadingFile(true);
@@ -316,7 +360,6 @@ export default function Messages() {
       chatChannel.send({ type: 'broadcast', event: 'typing', payload: { isTyping: false, userId: currentUserId } });
       clearTimeout(typingTimeoutRef.current);
     }
-    // Prepend reply quote if replying to a message
     const isReplyToMessage = Boolean(replyingTo && !replyingTo.quickLike);
     let finalContent = contentString;
     if (isReplyToMessage) {
@@ -360,8 +403,6 @@ export default function Messages() {
       } else if (data) {
         setMessages(prev => prev.map(m => m.id === tempId ? data : m));
 
-        // Session messages include the recipient directly; notify them only
-        // after the database provides the exact message ID.
         if (selectedContact.type === 'session' && selectedContact.userId && selectedContact.userId !== currentUserId) {
           const { data: actor } = await supabase
             .from('user_profiles')
@@ -396,7 +437,6 @@ export default function Messages() {
 
   const handleQuickLike = () => { executeMessageSend('💚'); };
 
-  // ── Delete message ────────────────────────────────────────────────────
   const handleDeleteMessage = async (messageId) => {
     if (!window.confirm('Delete this message?')) return;
     setMessages(prev => prev.map(m =>
@@ -414,7 +454,6 @@ export default function Messages() {
     }
   };
 
-  // ── Rate ticket ───────────────────────────────────────────────────────
   const handleRateTicket = async (stars) => {
     if (isSubmittingRating || !selectedContact || selectedContact.type !== 'ticket') return;
     setIsSubmittingRating(true);
@@ -425,6 +464,91 @@ export default function Messages() {
       setContacts(prev => prev.map(c => c.id === selectedContact.id ? { ...c, rating: stars } : c));
     } else { alert('Failed to submit rating.'); }
     setIsSubmittingRating(false);
+  };
+
+  const quickUpdateStatus = async (newStatus) => {
+    if (!selectedContact || selectedContact.type !== 'session') return;
+    const { data: session } = await supabase.from('sessions').select(`*, instructor:user_profiles!instructor_id(id,full_name), student:user_profiles!student_id(id,full_name)`).eq('id', selectedContact.id).single();
+    
+    const { error } = await supabase.from('sessions').update({ status: newStatus }).eq('id', selectedContact.id);
+    if (!error) {
+      if (newStatus === 'upcoming' && session) {
+        const isInstructorAction = session.instructor_id === currentUserId;
+        const targetUserId = isInstructorAction ? session.student_id : session.instructor_id;
+        const actorName = isInstructorAction ? session.instructor?.full_name || 'The teacher' : session.student?.full_name || 'The learner';
+        
+        await supabase.from('notifications').insert([{
+          user_id: targetUserId,
+          type: 'booking_accepted', 
+          content: `${actorName} has confirmed the schedule for the session. It is now upcoming!`,
+          link_url: `/sessions?session=${session.id}`
+        }]);
+      }
+    } else {
+      alert('Failed to update status.');
+    }
+  };
+
+  const handleQuickMarkDone = async () => {
+    setIsProcessingDone(true);
+    const { data: session, error } = await supabase.from('sessions')
+      .select(`*, instructor:user_profiles!instructor_id(id,full_name), student:user_profiles!student_id(id,full_name)`)
+      .eq('id', selectedContact.id).single();
+    
+    if (error || !session) { setIsProcessingDone(false); return; }
+
+    const isInstructor = session.instructor_id === currentUserId;
+    const myCompletedLocal = isInstructor ? session.instructor_completed : session.student_completed;
+    const otherCompletedLocal = isInstructor ? session.student_completed : session.instructor_completed;
+
+    if (myCompletedLocal) {
+      alert("You have already marked this as done! Waiting for your partner.");
+      setIsProcessingDone(false);
+      return;
+    }
+
+    if (window.confirm('Mark session as done?')) {
+      const payload = isInstructor ? { instructor_completed: true } : { student_completed: true };
+      
+      if (otherCompletedLocal) {
+        payload.status = 'completed';
+        const { data: id } = await supabase.from('user_profiles').select('credits_balance').eq('id', session.instructor_id).single();
+        await supabase.from('user_profiles').update({ credits_balance: Number(id?.credits_balance || 0) + Number(session.credit_amount || 0) }).eq('id', session.instructor_id);
+        
+        window.dispatchEvent(new Event('credit_updated'));
+        
+        await supabase.from('notifications').insert([
+          {
+            user_id: session.student_id,
+            type: 'session_completed',
+            content: `Your session with ${session.instructor?.full_name || 'the teacher'} is officially completed!`,
+            link_url: `/sessions?session=${session.id}`
+          },
+          {
+            user_id: session.instructor_id,
+            type: 'session_completed',
+            content: `Your session with ${session.student?.full_name || 'the learner'} is officially completed! ${session.credit_amount} CR added.`,
+            link_url: `/sessions?session=${session.id}`
+          }
+        ]);
+      } else {
+        const targetUserId = isInstructor ? session.student_id : session.instructor_id;
+        const actorName = isInstructor ? session.instructor?.full_name || 'The teacher' : session.student?.full_name || 'The learner';
+        await supabase.from('notifications').insert([{
+          user_id: targetUserId,
+          type: 'session_update',
+          content: `${actorName} has marked the session as done. Please confirm to finalize the completion.`,
+          link_url: `/sessions?session=${session.id}`
+        }]);
+      }
+      
+      await supabase.from('sessions').update(payload).eq('id', session.id);
+      
+      if (!otherCompletedLocal) {
+         alert("Marked as done! Waiting for partner confirmation.");
+      }
+    }
+    setIsProcessingDone(false);
   };
 
   const toggleMute = () => {
@@ -438,14 +562,14 @@ export default function Messages() {
     navigate(`/profile/${selectedContact.userId}`);
   };
 
-  // ── Filters ───────────────────────────────────────────────────────────
+  // ✨ CHANGED: Removed the status restriction on Teachers and Students tabs
   const TAB_FILTERS = {
     All:       ()  => true,
     Unread:    (c) => c.sessionStatus === 'active',
-    Teachers:  (c) => c.role === 'Teacher'  && !['completed','resolved'].includes(c.sessionStatus),
-    Students:  (c) => c.role === 'Student'  && !['completed','resolved'].includes(c.sessionStatus),
+    Teachers:  (c) => c.role === 'Teacher',
+    Students:  (c) => c.role === 'Student',
     Support:   (c) => c.role === 'Support',
-    Completed: (c) => ['completed','resolved'].includes(c.sessionStatus),
+    Completed: (c) => ['completed','resolved', 'cancelled'].includes(c.sessionStatus),
   };
 
   const filteredContacts = contacts.filter(contact => {
@@ -455,10 +579,13 @@ export default function Messages() {
     return matchesSearch && (TAB_FILTERS[activeTab]?.(contact) ?? true);
   });
 
+  const isContactInstructor = selectedContact?.isInstructor;
+  const myCompleted = selectedContact ? (isContactInstructor ? selectedContact.instructorCompleted : selectedContact.studentCompleted) : false;
+  const otherCompleted = selectedContact ? (isContactInstructor ? selectedContact.studentCompleted : selectedContact.instructorCompleted) : false;
+
   if (loadingContacts) return (
     <div role="status" aria-live="polite" aria-label="Loading messages" className="flex h-[calc(100vh-70px)] bg-white overflow-hidden text-gray-900">
       
-      {/* ══ LEFT PANEL SKELETON ══ */}
       <div className="w-full md:w-[260px] lg:w-[280px] border-r border-gray-100 flex flex-col shrink-0 bg-white">
         <div className="px-5 pt-5 pb-3 flex items-center shrink-0">
           <div className="h-8 w-24 bg-gray-200 rounded-lg animate-pulse" />
@@ -488,9 +615,7 @@ export default function Messages() {
         </div>
       </div>
 
-      {/* ══ CENTER CHAT SKELETON ══ */}
       <div className="hidden md:flex flex-1 min-w-0 flex-col bg-white">
-        {/* Chat Header */}
         <div className="px-5 py-3.5 border-b border-gray-100 flex items-center justify-between shrink-0 bg-white">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-gray-200 animate-pulse" />
@@ -502,7 +627,6 @@ export default function Messages() {
           <div className="w-9 h-9 rounded-full bg-gray-100 animate-pulse shrink-0" />
         </div>
 
-        {/* Chat Messages */}
         <div className="flex-1 overflow-hidden px-5 py-4 flex flex-col justify-end gap-5">
           <div className="flex justify-start w-full">
             <div className="flex items-end gap-1.5 w-full">
@@ -530,7 +654,6 @@ export default function Messages() {
           </div>
         </div>
 
-        {/* Input Bar Skeleton */}
         <div className="px-4 py-3 border-t border-gray-100 flex items-center gap-2 shrink-0 bg-white">
            <div className="w-9 h-9 rounded-full bg-gray-100 animate-pulse shrink-0" />
            <div className="hidden sm:block w-9 h-9 rounded-full bg-gray-100 animate-pulse shrink-0" />
@@ -539,9 +662,7 @@ export default function Messages() {
         </div>
       </div>
 
-      {/* ══ RIGHT INFO PANEL SKELETON ══ */}
       <div className="hidden lg:flex w-[240px] shrink-0 border-l border-gray-100 flex-col bg-white overflow-hidden">
-        {/* Profile Details Skeleton */}
         <div className="flex flex-col items-center text-center px-5 pt-8 pb-5 border-b border-gray-100">
           <div className="w-14 h-14 rounded-full bg-gray-200 animate-pulse" />
           <div className="mt-3 h-4 w-28 bg-gray-200 rounded animate-pulse" />
@@ -559,7 +680,6 @@ export default function Messages() {
           </div>
         </div>
 
-        {/* Accordions Skeleton */}
         {[1, 2].map(item => (
           <div key={item} className="border-b border-gray-100">
             <div className="px-5 py-4 flex items-center justify-between">
@@ -583,10 +703,9 @@ export default function Messages() {
     </div>
   );
 
-  const isClosed = ['completed','resolved'].includes(selectedContact?.sessionStatus);
+  const isClosed = ['completed','resolved','cancelled'].includes(selectedContact?.sessionStatus);
   const isMuted  = selectedContact ? mutedContacts[selectedContact.id] : false;
 
-  // ── Avatar component ──────────────────────────────────────────────────
   const Avatar = ({ contact, size = 'md' }) => {
     const s = size === 'sm' ? 'w-8 h-8 text-sm' : size === 'lg' ? 'w-14 h-14 text-2xl' : 'w-10 h-10 text-base';
     return contact?.avatar ? (
@@ -604,7 +723,6 @@ export default function Messages() {
     );
   };
 
-  // ── Reply quote bubble (shown inside a message bubble) ────────────────
   const ReplyQuote = ({ reply, isMe }) => (
     <div
       onClick={() => scrollToMessage(reply.id)}
@@ -623,7 +741,6 @@ export default function Messages() {
     </div>
   );
 
-  // ─────────────────────────────────────────────────────────────────────
   return (
     <div className="flex h-[calc(100vh-70px)] bg-white overflow-hidden text-gray-900">
 
@@ -631,12 +748,10 @@ export default function Messages() {
       <div className={`w-full md:w-[260px] lg:w-[280px] border-r border-gray-100 flex flex-col shrink-0 bg-white ${
         selectedContact ? 'hidden md:flex' : 'flex'
       }`}>
-        {/* Header — title only */}
         <div className="px-5 pt-5 pb-3 flex items-center shrink-0">
           <h1 className="text-2xl font-bold tracking-tight text-gray-900">Chats</h1>
         </div>
 
-        {/* Search */}
         <div className="px-4 pb-3 shrink-0">
           <div className="bg-gray-100 rounded-full flex items-center gap-2 px-4 py-2.5 focus-within:ring-2 focus-within:ring-emerald-500/20 transition">
             <Search className="w-4 h-4 text-gray-400 shrink-0" />
@@ -651,7 +766,6 @@ export default function Messages() {
           </div>
         </div>
 
-        {/* Tab pills */}
         <div className="px-4 pb-3 flex gap-2 overflow-x-auto scrollbar-hide shrink-0">
           {['All', 'Unread', 'Teachers', 'Students', 'Support', 'Completed'].map(tab => (
             <button key={tab} onClick={() => setActiveTab(tab)}
@@ -663,13 +777,12 @@ export default function Messages() {
           ))}
         </div>
 
-        {/* Contact list */}
         <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden">
           {filteredContacts.length === 0 ? (
             <div className="p-8 text-center text-gray-400 text-sm font-medium">No conversations found.</div>
           ) : filteredContacts.map(contact => {
             const isActive = selectedContact?.id === contact.id;
-            const closed   = ['completed','resolved'].includes(contact.sessionStatus);
+            const closed   = ['completed','resolved','cancelled'].includes(contact.sessionStatus);
             return (
               <div key={contact.id} onClick={() => setSelectedContact(contact)}
                 className={`px-3 py-2 flex items-center gap-3 cursor-pointer rounded-xl mx-2 mb-0.5 transition ${
@@ -698,7 +811,6 @@ export default function Messages() {
       <div className={`flex-1 min-w-0 flex flex-col bg-white ${ !selectedContact ? 'hidden md:flex' : 'flex' }`}>
         {selectedContact ? (
           <>
-            {/* Chat header */}
             <div className="px-5 py-3.5 border-b border-gray-100 flex items-center justify-between shrink-0 bg-white">
               <div className="flex items-center gap-3">
                 <button onClick={() => setSelectedContact(null)} aria-label="Back to conversations" className="md:hidden text-gray-500 mr-1"><ArrowLeft className="w-4 h-4" /></button>
@@ -720,13 +832,61 @@ export default function Messages() {
                 <button onClick={() => setShowInfoPanel(p => !p)}
                   className={`w-9 h-9 rounded-full flex items-center justify-center transition cursor-pointer ${
                     showInfoPanel ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                  }`} title="Info">
-                  <Info className="w-5 h-5" />
+                  }`} title="Toggle Info Panel">
+                  <PanelRight className="w-5 h-5" />
                 </button>
               </div>
             </div>
 
-            {/* ── SCROLLABLE MESSAGE AREA ── */}
+            {/* ── STICKY ACTION BANNER ── */}
+            {selectedContact.type === 'session' && (
+              ['pending', 'reschedule_proposed'].includes(selectedContact.sessionStatus) || 
+              (selectedContact.sessionStatus === 'active' && (myCompleted || otherCompleted))
+            ) && (
+              <div className={`border-b px-5 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0 relative z-10 ${
+                selectedContact.sessionStatus === 'active' ? 'bg-sky-50 border-sky-100 text-sky-800' : 'bg-indigo-50 border-indigo-100 text-indigo-800'
+              }`}>
+                <div className="flex items-center gap-2 text-[12px]">
+                  <CalendarDays className="w-4 h-4 shrink-0" />
+                  <p>
+                    {selectedContact.sessionStatus === 'pending' && selectedContact.role === 'Teacher' && "⏳ Waiting for Teacher's Confirmation."}
+                    {selectedContact.sessionStatus === 'pending' && selectedContact.role === 'Student' && "📅 Booking Request: Confirm Schedule?"}
+                    {selectedContact.sessionStatus === 'reschedule_proposed' && selectedContact.role === 'Teacher' && "📅 Teacher proposed a new time."}
+                    {selectedContact.sessionStatus === 'reschedule_proposed' && selectedContact.role === 'Student' && "⏳ Waiting for Learner's Confirmation on new time."}
+                    
+                    {selectedContact.sessionStatus === 'active' && otherCompleted && !myCompleted && `✨ ${selectedContact.name} marked this session as done. Please confirm to finalize.`}
+                    {selectedContact.sessionStatus === 'active' && myCompleted && `⏳ Waiting for ${selectedContact.name} to confirm completion.`}
+                  </p>
+                </div>
+                
+                <div className="flex flex-wrap items-center gap-2 shrink-0">
+                  {selectedContact.sessionStatus === 'pending' && selectedContact.role === 'Student' && (
+                    <button onClick={() => quickUpdateStatus('upcoming')} className="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-bold rounded-lg shadow-sm transition cursor-pointer">
+                      Confirm Schedule
+                    </button>
+                  )}
+
+                  {selectedContact.sessionStatus === 'reschedule_proposed' && selectedContact.role === 'Teacher' && (
+                    <button onClick={() => quickUpdateStatus('upcoming')} className="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-bold rounded-lg shadow-sm transition cursor-pointer">
+                      Accept Schedule
+                    </button>
+                  )}
+
+                  {selectedContact.sessionStatus === 'active' && otherCompleted && !myCompleted && (
+                    <button onClick={handleQuickMarkDone} disabled={isProcessingDone} className="px-4 py-1.5 bg-sky-600 hover:bg-sky-700 text-white text-[11px] font-bold rounded-lg shadow-sm transition cursor-pointer disabled:opacity-50">
+                      {isProcessingDone ? 'Processing...' : 'Confirm Done'}
+                    </button>
+                  )}
+
+                  <button onClick={() => navigate(`/sessions?session=${selectedContact.id}`)} className={`px-4 py-1.5 bg-white border text-[11px] font-bold rounded-lg transition cursor-pointer ${
+                    selectedContact.sessionStatus === 'active' ? 'border-sky-200 text-sky-700 hover:bg-sky-100' : 'border-indigo-200 text-indigo-700 hover:bg-indigo-100'
+                  }`}>
+                    Manage Details
+                  </button>
+                </div>
+              </div>
+            )}
+
             <div
               ref={messagesAreaRef}
               className="flex-1 overflow-y-auto overscroll-contain px-5 py-4 flex flex-col bg-white [&::-webkit-scrollbar]:hidden"
@@ -760,11 +920,9 @@ export default function Messages() {
                     >
                       <div
                         className={`flex w-fit items-end gap-1.5 max-w-[68%] ${ isMe ? 'flex-row-reverse' : 'flex-row' } group/msg`}
-                        // ── Long-press (mobile) ──
                         onTouchStart={() => !msg.is_deleted && startLongPress(msg)}
                         onTouchEnd={cancelLongPress}
                         onTouchMove={cancelLongPress}
-                        // ── Right-click (desktop) ──
                         onContextMenu={(e) => !msg.is_deleted && handleContextMenu(e, msg)}
                       >
                         {!isMe && (
@@ -775,10 +933,8 @@ export default function Messages() {
 
                         <div className={`flex w-fit max-w-full flex-col gap-1 ${ isMe ? 'items-end' : 'items-start' }`}>
 
-                          {/* Reply quote (if this message is a reply) */}
                           {reply && <ReplyQuote reply={reply} isMe={isMe} />}
 
-                          {/* Image attachment */}
                           {isImage && !msg.is_deleted && (
                             <a href={msg.file_url} target="_blank" rel="noopener noreferrer">
                               <img src={msg.file_url} alt="Attached"
@@ -786,7 +942,6 @@ export default function Messages() {
                             </a>
                           )}
 
-                          {/* File attachment */}
                           {isFile && !msg.is_deleted && (
                             <a href={msg.file_url} target="_blank" rel="noopener noreferrer"
                               className={`flex items-center gap-2.5 px-4 py-3 rounded-2xl text-[13px] font-bold ${
@@ -796,7 +951,6 @@ export default function Messages() {
                             </a>
                           )}
 
-                          {/* Text bubble */}
                           {(hasText || msg.is_deleted) && (
                             <div className={`px-4 py-2.5 text-[14px] leading-snug break-words ${
                               msg.is_deleted
@@ -805,14 +959,12 @@ export default function Messages() {
                                 ? 'bg-emerald-600 text-white rounded-2xl rounded-br-sm'
                                 : 'bg-gray-100 text-gray-900 rounded-2xl rounded-bl-sm'
                             }`}>
-                              {msg.is_deleted ? 'This message was deleted' : bodyText}
+                              {msg.is_deleted ? 'This message was deleted' : renderTextWithLinks(bodyText, isMe)}
                             </div>
                           )}
 
-                          {/* Timestamp and actions share one line below the bubble */}
                           <div className={`flex w-full items-center gap-2 px-1 text-[10px] ${isMe ? 'justify-end' : 'justify-start'}`}>
                             {!isMe && <span className="text-gray-400">{messageTime}</span>}
-                            {/* Reply hint on hover (desktop convenience) */}
                             {!msg.is_deleted && (
                               <button
                                 onClick={() => {
@@ -843,7 +995,6 @@ export default function Messages() {
                 })
               )}
 
-              {/* Typing indicator */}
               {isContactTyping && (
                 <div className="flex w-full mb-2 justify-start animate-in fade-in slide-in-from-bottom-2">
                   <div className="flex items-end gap-1.5">
@@ -856,11 +1007,9 @@ export default function Messages() {
                   </div>
                 </div>
               )}
-              {/* Anchor for auto-scroll-to-bottom */}
               <div ref={messagesEndRef} />
             </div>
 
-            {/* ── INPUT BAR ── */}
             {isClosed ? (
               <div className="px-5 py-4 border-t border-gray-100 flex flex-col items-center justify-center min-h-[80px] shrink-0">
                 {selectedContact.type === 'ticket' && selectedContact.sessionStatus === 'resolved' ? (
@@ -892,7 +1041,6 @@ export default function Messages() {
               <form onSubmit={handleSendMessage}
                 className="px-4 py-3 border-t border-gray-100 flex flex-col gap-2 shrink-0 relative bg-white">
 
-                {/* ── Reply preview bar ── */}
                 {replyingTo && (
                   <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-200 rounded-xl px-3 py-2 animate-in slide-in-from-bottom-2">
                     <div className="flex-1 min-w-0">
@@ -908,7 +1056,6 @@ export default function Messages() {
                   </div>
                 )}
 
-                {/* File preview */}
                 {selectedFile && (
                   <div className="px-4 py-2.5 bg-white border border-gray-200 rounded-2xl flex items-center gap-3 shadow-sm">
                     {selectedFile.type.startsWith('image/')
@@ -921,18 +1068,14 @@ export default function Messages() {
                   </div>
                 )}
 
-                {/* Toolbar row */}
                 <div className="flex items-center gap-2">
-                  {/* Hidden file input — images only */}
-                  <input type="file" ref={fileInputRef} onChange={handleFileSelect} className="hidden" accept="image/*" />
+                  <input type="file" ref={fileInputRef} onChange={handleFileSelect} className="hidden" accept="image/*, .pdf, .doc, .docx" />
 
-                  {/* Image button */}
                   <button type="button" onClick={() => fileInputRef.current?.click()}
-                    className="w-9 h-9 flex items-center justify-center rounded-full text-emerald-600 hover:bg-emerald-50 transition shrink-0 cursor-pointer" title="Attach image">
+                    className="w-9 h-9 flex items-center justify-center rounded-full text-emerald-600 hover:bg-emerald-50 transition shrink-0 cursor-pointer" title="Attach file">
                     <ImagePlus className="w-5 h-5" />
                   </button>
 
-                  {/* Emoji button */}
                   <button type="button" onClick={() => setShowEmojiPicker(p => !p)}
                     className="w-9 h-9 flex items-center justify-center rounded-full text-emerald-600 hover:bg-emerald-50 transition text-lg shrink-0 hidden sm:flex cursor-pointer" title="Emoji">
                     <Smile className="w-5 h-5" />
@@ -953,7 +1096,6 @@ export default function Messages() {
                     </div>
                   )}
 
-                  {/* Text input */}
                   <div className="flex-1 bg-gray-100 rounded-full flex items-center px-4 py-2.5 focus-within:bg-gray-50 focus-within:ring-2 focus-within:ring-emerald-400/30 transition">
                     <input
                       ref={replyInputRef}
@@ -965,7 +1107,6 @@ export default function Messages() {
                     />
                   </div>
 
-                  {/* Send / Quick Like */}
                   {newMessage.trim() || selectedFile ? (
                     <button type="submit" disabled={uploadingFile}
                       className="w-9 h-9 flex items-center justify-center rounded-full bg-emerald-600 hover:bg-emerald-700 text-white transition shrink-0 shadow-sm cursor-pointer">
@@ -1001,7 +1142,6 @@ export default function Messages() {
               {isClosed ? <span className="inline-flex items-center gap-1"><Lock className="w-3 h-3" /> Conversation closed</span> : <span className="text-emerald-600 font-medium">Active now</span>}
             </p>
             <div className="flex gap-3 mt-4">
-              {/* Mute */}
               <div className="flex flex-col items-center gap-1">
                 <button onClick={toggleMute}
                   className={`w-9 h-9 rounded-full flex items-center justify-center transition cursor-pointer ${
@@ -1011,7 +1151,6 @@ export default function Messages() {
                 </button>
                 <span className="text-[10px] font-bold text-gray-500">{isMuted ? 'Unmute' : 'Mute'}</span>
               </div>
-              {/* Visit */}
               <div className="flex flex-col items-center gap-1">
                 <button
                   onClick={handleVisitProfile}
@@ -1026,7 +1165,6 @@ export default function Messages() {
             </div>
           </div>
 
-          {/* Info accordion */}
           {[{
             label: 'Chat info',
             content: (

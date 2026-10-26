@@ -7,7 +7,7 @@ import {
 import supabase from '../../supabaseClient';
 
 // ─────────────────────────────────────────────────────────────────
-// SESSIONS V3 — "Upcoming State" + Formal Start & Dispute Countdown
+// SESSIONS V4 — "Upcoming State" + Formal Start & Cancelled Chat
 // ─────────────────────────────────────────────────────────────────
 
 const STATUS_DOT = {
@@ -646,7 +646,8 @@ export default function Sessions() {
                       const isExpanded         = expandedId === session.id;
                       const isHighlighted      = highlightedSessionId === session.id;
 
-                      const canMessage         = ['pending', 'reschedule_proposed', 'upcoming', 'active', 'completed', 'disputed'].includes(session.status);
+                      // ✨ ADDED 'cancelled' to this list to keep the chat button visible
+                      const canMessage         = ['pending', 'reschedule_proposed', 'upcoming', 'active', 'completed', 'disputed', 'cancelled'].includes(session.status);
 
                       return (
                         <div id={`session-${session.id}`} key={session.id} className="relative scroll-mt-24">
@@ -750,7 +751,7 @@ export default function Sessions() {
                                       </>
                                     )}
 
-                                    {/* 🚨 PROPOSED (INSTRUCTOR) - FIXED UI */}
+                                    {/* PROPOSED (INSTRUCTOR) */}
                                     {session.status === 'reschedule_proposed' && isInstructor && (
                                       <>
                                         <button onClick={() => { if (window.confirm('Cancel booking entirely?')) handleUpdateStatus(session, 'decline'); }} disabled={isProcessing} className="px-3 py-1.5 bg-rose-50 text-rose-600 border border-rose-200 font-bold rounded-lg text-[11px] transition cursor-pointer">Decline</button>

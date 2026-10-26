@@ -5,10 +5,12 @@ import {
   BookOpen,
   CalendarDays,
   ChevronRight,
+  CheckCircle2,
   Clock,
   Coins,
   Mail,
   Users,
+  Wallet,
   X,
 } from 'lucide-react';
 
@@ -24,6 +26,22 @@ const formatDate = value => {
     day: 'numeric',
   }).format(date);
 };
+
+const formatPeso = value => `₱${Number(value || 0).toLocaleString()}`;
+
+const methodLabel = value => {
+  if (value === 'gcash') return 'GCash';
+  if (value === 'paymaya') return 'Maya';
+  return 'PayMongo';
+};
+
+const topupStatusTone = value => {
+  if (value === 'paid') return 'bg-emerald-50 text-emerald-700 ring-emerald-100';
+  if (value === 'pending') return 'bg-amber-50 text-amber-800 ring-amber-100';
+  return 'bg-slate-100 text-slate-600 ring-slate-200';
+};
+
+const relationOne = value => (Array.isArray(value) ? value[0] : value) || null;
 
 function StatCard({ title, value, icon: Icon, tone }) {
   return (
@@ -178,6 +196,9 @@ function DetailModal({ record, onClose }) {
 export default function AdminDashboard() {
   const [stats, setStats] = useState({ users: 0, skills: 0, sessions: 0, credits: 0 });
   const [recentUsers, setRecentUsers] = useState([]);
+  const [topupStats, setTopupStats] = useState({ revenue: 0, credits: 0, paid: 0, pending: 0, gcash: 0, maya: 0 });
+  const [recentTopups, setRecentTopups] = useState([]);
+  const [topupError, setTopupError] = useState(false);
   const [loading, setLoading] = useState(true);
   const [selectedRecord, setSelectedRecord] = useState(null);
   
@@ -207,7 +228,28 @@ export default function AdminDashboard() {
           .order('created_at', { ascending: false })
           .limit(5);
 
+        const topupResult = await supabase
+          .from('topup_transactions')
+          .select('id, amount_php, credits_added, status, payment_method, created_at, user_profiles(full_name, email)')
+          .order('created_at', { ascending: false })
+          .limit(1000);
+
         if (!isMounted) return;
+
+        const topupRows = topupResult.data || [];
+        const paidRows = topupRows.filter(t => t.status === 'paid');
+        const sumOf = (rows, key) => rows.reduce((total, row) => total + (Number(row[key]) || 0), 0);
+        setTopupError(Boolean(topupResult.error));
+        setTopupStats({
+          revenue: sumOf(paidRows, 'amount_php'),
+          credits: sumOf(paidRows, 'credits_added'),
+          paid: paidRows.length,
+          pending: topupRows.filter(t => t.status === 'pending').length,
+          gcash: paidRows.filter(t => t.payment_method === 'gcash').length,
+          maya: paidRows.filter(t => t.payment_method === 'paymaya').length,
+        });
+        setRecentTopups(topupRows.slice(0, 5));
+
         setStats({
           users: usersResult.count || 0,
           skills: skillsResult.count || 0,
@@ -293,28 +335,111 @@ export default function AdminDashboard() {
         <aside className="rounded-2xl border border-slate-200/80 bg-slate-950 p-5 text-white shadow-sm sm:p-6">
           <div className="flex items-start gap-3">
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/10 text-emerald-300">
-              <Activity className="h-5 w-5" aria-hidden="true" />
+              <Wallet className="h-5 w-5" aria-hidden="true" />
             </span>
             <div>
-              <p className="text-sm font-bold">Platform snapshot</p>
-              <p className="mt-1 text-xs leading-relaxed text-slate-400">Current totals from the dashboard data source.</p>
+              <p className="text-sm font-bold">Top-up overview</p>
+              <p className="mt-1 text-xs leading-relaxed text-slate-400">Credit purchases made through PayMongo.</p>
             </div>
           </div>
-          <div className="mt-5 grid grid-cols-2 gap-3">
-            <div className="rounded-xl border border-white/10 bg-white/5 p-3">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Active skills</p>
-              <p className="mt-2 text-xl font-bold">{loading ? '—' : formatNumber(stats.skills)}</p>
+
+          {topupError ? (
+            <div role="alert" className="mt-5 rounded-xl border border-rose-400/30 bg-rose-500/10 p-3 text-xs leading-relaxed text-rose-200">
+              Could not load top-up data. Make sure the admin read policy for top-ups is in place.
             </div>
-            <div className="rounded-xl border border-white/10 bg-white/5 p-3">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Sessions</p>
-              <p className="mt-2 text-xl font-bold">{loading ? '—' : formatNumber(stats.sessions)}</p>
-            </div>
-          </div>
+          ) : (
+            <>
+              <div className="mt-5 grid grid-cols-2 gap-3">
+                <div className="col-span-2 rounded-xl border border-white/10 bg-white/5 p-3">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Total top-up revenue</p>
+                  <p className="mt-2 text-2xl font-bold">{loading ? '—' : formatPeso(topupStats.revenue)}</p>
+                </div>
+                <div className="rounded-xl border border-white/10 bg-white/5 p-3">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Credits sold</p>
+                  <p className="mt-2 text-xl font-bold">{loading ? '—' : formatNumber(topupStats.credits)}</p>
+                </div>
+                <div className="rounded-xl border border-white/10 bg-white/5 p-3">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Paid / Pending</p>
+                  <p className="mt-2 text-xl font-bold">
+                    {loading ? '—' : `${formatNumber(topupStats.paid)} / ${formatNumber(topupStats.pending)}`}
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-4 space-y-3 rounded-xl bg-white/5 p-3">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Paid by method</p>
+                {[
+                  { label: 'GCash', count: topupStats.gcash },
+                  { label: 'Maya', count: topupStats.maya },
+                ].map(method => {
+                  const pct = topupStats.paid ? Math.round((method.count / topupStats.paid) * 100) : 0;
+                  return (
+                    <div key={method.label}>
+                      <div className="flex items-center justify-between text-xs text-slate-300">
+                        <span>{method.label}</span>
+                        <span>{loading ? '—' : `${formatNumber(method.count)} · ${pct}%`}</span>
+                      </div>
+                      <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-white/10">
+                        <div className="h-full rounded-full bg-emerald-400" style={{ width: `${loading ? 0 : pct}%` }} />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
+          )}
+
           <div className="mt-4 flex items-start gap-2 rounded-xl bg-white/5 p-3 text-xs leading-relaxed text-slate-300">
-            <Clock className="mt-0.5 h-4 w-4 shrink-0 text-emerald-300" aria-hidden="true" />
-            <p>Metrics are totals only; this view does not invent historical chart data.</p>
+            <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-300" aria-hidden="true" />
+            <p>Only paid top-ups count toward revenue and credits sold.</p>
           </div>
         </aside>
+      </section>
+
+      <section className="mt-5 overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
+        <PanelHeader
+          icon={Wallet}
+          title="Recent top-ups"
+          description="The latest credit purchases on the platform"
+          count={loading ? '…' : recentTopups.length}
+          tone="text-emerald-700"
+        />
+        {loading ? (
+          <LoadingRows />
+        ) : topupError ? (
+          <div className="px-5 py-8 text-center text-sm text-slate-500">Top-up records are not available right now.</div>
+        ) : recentTopups.length === 0 ? (
+          <div className="px-5 py-8 text-center text-sm text-slate-500">No top-ups yet.</div>
+        ) : (
+          <ul className="divide-y divide-slate-100">
+            {recentTopups.map(topup => {
+              const member = relationOne(topup.user_profiles);
+              return (
+                <li key={topup.id} className="flex min-h-[68px] items-center gap-3 px-4 py-3 sm:px-5">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-sm font-bold text-emerald-800">
+                    {(member?.full_name || 'M').trim().charAt(0).toUpperCase()}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-semibold text-slate-800">{member?.full_name || 'Unknown member'}</span>
+                    <span className="mt-1 block truncate text-xs text-slate-500">
+                      {methodLabel(topup.payment_method)} · {formatDate(topup.created_at)}
+                    </span>
+                  </span>
+                  <span className="hidden shrink-0 text-right sm:block">
+                    <span className="block text-sm font-bold text-slate-800">{formatPeso(topup.amount_php)}</span>
+                    <span className="mt-1 block text-xs font-medium text-slate-500">+{formatNumber(topup.credits_added)} credits</span>
+                  </span>
+                  <span className={`inline-flex shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ring-1 ring-inset ${topupStatusTone(topup.status)}`}>
+                    {topup.status || 'unknown'}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+        <div className="border-t border-slate-100 px-4 py-3 text-[11px] font-medium text-slate-400 sm:px-5">
+          Showing the 5 most recent top-ups, including pending ones
+        </div>
       </section>
 
       <DetailModal record={selectedRecord} onClose={closeDetails} />

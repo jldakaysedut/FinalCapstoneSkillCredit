@@ -178,13 +178,7 @@ export default function PublicProfile() {
                   </div>
                 )}
               </div>
-              <button
-                onClick={() => {
-                  if (userSkills.length > 0) navigate(`/skill/${userSkills[0].id}`);
-                  else alert('This user has no active skill listings to book yet.');
-                }}
-                className="w-full bg-emerald-700 hover:bg-emerald-800 text-white py-2.5 rounded-xl font-bold text-[12px] transition shadow-sm flex items-center justify-center gap-1.5"
-              ><CalendarPlus className="h-4 w-4" />Book a Session</button>
+             
             </div>
 
             <div className="grid grid-cols-2 gap-2">
