@@ -2,7 +2,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-skillcredit-client",
 };
 
 const json = (body: unknown, status = 200) =>
@@ -38,9 +38,19 @@ Deno.serve(async (req) => {
       .split(",")
       .map((s) => s.trim())
       .filter(Boolean);
-    const origin = req.headers.get("origin") ?? "";
-    if (!allowed.includes(origin)) {
+    const requestOrigin = req.headers.get("origin") ?? "";
+    const isMobile = !requestOrigin && req.headers.get("x-skillcredit-client") === "mobile";
+    // Browser requests still require an exact allowlisted origin.
+    // Expo native fetch normally has no browser Origin header. Use an existing
+    // trusted HTTPS Web origin for PayMongo's success/cancel redirect URLs.
+    if (!isMobile && !allowed.includes(requestOrigin)) {
       return json({ error: "Origin not allowed" }, 403);
+    }
+    const origin = isMobile
+      ? allowed.find((entry) => entry.startsWith("https://"))
+      : requestOrigin;
+    if (!origin) {
+      return json({ error: "Mobile checkout requires an HTTPS site in ALLOWED_ORIGINS" }, 500);
     }
 
     // 3. Check the amount
@@ -118,7 +128,7 @@ Deno.serve(async (req) => {
       .update({ paymongo_checkout_id: body.data.id })
       .eq("id", tx.id);
 
-    return json({ checkout_url: body.data.attributes.checkout_url });
+    return json({ checkout_url: body.data.attributes.checkout_url, transaction_id: tx.id });
   } catch (e) {
     return json({ error: String(e) }, 500);
   }
