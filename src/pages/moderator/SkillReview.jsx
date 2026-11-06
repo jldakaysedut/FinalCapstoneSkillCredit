@@ -1,3 +1,4 @@
+import { confirmDialog } from '../../components/confirmDialog';
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import supabase from '../../supabaseClient';
@@ -45,7 +46,7 @@ export default function SkillReview() {
       const { data: { user } } = await supabase.auth.getUser();
       setCurrentUser(user);
 
-      // Explicit foreign keys para walang Ambiguous Relationship error
+      // Explicit foreign keys para walang Ambiguous Relationship error[cite: 10]
       const { data, error } = await supabase
         .from('skills')
         .select(`
@@ -70,7 +71,7 @@ export default function SkillReview() {
   const handleClaim = async () => {
     setProcessing(true);
     try {
-      // Dinagdagan natin ng .select() para ma-verify kung pumasok talaga ang update
+      // Dinagdagan natin ng .select() para ma-verify kung pumasok talaga ang update[cite: 10]
       const { data, error } = await supabase
         .from('skills')
         .update({ assigned_to: currentUser.id })
@@ -79,7 +80,7 @@ export default function SkillReview() {
         
       if (error) throw error;
       
-      // Kapag walang error pero walang nabago, RLS ang may kasalanan
+      // Kapag walang error pero walang nabago, RLS ang may kasalanan[cite: 10]
       if (!data || data.length === 0) {
         throw new Error("Supabase RLS blocked the update. Check your database policies.");
       }
@@ -94,7 +95,7 @@ export default function SkillReview() {
   };
 
   const handleApprove = async () => {
-    if (!window.confirm('Approve this skill to be published on the platform?')) return;
+    if (!await confirmDialog('Approve this skill to be published on the platform?')) return;
     setProcessing(true);
     try {
       const { error } = await supabase
@@ -104,11 +105,20 @@ export default function SkillReview() {
         
       if (error) throw error;
 
+      // 🚨 IDINAGDAG NATIN PARA SA MOD LOGS
+      await supabase.from('mod_logs').insert({
+        moderator_id: currentUser.id,
+        target_user_id: skill.instructor_id,
+        action_type: 'SKILL_REVIEW',
+        details: `Approved skill listing: "${skill.title}"`,
+        reference_id: id
+      });
+
       await supabase.from('notifications').insert([{
         user_id: skill.instructor_id,
         type: 'report_updated',
         content: `Moderator Update: Your skill listing "${skill.title}" has been APPROVED and is now live!`,
-        link_url: `/my-listings?highlight=${id}` // 🚨 DINAGDAGAN NG HIGHLIGHT PARAM
+        link_url: `/my-listings?highlight=${id}` // 🚨 DINAGDAGAN NG HIGHLIGHT PARAM[cite: 10]
       }]);
 
       alert('Skill successfully approved!');
@@ -137,11 +147,20 @@ export default function SkillReview() {
         
       if (error) throw error;
 
+      // 🚨 IDINAGDAG NATIN PARA SA MOD LOGS
+      await supabase.from('mod_logs').insert({
+        moderator_id: currentUser.id,
+        target_user_id: skill.instructor_id,
+        action_type: 'SKILL_REVIEW',
+        details: `Rejected skill listing: "${skill.title}". Reason: ${rejectReason}`,
+        reference_id: id
+      });
+
       await supabase.from('notifications').insert([{
         user_id: skill.instructor_id,
         type: 'account_warning',
         content: `Moderator Update: Your skill listing "${skill.title}" was REJECTED. Reason: ${rejectReason}`,
-        link_url: `/my-listings?highlight=${id}` // 🚨 DINAGDAGAN NG HIGHLIGHT PARAM
+        link_url: `/my-listings?highlight=${id}` // 🚨 DINAGDAGAN NG HIGHLIGHT PARAM[cite: 10]
       }]);
 
       alert('Skill has been rejected and the instructor has been notified.');

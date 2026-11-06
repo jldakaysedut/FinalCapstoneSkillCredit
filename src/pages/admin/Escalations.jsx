@@ -1,388 +1,722 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import supabase from '../../supabaseClient';
 import {
-  AlertOctagon,
-  Ban,
-  CalendarDays,
-  CheckCircle2,
-  FileText,
-  RefreshCw,
-  Search,
-  ShieldAlert,
-  UserRound,
-  X,
+  Search, ShieldCheck, UploadCloud, X, CalendarDays,
+  MessageSquareOff, AlertTriangle, Clock, Scale, ArrowRight,
+  Ban, RefreshCw, ShieldAlert
 } from 'lucide-react';
+
+const FOCUS_RING = 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2';
 
 const relation = value => Array.isArray(value) ? value[0] : value;
 
-const formatDate = value => {
-  if (!value) return 'Date unavailable';
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return 'Date unavailable';
-  return new Intl.DateTimeFormat(undefined, {
-    year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit',
-  }).format(date);
-};
-
-// ── NEW HELPER FOR CLUSTERED REPORTERS ──
-const formatReporters = (reporters) => {
-  if (!reporters || !reporters.length) return 'Unknown reporter';
-  if (reporters.length === 1) return reporters[0];
-  
-  // Kapag 2 pataas ang nag-report, ito na ang lalabas:
-  return `Multiple users (${reporters.length})`; 
-};
-
-function StatusBadge({ banned, unknown = false }) {
-  if (unknown) {
-    return <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-slate-600 ring-1 ring-inset ring-slate-200">Unlinked</span>;
-  }
-  return banned ? (
-    <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-rose-700 ring-1 ring-inset ring-rose-100"><Ban className="h-3 w-3" /> Banned</span>
-  ) : (
-    <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-amber-800 ring-1 ring-inset ring-amber-100"><ShieldAlert className="h-3 w-3" /> At risk</span>
-  );
-}
-
-function EscalationModal({ issue, action, saving, error, onClose, onConfirm, onRequestAction }) {
-  const reportedUser = relation(issue.reported_user);
-  const isBanAction = action === 'ban';
-
-  useEffect(() => {
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    const onKeyDown = event => { if (event.key === 'Escape' && !saving) onClose(); };
-    window.addEventListener('keydown', onKeyDown);
-    return () => {
-      document.body.style.overflow = previousOverflow;
-      window.removeEventListener('keydown', onKeyDown);
-    };
-  }, [onClose, saving]);
-
-  const isDetails = action === 'details';
-  const title = isDetails ? 'Escalation details' : isBanAction ? 'Enforce account ban?' : 'Resolve this escalation?';
-
-  return (
-    <div
-      className="fixed inset-0 z-[100] flex items-end justify-center bg-slate-950/45 p-0 backdrop-blur-sm sm:items-center sm:p-5"
-      onMouseDown={event => { if (event.target === event.currentTarget && !saving) onClose(); }}
-    >
-      <section role="dialog" aria-modal="true" aria-labelledby="escalation-modal-title" className="max-h-[calc(100dvh-1rem)] w-full overflow-y-auto rounded-t-3xl border border-slate-200 bg-white shadow-2xl sm:max-h-[calc(100dvh-2.5rem)] sm:max-w-lg sm:rounded-3xl">
-        <header className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-slate-100 bg-white/95 px-5 py-4 backdrop-blur sm:px-6">
-          <div>
-            <p className={`text-[10px] font-bold uppercase tracking-[0.16em] ${isBanAction ? 'text-rose-700' : 'text-emerald-700'}`}>{isDetails ? 'Priority review' : 'Confirmation required'}</p>
-            <h2 id="escalation-modal-title" className="mt-1 text-lg font-bold tracking-tight text-slate-950">{title}</h2>
-          </div>
-          <button type="button" onClick={onClose} disabled={saving} aria-label="Close dialog" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-slate-500 transition hover:bg-slate-100 disabled:opacity-50"><X className="h-5 w-5" /></button>
-        </header>
-
-        <div className="space-y-4 p-5 sm:p-6">
-          {isDetails ? (
-            <>
-              <div className="rounded-2xl border border-rose-100 bg-rose-50/70 p-4">
-                <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-rose-700">Report reason</p>
-                <p className="mt-2 break-words text-sm font-semibold leading-relaxed text-slate-900">{issue.reason || 'Reason not provided'}</p>
-              </div>
-              <dl className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <div className="rounded-xl border border-slate-200 p-3"><dt className="flex items-center gap-2 text-[11px] font-semibold text-slate-500"><CalendarDays className="h-3.5 w-3.5" /> Escalated</dt><dd className="mt-1 text-sm font-medium text-slate-900">{formatDate(issue.created_at)}</dd></div>
-                
-                {/* ── UPDATED REPORTER DISPLAY ── */}
-                <div className="rounded-xl border border-slate-200 p-3">
-                  <dt className="flex items-center gap-2 text-[11px] font-semibold text-slate-500"><UserRound className="h-3.5 w-3.5" /> Reported by</dt>
-                  <dd className="mt-1 break-words text-sm font-medium text-slate-900">{formatReporters(issue.all_reporters)}</dd>
-                </div>
-                
-                <div className="rounded-xl border border-slate-200 p-3 sm:col-span-2"><dt className="text-[11px] font-semibold text-slate-500">Reported account</dt><dd className="mt-1 flex flex-wrap items-center justify-between gap-2"><span className="break-words text-sm font-bold text-slate-900">{reportedUser?.full_name || 'Unknown user'}</span><StatusBadge banned={reportedUser?.is_banned} unknown={typeof reportedUser?.is_banned !== 'boolean'} /></dd></div>
-                <div className="min-w-0 rounded-xl border border-slate-200 p-3 sm:col-span-2"><dt className="text-[11px] font-semibold text-slate-500">Cluster ID (Reference)</dt><dd className="mt-1 break-all font-mono text-xs text-slate-700">{issue.reference_id || issue.id}</dd></div>
-              </dl>
-              <div className="flex flex-col-reverse gap-2 border-t border-slate-100 pt-4 sm:flex-row sm:justify-end">
-                <button type="button" onClick={onClose} className="min-h-11 rounded-xl border border-slate-200 px-5 text-sm font-semibold text-slate-700 hover:bg-slate-50">Close</button>
-                <button type="button" onClick={() => onRequestAction('resolve')} className="min-h-11 rounded-xl bg-slate-900 px-5 text-sm font-bold text-white hover:bg-slate-700">Dismiss / Resolve</button>
-                {!reportedUser?.is_banned && reportedUser?.id && <button type="button" onClick={() => onRequestAction('ban')} className="min-h-11 rounded-xl bg-rose-700 px-5 text-sm font-bold text-white hover:bg-rose-800">Enforce ban</button>}
-              </div>
-            </>
-          ) : (
-            <>
-              <div className={`rounded-2xl border p-4 ${isBanAction ? 'border-rose-100 bg-rose-50' : 'border-slate-200 bg-slate-50'}`}>
-                <p className="text-sm leading-relaxed text-slate-800">
-                  {isBanAction
-                    ? <>This will set the account for <span className="font-bold">{reportedUser?.full_name || 'this user'}</span> to banned and resolve {issue.clustered_ids.length > 1 ? `all ${issue.clustered_ids.length} related reports` : 'this report'}.</>
-                    : <>Mark {issue.clustered_ids.length > 1 ? `all ${issue.clustered_ids.length} related reports` : 'the report'} about <span className="font-bold">{reportedUser?.full_name || 'this user'}</span> as resolved?</>}
-                </p>
-                <p className="mt-2 break-words text-xs text-slate-500">{issue.reason || 'Reason not provided'}</p>
-              </div>
-              {error && <p role="alert" className="text-xs font-semibold text-rose-700">{error}</p>}
-              <div className="flex flex-col-reverse gap-2 border-t border-slate-100 pt-4 sm:flex-row sm:justify-end">
-                <button type="button" onClick={onClose} disabled={saving} className="min-h-11 rounded-xl border border-slate-200 px-5 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50">Cancel</button>
-                <button type="button" onClick={() => onConfirm(action)} disabled={saving} className={`min-h-11 rounded-xl px-5 text-sm font-bold text-white disabled:cursor-wait disabled:opacity-60 ${isBanAction ? 'bg-rose-700 hover:bg-rose-800' : 'bg-slate-900 hover:bg-slate-700'}`}>
-                  {saving ? 'Working…' : isBanAction ? 'Confirm ban' : 'Confirm resolution'}
-                </button>
-              </div>
-            </>
-          )}
-        </div>
-      </section>
-    </div>
-  );
-}
-
 export default function Escalations() {
-  const [escalated, setEscalated] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [adminUser, setAdminUser] = useState(null);
-  const [activeIssue, setActiveIssue] = useState(null);
-  const [saving, setSaving] = useState(false);
-  const [actionError, setActionError] = useState('');
-  const [notice, setNotice] = useState('');
+  const [escalations, setEscalations] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [currentAdminId, setCurrentAdminId] = useState(null);
 
+  const [activeTabFilter, setActiveTabFilter] = useState('ALL'); // 'ALL', 'pending', 'admin_banned'
+  const [manageModal, setManageModal] = useState({ isOpen: false, item: null });
+  const [historyModal, setHistoryModal] = useState({ isOpen: false, user: null, logs: [], loading: false });
+  const [confirmModal, setConfirmModal] = useState({ isOpen: false, item: null, note: '' });
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [notice, setNotice] = useState('');
+
+  // Fetch all escalations with user profile details
   const fetchEscalations = useCallback(async () => {
     setLoading(true);
-    // Added reference_id to select query for clustering
+    const { data: { user } } = await supabase.auth.getUser();
+    setCurrentAdminId(user?.id);
+
     const { data, error } = await supabase
-      .from('reports')
-      .select('id, status, reason, created_at, reference_id, reporter:user_profiles!reports_reporter_id_fkey(full_name), reported_user:user_profiles!reports_reported_user_id_fkey(id, full_name, is_banned)')
-      .eq('status', 'escalated')
+      .from('admin_escalations')
+      .select(`
+        id,
+        status,
+        created_at,
+        updated_at,
+        repeat_offender_id,
+        moderator_id,
+        admin_id,
+        repeat_offender:repeat_offenders(
+          id,
+          user_id,
+          user_profiles:user_id(
+            id,
+            full_name,
+            avatar_url,
+            role,
+            is_banned,
+            violation_count
+          )
+        ),
+        moderator:user_profiles!admin_escalations_moderator_id_fkey(
+          full_name
+        )
+      `)
       .order('created_at', { ascending: false });
-      
-    if (error) {
-      console.error("Error fetching escalations:", error);
-    } else if (data) {
-      // ── CLUSTERING LOGIC ──
-      const grouped = {};
-      data.forEach(report => {
-        // Group by reference_id (or its own ID if none exists)
-        const key = report.reference_id || report.id;
-        
-        if (!grouped[key]) {
-          grouped[key] = { 
-            ...report, 
-            clustered_ids: [report.id], 
-            all_reporters: [relation(report.reporter)?.full_name].filter(Boolean) 
-          };
-        } else {
-          // Push to cluster IDs
-          grouped[key].clustered_ids.push(report.id);
-          
-          // Push unique reporter names
-          const rName = relation(report.reporter)?.full_name;
-          if (rName && !grouped[key].all_reporters.includes(rName)) {
-             grouped[key].all_reporters.push(rName);
-          }
-        }
-      });
-      setEscalated(Object.values(grouped));
+
+    if (!error && data) {
+      setEscalations(data);
+    } else if (error) {
+      console.error('Error fetching admin_escalations:', error);
     }
     setLoading(false);
-    return error;
   }, []);
 
   useEffect(() => {
-    let isMounted = true;
-    const initialize = async () => {
-      const { data } = await supabase.auth.getUser();
-      if (isMounted) setAdminUser(data?.user || null);
-      await fetchEscalations();
+    fetchEscalations();
+
+    const channel = supabase
+      .channel('admin_escalations_realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'admin_escalations' },
+        () => fetchEscalations()
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
     };
-    initialize();
-    return () => { isMounted = false; };
   }, [fetchEscalations]);
 
-  const logAction = async (targetUserId, type, details) => {
-    if (!adminUser) return;
-    await supabase.from('admin_logs').insert({
-      admin_id: adminUser.id,
-      target_user_id: targetUserId,
-      action_type: type,
-      details,
-    });
+  // Helper to extract target user profile
+  const getTargetUser = (item) => {
+    const offenderRelation = relation(item?.repeat_offender);
+    return relation(offenderRelation?.user_profiles) || null;
   };
 
-  const closeIssueModal = useCallback(() => {
-    if (saving) return;
-    setActiveIssue(null);
-    setActionError('');
-  }, [saving]);
+  // Open Active Reports History modal
+  const handleOpenHistoryModal = async (targetUser) => {
+    setManageModal({ isOpen: false, item: null });
+    setHistoryModal({ isOpen: true, user: targetUser, logs: [], loading: true });
 
-  const handleConfirmAction = async action => {
-    const issue = activeIssue?.issue;
-    if (!issue || saving) return;
-    const reportedUser = relation(issue.reported_user);
-    setSaving(true);
-    setActionError('');
-    setNotice('');
+    if (targetUser?.id) {
+      const { data, error } = await supabase
+        .from('reports')
+        .select('id, created_at, reason, details, status, reference_type')
+        .eq('reported_user_id', targetUser.id)
+        .order('created_at', { ascending: false });
 
-    if (action === 'ban') {
-      if (!reportedUser?.id) {
-        setActionError('This report has no linked user account, so a ban cannot be applied.');
-        setSaving(false);
-        return;
-      }
-      const { error: banError } = await supabase.from('user_profiles').update({ is_banned: true }).eq('id', reportedUser.id);
-      if (banError) {
-        setActionError('The account could not be banned. Please try again.');
-        setSaving(false);
-        return;
-      }
-      
-      // Update ALL clustered reports to resolved
-      const { error: reportError } = await supabase.from('reports').update({ status: 'resolved' }).in('id', issue.clustered_ids);
-      
-      await logAction(reportedUser.id, 'ENFORCE_BAN', `Admin enforced permanent ban on ${reportedUser.full_name || 'user'} from escalation.`);
-      
-      if (reportError) {
-        setEscalated(current => current.map(item => item.id === issue.id ? { ...item, reported_user: { ...reportedUser, is_banned: true } } : item));
-        setNotice('The account was banned, but the reports could not be marked resolved. Refresh and review again.');
+      if (!error && data) {
+        setHistoryModal({ isOpen: true, user: targetUser, logs: data, loading: false });
       } else {
-        setEscalated(current => current.filter(item => item.id !== issue.id));
-        setNotice(`${reportedUser.full_name || 'The user'} was banned and ${issue.clustered_ids.length} linked reports were resolved.`);
+        setHistoryModal(prev => ({ ...prev, loading: false }));
       }
-      setActiveIssue(null);
-      setSaving(false);
-      return;
+    } else {
+      setHistoryModal(prev => ({ ...prev, loading: false }));
     }
-
-    // Update ALL clustered reports to resolved
-    const { error } = await supabase.from('reports').update({ status: 'resolved' }).in('id', issue.clustered_ids);
-    if (error) {
-      setActionError('The escalation could not be resolved. Please try again.');
-      setSaving(false);
-      return;
-    }
-    setEscalated(current => current.filter(item => item.id !== issue.id));
-    await logAction(reportedUser?.id, 'RESOLVE_ESCALATION', `Admin resolved escalation regarding ${reportedUser?.full_name || 'user'}.`);
-    setActiveIssue(null);
-    setSaving(false);
-    setNotice(`Escalation marked as resolved (${issue.clustered_ids.length} linked tickets closed).`);
   };
 
+  // Handle Permanent Ban confirmation
+  const confirmBan = async () => {
+    setIsProcessing(true);
+    const item = confirmModal.item;
+    const targetUser = getTargetUser(item);
+
+    if (!targetUser?.id) {
+      alert('Target user ID not found.');
+      setIsProcessing(false);
+      return;
+    }
+
+    try {
+      // 1. Update user_profiles table -> is_banned = true
+      const { error: banErr } = await supabase
+        .from('user_profiles')
+        .update({ is_banned: true })
+        .eq('id', targetUser.id);
+
+      if (banErr) throw banErr;
+
+      // 2. Update admin_escalations status = 'admin_banned'
+      const { error: escErr } = await supabase
+        .from('admin_escalations')
+        .update({
+          status: 'admin_banned',
+          admin_id: currentAdminId,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', item.id);
+
+      if (escErr) throw escErr;
+
+      // 3. Log action & send notification
+      if (currentAdminId) {
+        await supabase.from('admin_logs').insert([{
+          admin_id: currentAdminId,
+          target_user_id: targetUser.id,
+          action_type: 'ENFORCE_BAN',
+          details: `Admin enforced permanent ban on ${targetUser.full_name}.\nNotes: ${confirmModal.note.trim() || 'No notes provided'}`
+        }]);
+      }
+
+      await supabase.from('notifications').insert([{
+        user_id: targetUser.id,
+        type: 'account_banned',
+        content: `Your account has been permanently banned by an Administrator following escalation review.`
+      }]);
+
+      setEscalations(prev => prev.map(e => {
+        if (e.id === item.id) {
+          const offender = relation(e.repeat_offender);
+          const profile = relation(offender?.user_profiles);
+          return {
+            ...e,
+            status: 'admin_banned',
+            repeat_offender: {
+              ...offender,
+              user_profiles: { ...profile, is_banned: true }
+            }
+          };
+        }
+        return e;
+      }));
+
+      setNotice(`Successfully banned ${targetUser.full_name} and updated status to admin_banned.`);
+      setConfirmModal({ isOpen: false, item: null, note: '' });
+    } catch (err) {
+      console.error(err);
+      alert('Error enforcing ban: ' + err.message);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  // Summary statistics
+  const stats = useMemo(() => {
+    const total = escalations.length;
+    const pending = escalations.filter(e => e.status === 'pending').length;
+    const banned = escalations.filter(e => e.status === 'admin_banned').length;
+
+    return { total, pending, banned };
+  }, [escalations]);
+
+  // Filtered escalations list
   const filteredEscalations = useMemo(() => {
-    const query = searchQuery.trim().toLowerCase();
-    if (!query) return escalated;
-    return escalated.filter(issue => {
-      const reportedUser = relation(issue.reported_user);
-      return String(issue.reason || '').toLowerCase().includes(query)
-        || String(reportedUser?.full_name || '').toLowerCase().includes(query)
-        || issue.all_reporters?.some(r => r.toLowerCase().includes(query));
-    });
-  }, [escalated, searchQuery]);
+    return escalations.filter(item => {
+      if (activeTabFilter !== 'ALL' && item.status !== activeTabFilter) return false;
 
-  const renderActions = issue => {
-    const reportedUser = relation(issue.reported_user);
-    return (
-      <div className="flex flex-wrap items-center gap-2">
-        <button type="button" onClick={() => { setActionError(''); setActiveIssue({ issue, action: 'details' }); }} className="min-h-10 flex-1 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 sm:flex-none">Details</button>
-        <button type="button" onClick={() => { setActionError(''); setActiveIssue({ issue, action: 'resolve' }); }} className="min-h-10 flex-1 rounded-xl border border-slate-200 bg-slate-100 px-3 text-xs font-bold text-slate-700 transition hover:bg-slate-900 hover:text-white sm:flex-none">Resolve</button>
-        <button type="button" disabled={Boolean(reportedUser?.is_banned) || !reportedUser?.id} onClick={() => { setActionError(''); setActiveIssue({ issue, action: 'ban' }); }} className="min-h-10 flex-1 rounded-xl border border-rose-100 bg-rose-50 px-3 text-xs font-bold text-rose-700 transition hover:bg-rose-700 hover:text-white disabled:cursor-not-allowed disabled:opacity-50 sm:flex-none">{reportedUser?.is_banned ? 'Already banned' : 'Enforce ban'}</button>
-      </div>
-    );
-  };
+      const targetUser = getTargetUser(item);
+      const modUser = relation(item.moderator);
+      const query = searchQuery.toLowerCase();
+
+      const userName = targetUser?.full_name?.toLowerCase() || '';
+      const modName = modUser?.full_name?.toLowerCase() || '';
+      const itemId = item.id.toLowerCase();
+
+      return userName.includes(query) || modName.includes(query) || itemId.includes(query);
+    });
+  }, [escalations, searchQuery, activeTabFilter]);
+
+  // Active reports formatting
+  const validHistoryLogs = historyModal.logs
+    .filter(log => !log.details?.toUpperCase().includes('DISMISS'))
+    .sort((a, b) => {
+      const isAEscape = a.reason === 'Repeat Offender Threshold Reached';
+      const isBEscape = b.reason === 'Repeat Offender Threshold Reached';
+      if (isAEscape && !isBEscape) return -1;
+      if (!isAEscape && isBEscape) return 1;
+      return new Date(b.created_at) - new Date(a.created_at);
+    });
+
+  const strikeReportsCount = validHistoryLogs.filter(
+    log => log.reason !== 'Repeat Offender Threshold Reached'
+  );
 
   return (
-    <main className="mx-auto w-full max-w-[1440px] px-4 py-5 sm:px-6 sm:py-7 lg:px-8">
-      <header className="mb-6 flex flex-col gap-4 sm:mb-8 sm:flex-row sm:items-end sm:justify-between">
-        <div className="min-w-0">
-          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-rose-700">Admin workspace</p>
-          <h1 className="mt-1 flex items-center gap-2 text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl"><AlertOctagon className="h-6 w-6 shrink-0 text-rose-600" aria-hidden="true" /> Escalations</h1>
-          <p className="mt-1 max-w-2xl text-sm leading-relaxed text-slate-500">Review high-priority issues and disputes escalated by moderators.</p>
+    <div className="max-w-5xl mx-auto space-y-6 font-sans text-gray-700">
+
+      {/* ── PAGE HEADER ── */}
+      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight text-gray-900">Admin escalations queue</h1>
+          <p className="mt-1 max-w-xl text-sm text-gray-500">
+            Review severe user accounts escalated by moderators for final disciplinary action or ban enforcement.
+          </p>
         </div>
-        <button type="button" onClick={fetchEscalations} disabled={loading} className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:opacity-60 sm:w-auto">
-          <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} aria-hidden="true" /> {loading ? 'Refreshing' : 'Refresh queue'}
+        <button
+          type="button"
+          onClick={fetchEscalations}
+          disabled={loading}
+          className={`inline-flex items-center justify-center gap-2 self-start rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-[13px] font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50 disabled:opacity-60 sm:self-auto ${FOCUS_RING}`}
+        >
+          <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} aria-hidden="true" />
+          {loading ? 'Refreshing' : 'Refresh queue'}
         </button>
-      </header>
+      </div>
 
-      {notice && <div role="status" className="mb-4 flex items-start justify-between gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800"><span>{notice}</span><button type="button" onClick={() => setNotice('')} aria-label="Dismiss message" className="shrink-0 rounded-md p-0.5 hover:bg-emerald-100"><X className="h-4 w-4" /></button></div>}
-
-      <section className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
-        <div className="flex flex-col gap-3 border-b border-slate-100 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
-          <div className="flex items-center gap-3">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-rose-50 text-rose-700"><ShieldAlert className="h-5 w-5" /></span>
-            <div><h2 className="text-sm font-bold text-slate-950">Priority review queue</h2><p className="mt-0.5 text-xs text-slate-500">{loading ? 'Loading escalations…' : `${filteredEscalations.length} case${filteredEscalations.length !== 1 ? 's' : ''} pending review`}</p></div>
-          </div>
-          <label className="flex min-h-11 min-w-0 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 transition focus-within:border-emerald-500 focus-within:ring-4 focus-within:ring-emerald-100 sm:w-[min(100%,360px)]">
-            <Search className="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" /><span className="sr-only">Search escalations</span>
-            <input type="search" value={searchQuery} onChange={event => setSearchQuery(event.target.value)} placeholder="Search reason or user" className="min-w-0 flex-1 bg-transparent text-sm text-slate-800 outline-none placeholder:text-slate-400" />
-          </label>
+      {/* ── NOTICE ALERT ── */}
+      {notice && (
+        <div role="status" className="flex items-start justify-between gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800 animate-in fade-in">
+          <span>{notice}</span>
+          <button type="button" onClick={() => setNotice('')} aria-label="Dismiss notice" className="shrink-0 rounded-md p-0.5 text-emerald-700 hover:bg-emerald-100">
+            <X className="h-4 w-4" />
+          </button>
         </div>
-
-        {loading ? (
-          <div className="space-y-3 p-4" aria-label="Loading escalations">{[1, 2, 3].map(item => <div key={item} className="h-32 animate-pulse rounded-xl bg-slate-100" />)}</div>
-        ) : filteredEscalations.length === 0 ? (
-          <div className="px-5 py-14 text-center">
-            <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600"><CheckCircle2 className="h-6 w-6" /></span>
-            <h3 className="mt-3 text-sm font-bold text-slate-900">{escalated.length ? 'No matching escalations' : 'No pending escalations'}</h3>
-            <p className="mt-1 text-xs text-slate-500">{escalated.length ? 'Try another search term.' : 'There are no escalated reports to review right now.'}</p>
-          </div>
-        ) : (
-          <>
-            <ul className="divide-y divide-slate-100 lg:hidden">
-              {filteredEscalations.map(issue => {
-                const reportedUser = relation(issue.reported_user);
-                return (
-                  <li key={issue.id} className="space-y-3 p-4">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <p className="break-words text-sm font-bold leading-snug text-slate-900">{issue.reason || 'Reason not provided'}</p>
-                          {issue.clustered_ids.length > 1 && <span className="bg-rose-100 text-rose-700 text-[10px] font-bold px-2 py-0.5 rounded-full">{issue.clustered_ids.length} linked</span>}
-                        </div>
-                        <p className="text-xs text-slate-500">Reported by {formatReporters(issue.all_reporters)}</p>
-                      </div>
-                      <StatusBadge banned={reportedUser?.is_banned} unknown={typeof reportedUser?.is_banned !== 'boolean'} />
-                    </div>
-                    <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-slate-50 px-3 py-2.5">
-                      <span className="flex min-w-0 items-center gap-1.5 text-xs font-semibold text-slate-700"><UserRound className="h-3.5 w-3.5 shrink-0 text-slate-400" /><span className="truncate">{reportedUser?.full_name || 'Unknown user'}</span></span>
-                      <time className="flex shrink-0 items-center gap-1.5 text-[11px] text-slate-500"><CalendarDays className="h-3.5 w-3.5" />{formatDate(issue.created_at)}</time>
-                    </div>
-                    {renderActions(issue)}
-                  </li>
-                );
-              })}
-            </ul>
-            <div className="hidden overflow-x-auto lg:block">
-              <table className="w-full min-w-[1040px] border-collapse text-left">
-                <thead><tr className="border-b border-slate-100 bg-slate-50/70"><th className="px-5 py-3 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">Date escalated</th><th className="px-5 py-3 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">Report details</th><th className="px-5 py-3 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">Target user</th><th className="px-5 py-3 text-right text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">Admin actions</th></tr></thead>
-                <tbody className="divide-y divide-slate-100">
-                  {filteredEscalations.map(issue => {
-                    const reportedUser = relation(issue.reported_user);
-                    return (
-                      <tr key={issue.id} className="align-top transition hover:bg-slate-50/60">
-                        <td className="whitespace-nowrap px-5 py-4 text-xs text-slate-500">{formatDate(issue.created_at)}</td>
-                        <td className="max-w-[420px] px-5 py-4">
-                          <div className="flex items-start gap-2.5">
-                            <FileText className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" />
-                            <div className="min-w-0">
-                              <div className="flex items-center gap-2 mb-1">
-                                <p className="line-clamp-2 text-sm font-semibold leading-relaxed text-slate-800">{issue.reason || 'Reason not provided'}</p>
-                                {issue.clustered_ids.length > 1 && <span className="shrink-0 bg-rose-100 text-rose-700 text-[10px] font-bold px-2 py-0.5 rounded-full">{issue.clustered_ids.length} linked</span>}
-                              </div>
-                              <p className="text-xs text-slate-500">Reported by {formatReporters(issue.all_reporters)}</p>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-5 py-4"><p className="text-sm font-bold text-slate-900">{reportedUser?.full_name || 'Unknown user'}</p><div className="mt-2"><StatusBadge banned={reportedUser?.is_banned} unknown={typeof reportedUser?.is_banned !== 'boolean'} /></div></td>
-                        <td className="px-5 py-4"><div className="flex justify-end">{renderActions(issue)}</div></td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </>
-        )}
-      </section>
-
-      {activeIssue && (
-        <EscalationModal
-          issue={activeIssue.issue}
-          action={activeIssue.action}
-          saving={saving}
-          error={actionError}
-          onClose={closeIssueModal}
-          onConfirm={() => handleConfirmAction(activeIssue.action)}
-          onRequestAction={action => { setActiveIssue(current => current ? { ...current, action } : current); setActionError(''); }}
-        />
       )}
-    </main>
+
+      {/* ── SUMMARY CARDS ── */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <button
+          type="button"
+          onClick={() => setActiveTabFilter('ALL')}
+          className={`rounded-2xl border p-5 text-left transition-all ${FOCUS_RING} ${
+            activeTabFilter === 'ALL'
+              ? 'border-2 border-emerald-500 bg-emerald-50/40 shadow-sm'
+              : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50'
+          }`}
+        >
+          <p className={`text-[13px] font-semibold ${activeTabFilter === 'ALL' ? 'text-emerald-800' : 'text-gray-600'}`}>All Escalations</p>
+          <p className={`mt-2 text-3xl font-bold ${activeTabFilter === 'ALL' ? 'text-emerald-900' : 'text-gray-900'}`}>{stats.total}</p>
+          <p className={`mt-1 text-xs ${activeTabFilter === 'ALL' ? 'text-emerald-700' : 'text-gray-500'}`}>Entire escalations queue</p>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTabFilter('pending')}
+          className={`rounded-2xl border p-5 text-left transition-all ${FOCUS_RING} ${
+            activeTabFilter === 'pending'
+              ? 'border-2 border-emerald-500 bg-emerald-50/40 shadow-sm'
+              : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50'
+          }`}
+        >
+          <p className={`text-[13px] font-semibold ${activeTabFilter === 'pending' ? 'text-emerald-800' : 'text-gray-600'}`}>Pending Review</p>
+          <p className={`mt-2 text-3xl font-bold ${activeTabFilter === 'pending' ? 'text-emerald-900' : 'text-gray-900'}`}>{stats.pending}</p>
+          <p className={`mt-1 text-xs ${activeTabFilter === 'pending' ? 'text-emerald-700' : 'text-gray-500'}`}>Awaiting admin review</p>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTabFilter('admin_banned')}
+          className={`rounded-2xl border p-5 text-left transition-all ${FOCUS_RING} ${
+            activeTabFilter === 'admin_banned'
+              ? 'border-2 border-emerald-500 bg-emerald-50/40 shadow-sm'
+              : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50'
+          }`}
+        >
+          <p className={`text-[13px] font-semibold ${activeTabFilter === 'admin_banned' ? 'text-emerald-800' : 'text-gray-600'}`}>Admin Banned</p>
+          <p className={`mt-2 text-3xl font-bold ${activeTabFilter === 'admin_banned' ? 'text-emerald-900' : 'text-gray-900'}`}>{stats.banned}</p>
+          <p className={`mt-1 text-xs ${activeTabFilter === 'admin_banned' ? 'text-emerald-700' : 'text-gray-500'}`}>Permanently restricted</p>
+        </button>
+      </div>
+
+      {/* ── SEARCH BAR ── */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <label className="flex w-full items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 shadow-sm transition focus-within:border-emerald-400 focus-within:ring-2 focus-within:ring-emerald-100 sm:max-w-md">
+          <Search className="h-4 w-4 shrink-0 text-gray-400" aria-hidden="true" />
+          <input
+            type="text"
+            placeholder="Search by offender name, ID, or moderator"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="min-w-0 flex-1 bg-transparent text-sm font-medium text-gray-800 placeholder-gray-400 outline-none"
+          />
+          {searchQuery && (
+            <button onClick={() => setSearchQuery('')} aria-label="Clear search" className="rounded p-0.5 text-gray-300 hover:text-gray-600">
+              <X className="h-4 w-4" />
+            </button>
+          )}
+        </label>
+        {!loading && (
+          <div className="flex items-center gap-3">
+            {activeTabFilter !== 'ALL' && (
+              <button
+                type="button"
+                onClick={() => setActiveTabFilter('ALL')}
+                className="text-xs font-semibold text-emerald-700 hover:underline"
+              >
+                Reset filter ({activeTabFilter.toLowerCase()})
+              </button>
+            )}
+            <p className="text-xs text-gray-500" role="status">
+              Showing <span className="font-semibold tabular-nums text-gray-900">{filteredEscalations.length}</span> of <span className="tabular-nums">{escalations.length}</span> cases
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* ── TABLE LAYOUT ── */}
+      <div className="overflow-x-auto rounded-2xl border border-gray-200 bg-white shadow-sm">
+        <table className="min-w-full divide-y divide-gray-200 text-left text-sm">
+          <thead className="bg-gray-50">
+            <tr>
+              <th scope="col" className="px-6 py-4 font-semibold text-gray-600 text-xs uppercase tracking-wider">Offender</th>
+              <th scope="col" className="px-6 py-4 font-semibold text-gray-600 text-xs uppercase tracking-wider">Policy Strikes</th>
+              <th scope="col" className="px-6 py-4 font-semibold text-gray-600 text-xs uppercase tracking-wider">Queue Status</th>
+              <th scope="col" className="px-6 py-4 font-semibold text-gray-600 text-xs uppercase tracking-wider text-right">Action</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-100 bg-white">
+            {loading ? (
+              <tr>
+                <td colSpan="4" className="px-6 py-12 text-center text-sm text-gray-500 animate-pulse">
+                  Loading escalations queue...
+                </td>
+              </tr>
+            ) : filteredEscalations.length === 0 ? (
+              <tr>
+                <td colSpan="4" className="px-6 py-16 text-center">
+                  <span className="mx-auto flex h-11 w-11 items-center justify-center rounded-xl border border-emerald-100 bg-emerald-50 text-emerald-700">
+                    <ShieldCheck className="h-5 w-5" />
+                  </span>
+                  <p className="mt-3 text-sm font-semibold text-gray-900">No escalation tickets match this filter</p>
+                  <p className="mt-1 text-xs text-gray-500">Try switching your view above or clearing your search.</p>
+                </td>
+              </tr>
+            ) : (
+              filteredEscalations.map(item => {
+                const targetUser = getTargetUser(item);
+                const isBanned = targetUser?.is_banned || item.status === 'admin_banned';
+
+                return (
+                  <tr key={item.id} className="relative hover:bg-gray-50/50 transition-colors">
+                    <td className={`px-6 py-4 whitespace-nowrap border-l-4 ${isBanned ? 'border-l-rose-500' : 'border-l-amber-400'}`}>
+                      <div className="flex items-center gap-3">
+                        <span className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gray-100 text-xs font-bold text-gray-500 uppercase border border-gray-200">
+                          {targetUser?.avatar_url ? (
+                            <img src={targetUser.avatar_url} alt="" className="h-full w-full object-cover" />
+                          ) : (
+                            targetUser?.full_name?.charAt(0) || 'U'
+                          )}
+                        </span>
+                        <div>
+                          <p className="text-[15px] font-bold text-gray-900">{targetUser?.full_name || 'Unknown User'}</p>
+                          <div className="mt-0.5 flex items-center gap-2">
+                            <span className="inline-flex items-center rounded-md bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-gray-700">
+                              {targetUser?.role || 'User'}
+                            </span>
+                            <span className="text-[11px] text-gray-400 font-mono">#{targetUser?.id ? targetUser.id.split('-')[0] : item.id.split('-')[0]}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="inline-flex items-center gap-1.5 rounded-full border border-rose-100 bg-rose-50 px-3 py-1 text-xs font-bold text-rose-700">
+                        <span className="h-1.5 w-1.5 rounded-full bg-rose-500" aria-hidden="true"></span>
+                        {targetUser?.violation_count || 0} Strikes
+                      </span>
+                    </td>
+
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {isBanned ? (
+                        <span className="inline-flex items-center gap-1.5 rounded-md bg-rose-50 border border-rose-200 px-2.5 py-1 text-xs font-semibold text-rose-800">
+                          <Ban className="h-3.5 w-3.5" /> Admin Banned
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1.5 rounded-md bg-amber-50 border border-amber-200 px-2.5 py-1 text-xs font-semibold text-amber-800">
+                          <UploadCloud className="h-3.5 w-3.5 text-amber-600" /> Pending Review
+                        </span>
+                      )}
+                    </td>
+
+                    <td className="px-6 py-4 whitespace-nowrap text-right">
+                      <button
+                        type="button"
+                        onClick={() => setManageModal({ isOpen: true, item })}
+                        className={`inline-flex items-center gap-1.5 rounded-lg px-4 py-2 text-[13px] font-semibold shadow-sm transition ${
+                          !isBanned
+                            ? 'bg-emerald-700 text-white hover:bg-emerald-800'
+                            : 'text-gray-700 bg-gray-100 hover:bg-gray-200'
+                        } ${FOCUS_RING}`}
+                      >
+                        {!isBanned ? 'Manage user' : 'View record'} <ArrowRight className="h-4 w-4" />
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* ── UNIFIED MANAGE MODAL (Without Resolve button) ── */}
+      {manageModal.isOpen && manageModal.item && (() => {
+        const item = manageModal.item;
+        const targetUser = getTargetUser(item);
+        if (!targetUser) return null;
+
+        const isBanned = targetUser.is_banned || item.status === 'admin_banned';
+
+        return (
+          <div
+            role="dialog"
+            className="fixed inset-0 z-[700] flex items-center justify-center bg-gray-900/60 p-4 backdrop-blur-sm animate-in fade-in duration-200"
+            onClick={(e) => e.target === e.currentTarget && setManageModal({ isOpen: false, item: null })}
+          >
+            <div className="relative w-full max-w-sm rounded-2xl border border-gray-100 bg-white p-6 shadow-2xl">
+              <button
+                type="button"
+                onClick={() => setManageModal({ isOpen: false, item: null })}
+                className="absolute right-4 top-4 p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700 rounded-lg transition"
+              >
+                <X className="h-5 w-5" />
+              </button>
+
+              <div className="flex flex-col items-center text-center mt-4">
+                <span className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-full bg-emerald-100 text-xl font-bold text-emerald-800 border border-emerald-200 shadow-sm">
+                  {targetUser.avatar_url ? (
+                    <img src={targetUser.avatar_url} alt="" className="h-full w-full object-cover" />
+                  ) : (
+                    targetUser.full_name?.charAt(0)?.toUpperCase() || 'U'
+                  )}
+                </span>
+                <h3 className="mt-3 text-lg font-bold text-gray-900">{targetUser.full_name}</h3>
+                <p className="text-xs text-gray-500 uppercase tracking-wide font-medium mt-1 flex items-center justify-center gap-1.5">
+                  <span>{targetUser.role || 'User'}</span>
+                  <span className="text-gray-300">•</span>
+                  <span className="font-mono text-gray-400">#{targetUser.id.split('-')[0]}</span>
+                </p>
+
+                <div className="mt-5 w-full rounded-xl border border-gray-100 bg-gray-50 p-4 space-y-3 text-left">
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-gray-500 font-medium">Policy Strikes:</span>
+                    <span className="font-bold text-rose-600 px-2 py-0.5 bg-rose-100 rounded-md">{targetUser.violation_count || 0}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-gray-500 font-medium">Escalation Status:</span>
+                    <span className="font-semibold text-gray-900 capitalize">
+                      {isBanned ? 'Admin Banned' : 'Pending Review'}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="mt-6 w-full flex flex-col gap-2 border-t border-gray-100 pt-5">
+                  <button
+                    type="button"
+                    onClick={() => handleOpenHistoryModal(targetUser)}
+                    className="w-full flex items-center justify-center gap-2 rounded-xl bg-gray-100 py-3 text-[13px] font-semibold text-gray-700 hover:bg-gray-200 transition"
+                  >
+                    <Clock className="h-4 w-4" /> View Active Reports
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setManageModal({ isOpen: false, item: null });
+                      setConfirmModal({ isOpen: true, item, note: '' });
+                    }}
+                    disabled={isBanned}
+                    className={`w-full flex items-center justify-center gap-2 rounded-xl border py-3 text-[13px] font-semibold transition ${
+                      isBanned
+                        ? 'border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed'
+                        : 'border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100'
+                    }`}
+                  >
+                    <Ban className="h-4 w-4" /> {isBanned ? 'Already Banned' : 'Enforce Permanent Ban'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* ── ACTIVE REPORT HISTORY MODAL ── */}
+      {historyModal.isOpen && historyModal.user && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 z-[700] flex items-center justify-center bg-gray-900/60 p-4 backdrop-blur-sm animate-in fade-in duration-200"
+          onClick={(e) => e.target === e.currentTarget && setHistoryModal({ isOpen: false, user: null, logs: [], loading: false })}
+        >
+          <div className="relative w-full max-w-lg rounded-2xl border border-gray-100 bg-white shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+
+            <div className="flex items-start justify-between gap-3 p-5 border-b border-gray-100 shrink-0">
+              <div className="flex items-center gap-3">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gray-100 text-gray-600">
+                  <Clock className="h-5 w-5" />
+                </span>
+                <div>
+                  <h3 className="text-base font-bold text-gray-900 leading-tight">Active Report History</h3>
+                  <p className="text-xs text-gray-500 font-medium mt-0.5">{historyModal.user.full_name}</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setHistoryModal({ isOpen: false, user: null, logs: [], loading: false })}
+                className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="overflow-y-auto p-5">
+              {historyModal.loading ? (
+                <div className="flex flex-col items-center justify-center py-10 text-gray-500 text-sm font-medium animate-pulse">
+                  Loading report records...
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  <div className="flex gap-4">
+                    <div className="flex-1 bg-amber-50 border border-amber-200 p-4 rounded-xl">
+                      <div className="flex items-center gap-2 text-amber-700 mb-1">
+                        <MessageSquareOff className="h-4 w-4" />
+                        <p className="text-[11px] font-bold uppercase tracking-wider">Total Reports</p>
+                      </div>
+                      <p className="text-3xl font-black text-amber-900">
+                        {strikeReportsCount.length}
+                      </p>
+                      <p className="text-[10px] font-medium text-amber-700 mt-1 leading-tight">filed against this user</p>
+                    </div>
+
+                    <div className="flex-1 bg-purple-50 border border-purple-200 p-4 rounded-xl">
+                      <div className="flex items-center gap-2 text-purple-700 mb-1">
+                        <Scale className="h-4 w-4" />
+                        <p className="text-[11px] font-bold uppercase tracking-wider">Session Disputes</p>
+                      </div>
+                      <p className="text-3xl font-black text-purple-900">
+                        {strikeReportsCount.filter(l => l.reference_type?.toLowerCase().includes('session') || l.reference_type?.toLowerCase().includes('booking')).length}
+                      </p>
+                      <p className="text-[10px] font-medium text-purple-700 mt-1 leading-tight">booking or escrow issues</p>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Associated Reports</h4>
+                    {validHistoryLogs.length === 0 ? (
+                      <p className="text-sm text-gray-500 italic">No active reports found for this user.</p>
+                    ) : (
+                      <div className="space-y-3">
+                        {validHistoryLogs.map(log => {
+                          const isEscalationTicket = log.reason === 'Repeat Offender Threshold Reached';
+                          const isDispute = log.reference_type?.toLowerCase().includes('session') || log.reference_type?.toLowerCase().includes('booking');
+                          const isCommunity = !isDispute && !isEscalationTicket;
+
+                          let style = { bg: 'bg-gray-50', border: 'border-gray-200', text: 'text-gray-900', icon: ShieldAlert, iconColor: 'text-gray-500' };
+
+                          if (isEscalationTicket) style = { bg: 'bg-rose-50/70', border: 'border-rose-300', text: 'text-rose-950', icon: UploadCloud, iconColor: 'text-rose-600' };
+                          else if (isCommunity) style = { bg: 'bg-amber-50/50', border: 'border-amber-200', text: 'text-amber-900', icon: AlertTriangle, iconColor: 'text-amber-600' };
+                          else if (isDispute) style = { bg: 'bg-purple-50/50', border: 'border-purple-200', text: 'text-purple-900', icon: Scale, iconColor: 'text-purple-600' };
+
+                          const IconToUse = style.icon;
+
+                          return (
+                            <div key={log.id} className={`p-3.5 rounded-xl border ${style.border} ${style.bg} ${isEscalationTicket ? 'ring-2 ring-rose-400/30' : ''}`}>
+                              <div className="flex items-center justify-between mb-2">
+                                <div className="flex items-center gap-1.5">
+                                  <IconToUse className={`h-3.5 w-3.5 ${style.iconColor}`} />
+                                  <span className={`text-xs font-bold ${style.text}`}>{log.reason || 'User Report'}</span>
+                                  {isEscalationTicket && (
+                                    <span className="ml-1.5 rounded bg-rose-200 px-1.5 py-0.2 text-[10px] font-extrabold text-rose-800 uppercase">Master Ticket</span>
+                                  )}
+                                </div>
+                                <span className="text-[10px] font-medium text-gray-500">
+                                  {new Date(log.created_at).toLocaleDateString()}
+                                </span>
+                              </div>
+                              <p className="text-xs text-gray-700 leading-relaxed mb-2 line-clamp-3">
+                                {log.details}
+                              </p>
+                              <div className="flex justify-between text-[10px] text-gray-500 font-medium border-t border-gray-200/50 pt-2 mt-2">
+                                <span className="uppercase">Status: {log.status}</span>
+                                <span>Type: {log.reference_type || 'Unknown'}</span>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+
+                </div>
+              )}
+            </div>
+
+            <div className="p-4 border-t border-gray-100 shrink-0">
+              <button
+                type="button"
+                onClick={() => setHistoryModal({ isOpen: false, user: null, logs: [], loading: false })}
+                className="w-full py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-xs rounded-xl transition"
+              >
+                Close History
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
+
+      {/* ── BAN CONFIRMATION MODAL ── */}
+      {confirmModal.isOpen && confirmModal.item && (() => {
+        const item = confirmModal.item;
+        const targetUser = getTargetUser(item);
+
+        return (
+          <div
+            role="dialog"
+            aria-modal="true"
+            className="fixed inset-0 z-[700] flex items-center justify-center bg-gray-900/50 p-4 backdrop-blur-sm animate-in fade-in duration-200"
+          >
+            <div className="relative w-full max-w-md rounded-2xl border border-gray-100 bg-white p-6 shadow-2xl animate-in zoom-in-95 duration-200">
+
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-rose-50 text-rose-700">
+                    <Ban className="h-5 w-5" />
+                  </span>
+                  <h3 className="text-base font-semibold text-gray-900">
+                    Enforce permanent ban
+                  </h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => !isProcessing && setConfirmModal({ isOpen: false, item: null, note: '' })}
+                  aria-label="Close"
+                  className={`rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700 ${FOCUS_RING}`}
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              <p className="mt-4 text-sm leading-6 text-gray-500">
+                You are enforcing a permanent ban for <span className="font-semibold text-gray-900">{targetUser?.full_name}</span>. This will set <code className="text-xs bg-gray-100 px-1 py-0.5 rounded">is_banned = true</code> on their user profile and update status to <code className="text-xs bg-gray-100 px-1 py-0.5 rounded">admin_banned</code>.
+              </p>
+
+              <div className="mt-5 space-y-3">
+                <label className="block">
+                  <span className="mb-1.5 block text-[13px] font-medium text-gray-700">Admin remarks / justification</span>
+                  <textarea
+                    value={confirmModal.note}
+                    onChange={(e) => setConfirmModal(prev => ({ ...prev, note: e.target.value }))}
+                    placeholder="Reason for banning this user..."
+                    className="h-28 w-full resize-none rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-800 placeholder-gray-400 outline-none transition focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"
+                  />
+                </label>
+                <div className="flex items-start gap-2.5 rounded-xl border p-3 text-xs leading-5 border-rose-100 bg-rose-50/60 text-rose-900">
+                  <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-rose-700" aria-hidden="true" />
+                  <p>This action will be securely recorded in system audit logs and sent as a notification to the user.</p>
+                </div>
+              </div>
+
+              <div className="mt-6 flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setConfirmModal({ isOpen: false, item: null, note: '' })}
+                  disabled={isProcessing}
+                  className={`flex-1 rounded-lg border border-gray-200 bg-white py-2.5 text-[13px] font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 ${FOCUS_RING}`}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={confirmBan}
+                  disabled={isProcessing}
+                  className={`flex-[1.5] rounded-lg py-2.5 text-[13px] font-semibold text-white shadow-sm transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${FOCUS_RING} bg-rose-700 hover:bg-rose-800`}
+                >
+                  {isProcessing ? 'Processing...' : 'Confirm permanent ban'}
+                </button>
+              </div>
+
+            </div>
+          </div>
+        );
+      })()}
+
+    </div>
   );
 }

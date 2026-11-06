@@ -1,7 +1,14 @@
+import useRealtimeRefresh from '../../hooks/useRealtimeRefresh';
 import { useState, useEffect, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import supabase from '../../supabaseClient';
-import { FileImage } from 'lucide-react';
+import { FileImage, RefreshCw, Search, X, ArrowRight, ClipboardCheck } from 'lucide-react';
+
+const FOCUS_RING = 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2';
+
+// One column template shared by the header row and every listing row (desktop),
+// so all columns line up exactly.
+const ROW_GRID = 'lg:grid lg:grid-cols-[minmax(0,2.4fr)_minmax(0,1.4fr)_96px_minmax(0,1.2fr)_104px_128px] lg:items-center lg:gap-6';
 
 export default function SkillApprovals() {
   const [loading, setLoading] = useState(true);
@@ -38,6 +45,8 @@ export default function SkillApprovals() {
   useEffect(() => {
     fetchSkills();
   }, []);
+
+  useRealtimeRefresh(fetchSkills, ['skills'], 'web_refresh_skillapprovals');
 
   // Telemetry Calculations
   const metrics = useMemo(() => {
@@ -76,246 +85,233 @@ export default function SkillApprovals() {
     });
   }, [skills, activeTab, searchQuery, currentUserId]);
 
+  // ── Display-only: the five filter tabs ──
+  const tabs = [
+    { id: 'pending', label: 'All pending', hint: 'Action required', count: metrics.pendingCount },
+    { id: 'unassigned', label: 'Unassigned', hint: 'Awaiting claim', count: metrics.unassignedCount },
+    { id: 'my_claims', label: 'My claims', hint: 'In your review', count: metrics.myClaimsCount },
+    { id: 'resolved', label: 'Resolved history', hint: 'Processed', count: metrics.resolvedCount },
+    { id: 'all', label: 'All listings', hint: 'Everything', count: skills.length },
+  ];
+
   return (
-    <div className="max-w-7xl mx-auto space-y-6">
-      
-      {/* ── HEADER ── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-slate-200">
+    <div className="max-w-5xl mx-auto space-y-6 font-sans text-gray-700">
+
+      {/* ── PAGE HEADER ── */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-xl font-bold text-slate-900 tracking-tight">
-            Skill Approvals
-          </h1>
-          <p className="text-xs text-slate-500 mt-1">
-            Review, claim, and adjudicate new skill listings before they go live on the platform.
+          <h1 className="text-2xl font-semibold tracking-tight text-gray-900">Skill approvals</h1>
+          <p className="mt-1 max-w-xl text-sm text-gray-500">
+            Review, claim, and rule on new skill listings before they go live on the platform.
           </p>
         </div>
-
         <button
           onClick={fetchSkills}
-          className="self-start sm:self-auto px-3.5 py-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-lg transition shadow-sm"
+          className={`inline-flex items-center justify-center gap-2 self-start rounded-lg border border-gray-200 bg-white px-3.5 py-2 text-[13px] font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50 sm:self-auto ${FOCUS_RING}`}
         >
-          Refresh Queue
+          <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} /> Refresh queue
         </button>
       </div>
 
-      {/* ── METRIC STRIP ── */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-white border border-slate-200 p-4 rounded-xl">
-          <p className="text-[11px] font-medium text-slate-500 uppercase tracking-wider">Action Required</p>
-          <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-2xl font-bold text-slate-900">{metrics.pendingCount}</span>
-            <span className="text-[11px] text-amber-600 font-medium">Pending</span>
-          </div>
-        </div>
-
-        <div className="bg-white border border-slate-200 p-4 rounded-xl">
-          <p className="text-[11px] font-medium text-slate-500 uppercase tracking-wider">Unassigned</p>
-          <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-2xl font-bold text-slate-900">{metrics.unassignedCount}</span>
-            <span className="text-[11px] font-semibold text-slate-500">Awaiting Claim</span>
-          </div>
-        </div>
-
-        <div className="bg-white border border-slate-200 p-4 rounded-xl">
-          <p className="text-[11px] font-medium text-slate-500 uppercase tracking-wider">Assigned to You</p>
-          <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-2xl font-bold text-slate-900">{metrics.myClaimsCount}</span>
-            <span className="text-[11px] text-blue-600 font-medium">In Review</span>
-          </div>
-        </div>
-
-        <div className="bg-white border border-slate-200 p-4 rounded-xl">
-          <p className="text-[11px] font-medium text-slate-500 uppercase tracking-wider">Resolved</p>
-          <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-2xl font-bold text-slate-900">{metrics.resolvedCount}</span>
-            <span className="text-[11px] text-emerald-600 font-medium">Processed</span>
-          </div>
-        </div>
-      </div>
-
-      {/* ── SEARCH & FILTER CONTROLS ── */}
-      <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 bg-white border border-slate-200 p-2.5 rounded-xl">
-        
-        {/* Navigation Tabs */}
-        <div className="flex items-center gap-1 overflow-x-auto text-xs">
-          {[
-            { id: 'pending', label: 'All Pending', count: metrics.pendingCount },
-            { id: 'unassigned', label: 'Unassigned', count: metrics.unassignedCount },
-            { id: 'my_claims', label: 'My Claims', count: metrics.myClaimsCount },
-            { id: 'resolved', label: 'Resolved History', count: metrics.resolvedCount },
-            { id: 'all', label: 'All Listings', count: skills.length }
-          ].map(tab => (
+      {/* ── STAT TABS (counts double as the queue filter) ── */}
+      <div role="group" aria-label="Filter the queue" className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5">
+        {tabs.map(tab => {
+          const isActive = activeTab === tab.id;
+          return (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`px-3 py-1.5 rounded-lg font-medium transition whitespace-nowrap flex items-center gap-1.5 ${
-                activeTab === tab.id
-                  ? 'bg-slate-900 text-white font-semibold'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+              aria-pressed={isActive}
+              className={`rounded-2xl border p-4 text-left transition-colors ${FOCUS_RING} ${
+                isActive
+                  ? 'border-emerald-600 bg-emerald-50 shadow-sm ring-1 ring-emerald-600'
+                  : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50'
               }`}
             >
-              <span>{tab.label}</span>
-              <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${
-                activeTab === tab.id ? 'bg-slate-800 text-slate-200' : 'bg-slate-200/70 text-slate-600'
-              }`}>
-                {tab.count}
-              </span>
+              <span className={`block text-[13px] font-medium ${isActive ? 'text-emerald-900' : 'text-gray-600'}`}>{tab.label}</span>
+              <span className={`mt-2 block text-2xl font-semibold leading-none tabular-nums transition-opacity ${isActive ? 'text-emerald-900' : 'text-gray-900'} ${loading ? 'opacity-30' : ''}`}>{tab.count}</span>
+              <span className={`mt-1.5 block text-xs ${isActive ? 'text-emerald-700' : 'text-gray-500'}`}>{tab.hint}</span>
             </button>
-          ))}
-        </div>
+          );
+        })}
+      </div>
 
-        {/* Search Input */}
-        <div className="relative w-full md:w-72">
+      {/* ── SEARCH ── */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <label className="flex w-full items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 shadow-sm transition focus-within:border-emerald-400 focus-within:ring-2 focus-within:ring-emerald-100 sm:max-w-md">
+          <Search className="h-4 w-4 shrink-0 text-gray-400" aria-hidden="true" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search listings or instructors..."
-            className="w-full bg-slate-50 border border-slate-200 rounded-lg pl-3 pr-8 py-1.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-400 focus:bg-white transition"
+            placeholder="Search by title, category, instructor, or ID"
+            aria-label="Search listings"
+            className="min-w-0 flex-1 bg-transparent text-sm font-medium text-gray-800 placeholder-gray-400 outline-none"
           />
           {searchQuery && (
-            <button
-              onClick={() => setSearchQuery('')}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs"
-            >
-              ✕
+            <button onClick={() => setSearchQuery('')} aria-label="Clear search" className="rounded p-0.5 text-gray-300 hover:text-gray-600">
+              <X className="h-4 w-4" />
             </button>
           )}
-        </div>
-
+        </label>
+        {!loading && (
+          <p className="text-xs text-gray-500" role="status">
+            Showing <span className="font-semibold tabular-nums text-gray-900">{filteredSkills.length}</span> of <span className="tabular-nums">{skills.length}</span> listings
+          </p>
+        )}
       </div>
 
-      {/* ── TABLE DATA VIEW ── */}
-      <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+      {/* ── LISTINGS ── */}
+      <section aria-label="Skill listings" className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
         {loading ? (
-          <div className="py-20 text-center text-xs text-slate-400 font-medium">
-            Loading approval queue...
-          </div>
+          <ul aria-busy="true" className="divide-y divide-gray-100" role="status">
+            {[0, 1, 2, 3].map(i => (
+              <li key={i} className="flex animate-pulse items-center gap-4 px-6 py-5">
+                <span className="h-12 w-12 rounded-xl bg-gray-100" />
+                <span className="flex-1 space-y-2">
+                  <span className="block h-3 w-1/3 rounded bg-gray-100" />
+                  <span className="block h-3 w-1/5 rounded bg-gray-100" />
+                </span>
+              </li>
+            ))}
+          </ul>
         ) : filteredSkills.length === 0 ? (
-          <div className="py-20 text-center p-6">
-            <p className="text-sm font-semibold text-slate-700">Queue is clear</p>
-            <p className="text-xs text-slate-400 mt-1">
+          <div className="px-6 py-16 text-center">
+            <span className="mx-auto flex h-11 w-11 items-center justify-center rounded-xl border border-gray-100 bg-gray-50 text-gray-400">
+              <ClipboardCheck className="h-5 w-5" />
+            </span>
+            <p className="mt-3 text-sm font-semibold text-gray-900">Queue is clear</p>
+            <p className="mt-1 text-xs text-gray-500">
               {searchQuery
                 ? 'No skills matched your search filter.'
                 : 'There are no listings waiting for approval.'}
             </p>
+            {searchQuery && (
+              <button onClick={() => setSearchQuery('')} className={`mt-4 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50 ${FOCUS_RING}`}>
+                Clear search
+              </button>
+            )}
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-semibold text-[11px]">
-                <tr>
-                  <th className="py-3 px-4">Skill Details</th>
-                  <th className="py-3 px-4">Instructor</th>
-                  <th className="py-3 px-4 text-center">Format & Cost</th>
-                  <th className="py-3 px-4">Assignment</th>
-                  <th className="py-3 px-4">Status</th>
-                  <th className="py-3 px-4 text-right">Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 text-slate-700">
-                {filteredSkills.map(item => {
-                  const isMine = item.assigned_to === currentUserId;
+          <>
+            {/* Column headers (desktop) */}
+            <div aria-hidden="true" className={`hidden border-b border-gray-200 bg-gray-50 px-6 py-3 text-xs font-semibold text-gray-500 ${ROW_GRID}`}>
+              <span>Skill</span>
+              <span>Instructor</span>
+              <span>Cost</span>
+              <span>Assignment</span>
+              <span>Status</span>
+              <span className="text-right">Action</span>
+            </div>
 
-                  return (
-                    <tr key={item.id} className="hover:bg-slate-50/70 transition">
-                      
-                      {/* Skill Details */}
-                      <td className="py-3.5 px-4 align-top">
-                        <div className="flex gap-3 items-start">
-                          <div className="w-10 h-10 bg-slate-100 rounded-lg overflow-hidden shrink-0 border border-slate-200 flex items-center justify-center">
-                            {item.cover_image_url ? (
-                              <img src={item.cover_image_url} alt="" className="w-full h-full object-cover" />
-                            ) : (
-                              <FileImage className="w-4 h-4 text-slate-300" />
-                            )}
-                          </div>
-                          <div className="space-y-0.5">
-                            <p className="font-semibold text-slate-900 text-xs truncate max-w-[200px]" title={item.title}>
-                              {item.title}
-                            </p>
-                            <p className="text-[10px] text-slate-500">{item.category}</p>
-                            <p className="text-[9px] text-slate-400 font-mono">#{item.id.slice(0, 8)}</p>
-                          </div>
-                        </div>
-                      </td>
+            <ul className="divide-y divide-gray-100">
+              {filteredSkills.map(item => {
+                const isMine = item.assigned_to === currentUserId;
+                const isPending = item.status === 'pending';
 
-                      {/* Instructor */}
-                      <td className="py-3.5 px-4 align-top text-xs">
-                        <div className="space-y-0.5">
-                          <p className="text-slate-800 font-medium">
-                            {item.instructor?.full_name || 'Unknown User'}
-                          </p>
-                          <p className="text-[10px] text-slate-400">
+                return (
+                  <li key={item.id} className={`relative flex flex-col gap-4 px-6 py-5 transition-colors hover:bg-gray-50/70 ${ROW_GRID}`}>
+                    <span
+                      className={`absolute inset-y-0 left-0 w-[3px] ${isPending ? 'bg-amber-400' : item.status === 'approved' ? 'bg-emerald-500' : 'bg-rose-400'}`}
+                      aria-hidden="true"
+                    />
+
+                    {/* Skill details */}
+                    <div className="flex min-w-0 items-center gap-3.5">
+                      <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-gray-200 bg-gray-50">
+                        {item.cover_image_url ? (
+                          <img src={item.cover_image_url} alt="" className="h-full w-full object-cover" />
+                        ) : (
+                          <FileImage className="h-4 w-4 text-gray-300" />
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold text-gray-900" title={item.title}>{item.title}</p>
+                        <p className="mt-0.5 truncate text-xs text-gray-500">
+                          {item.category} <span className="text-gray-300" aria-hidden="true">/</span> <span className="tabular-nums text-gray-400">#{item.id.slice(0, 8)}</span>
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Meta cells: labelled on mobile, columns on desktop */}
+                    <dl className="grid grid-cols-2 gap-x-4 gap-y-4 sm:grid-cols-4 lg:contents">
+                      <div className="min-w-0">
+                        <dt className="mb-1 text-[11px] font-medium text-gray-400 lg:sr-only">Instructor</dt>
+                        <dd>
+                          <p className="truncate text-[13px] font-medium text-gray-800">{item.instructor?.full_name || 'Unknown User'}</p>
+                          <p className="mt-0.5 text-xs tabular-nums text-gray-400">
                             {new Date(item.created_at).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })}
                           </p>
-                        </div>
-                      </td>
+                        </dd>
+                      </div>
 
-                      {/* Cost and Format */}
-                      <td className="py-3.5 px-4 align-top text-center">
-                        <span className="font-bold text-slate-900 text-sm">
-                          {item.credit_cost} CR
-                        </span>
-                        <span className="block text-[10px] font-medium text-slate-400 mt-0.5">
-                          {item.format}
-                        </span>
-                      </td>
+                      <div>
+                        <dt className="mb-1 text-[11px] font-medium text-gray-400 lg:sr-only">Cost</dt>
+                        <dd>
+                          <p className="text-sm font-semibold tabular-nums text-gray-900">{item.credit_cost} CR</p>
+                          <p className="mt-0.5 text-xs text-gray-500">{item.format}</p>
+                        </dd>
+                      </div>
 
-                      {/* Assignment */}
-                      <td className="py-3.5 px-4 align-top">
-                        {item.assigned_to ? (
-                          isMine ? (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-blue-50 text-blue-700 border border-blue-200">
-                              Assigned to You
-                            </span>
+                      <div className="min-w-0">
+                        <dt className="mb-1 text-[11px] font-medium text-gray-400 lg:sr-only">Assignment</dt>
+                        <dd>
+                          {item.assigned_to ? (
+                            isMine ? (
+                              <span className="inline-flex items-center rounded-md border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-800">
+                                Assigned to You
+                              </span>
+                            ) : (
+                              <span className="block truncate text-[13px] font-medium text-gray-700">
+                                {item.assignee?.full_name || 'Another Mod'}
+                              </span>
+                            )
                           ) : (
-                            <span className="inline-block text-[11px] text-slate-600 font-medium">
-                              {item.assignee?.full_name || 'Another Mod'}
+                            <span className="inline-flex items-center rounded-md border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-800">
+                              Unassigned
                             </span>
-                          )
-                        ) : (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-amber-50 text-amber-700 border border-amber-200">
-                            Unassigned
+                          )}
+                        </dd>
+                      </div>
+
+                      <div>
+                        <dt className="mb-1 text-[11px] font-medium text-gray-400 lg:sr-only">Status</dt>
+                        <dd>
+                          <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium capitalize ${
+                            isPending
+                              ? 'bg-amber-50 text-amber-800'
+                              : item.status === 'approved'
+                              ? 'bg-emerald-50 text-emerald-800'
+                              : 'bg-rose-50 text-rose-800'
+                          }`}>
+                            <span
+                              className={`h-1.5 w-1.5 rounded-full ${isPending ? 'bg-amber-500' : item.status === 'approved' ? 'bg-emerald-600' : 'bg-rose-500'}`}
+                              aria-hidden="true"
+                            />
+                            {item.status}
                           </span>
-                        )}
-                      </td>
+                        </dd>
+                      </div>
+                    </dl>
 
-                      {/* Status */}
-                      <td className="py-3.5 px-4 align-top">
-                        <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold capitalize ${
-                          item.status === 'pending'
-                            ? 'bg-amber-50 text-amber-800 border border-amber-200'
-                            : item.status === 'approved'
-                            ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
-                            : 'bg-rose-50 text-rose-800 border border-rose-200'
-                        }`}>
-                          {item.status}
-                        </span>
-                      </td>
-
-                      {/* Action */}
-                      <td className="py-3.5 px-4 align-top text-right">
-                        <Link
-                          to={`/moderator/review/${item.id}`}
-                          className={`inline-block px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
-                            item.status === 'pending'
-                              ? 'bg-slate-900 hover:bg-slate-800 text-white'
-                              : 'border border-slate-200 hover:bg-slate-50 text-slate-700'
-                          }`}
-                        >
-                          {item.status === 'pending' ? 'Review Skill' : 'View Record'}
-                        </Link>
-                      </td>
-
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                    {/* Action */}
+                    <Link
+                      to={`/moderator/review/${item.id}`}
+                      className={`inline-flex w-full items-center justify-center gap-1.5 rounded-lg px-3.5 py-2 text-xs font-semibold transition-colors lg:w-full ${FOCUS_RING} ${
+                        isPending
+                          ? 'bg-emerald-700 text-white shadow-sm hover:bg-emerald-800'
+                          : 'border border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
+                      }`}
+                    >
+                      {isPending ? 'Review Skill' : 'View Record'} <ArrowRight className="h-3.5 w-3.5" />
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </>
         )}
-      </div>
+      </section>
 
     </div>
   );

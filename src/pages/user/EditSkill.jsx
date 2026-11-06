@@ -5,27 +5,53 @@ import {
   ArrowLeft, Lock, UploadCloud, Save, X, ShieldAlert, Unlock, FileText, AlertCircle
 } from 'lucide-react';
 
+// min/max = allowed credits for a 1-hour session (Table 2). 2-hr and 3-hr bands = x2 and x3.
 const SKILL_CATEGORIES = [
-  { name: 'Cooking & Baking',                      tier: 'Tier 1', min: 9,  max: 22,  color: '#f97316' },
-  { name: 'Gardening & Farming',                   tier: 'Tier 1', min: 9,  max: 18,  color: '#22c55e' },
-  { name: 'Home & DIY',                            tier: 'Tier 1', min: 9,  max: 20,  color: '#a78bfa' },
-  { name: 'Health & Fitness',                      tier: 'Tier 1', min: 9,  max: 25,  color: '#ef4444' },
-  { name: 'Beauty & Grooming',                     tier: 'Tier 1', min: 9,  max: 20,  color: '#ec4899' },
-  { name: 'Gaming & Hobbies',                      tier: 'Tier 1', min: 9,  max: 20,  color: '#6366f1' },
-  { name: 'Electronics, Appliance & Basic Repair', tier: 'Tier 2', min: 17, max: 42,  color: '#64748b' },
-  { name: 'Electronics & Repair',                  tier: 'Tier 2', min: 17, max: 42,  color: '#3b82f6' }, 
-  { name: 'School & Tutoring',                     tier: 'Tier 2', min: 19, max: 39,  color: '#0ea5e9' },
-  { name: 'Writing & Content',                     tier: 'Tier 2', min: 17, max: 45,  color: '#8b5cf6' },
-  { name: 'Languages & Speaking',                  tier: 'Tier 2', min: 21, max: 42,  color: '#14b8a6' },
-  { name: 'Singing & Instruments',                 tier: 'Tier 2', min: 17, max: 47,  color: '#f43f5e' },
-  { name: 'Art & Graphic Design',                  tier: 'Tier 2', min: 19, max: 52,  color: '#f59e0b' },
-  { name: 'Video & Animation',                     tier: 'Tier 2', min: 22, max: 56,  color: '#dc2626' },
-  { name: 'Business & Freelance',                  tier: 'Tier 3', min: 28, max: 75,  color: '#0d9488' },
-  { name: 'Financial Literacy & Money Management', tier: 'Tier 3', min: 25, max: 60,  color: '#ca8a04' },
-  { name: 'Financial Literacy',                    tier: 'Tier 3', min: 25, max: 60,  color: '#059669' }, 
-  { name: 'UI/UX Design',                          tier: 'Tier 3', min: 38, max: 94,  color: '#7c3aed' },
-  { name: 'Coding & Tech',                         tier: 'Tier 3', min: 38, max: 100, color: '#10b981' },
+  { name: 'Cooking & Baking',                       min: 8,  max: 15, color: '#f97316' },
+  { name: 'Gardening & Plant Care',                 min: 7,  max: 13, color: '#22c55e' },
+  { name: 'Home Repair & DIY',                      min: 7,  max: 14, color: '#a78bfa' },
+  { name: 'Fitness & Sports',                       min: 11, max: 21, color: '#ef4444' },
+  { name: 'Beauty & Personal Care',                 min: 9,  max: 17, color: '#ec4899' },
+  { name: 'Computer, Phone & Electronics Help',     min: 7,  max: 14, color: '#64748b' },
+  { name: 'School Subjects & Tutoring',             min: 8,  max: 15, color: '#0ea5e9' },
+  { name: 'Writing & Editing',                      min: 11, max: 20, color: '#8b5cf6' },
+  { name: 'Languages & Public Speaking',            min: 22, max: 42, color: '#14b8a6' },
+  { name: 'Music & Singing',                        min: 13, max: 24, color: '#f43f5e' },
+  { name: 'Graphic Design & Digital Art',           min: 11, max: 21, color: '#f59e0b' },
+  { name: 'Video, Animation & AI Content Creation', min: 11, max: 21, color: '#dc2626' },
+  { name: 'Business, Entrepreneurship & Marketing', min: 10, max: 19, color: '#0d9488' },
+  { name: 'Finance, Investing & Trading',           min: 15, max: 27, color: '#ca8a04' },
+  { name: 'Website & App Design',                   min: 19, max: 35, color: '#7c3aed' },
+  { name: 'Coding & Programming',                   min: 15, max: 28, color: '#10b981' },
 ];
+
+// Old category names still stored on existing listings -> their new category (so the right band is used)
+const LEGACY_CATEGORY_MAP = {
+  'Gardening & Farming': 'Gardening & Plant Care',
+  'Home & DIY': 'Home Repair & DIY',
+  'Health & Fitness': 'Fitness & Sports',
+  'Beauty & Grooming': 'Beauty & Personal Care',
+  'Electronics, Appliance & Basic Repair': 'Computer, Phone & Electronics Help',
+  'Electronics & Repair': 'Computer, Phone & Electronics Help',
+  'School & Tutoring': 'School Subjects & Tutoring',
+  'Writing & Content': 'Writing & Editing',
+  'Languages & Speaking': 'Languages & Public Speaking',
+  'Singing & Instruments': 'Music & Singing',
+  'Art & Graphic Design': 'Graphic Design & Digital Art',
+  'Video & Animation': 'Video, Animation & AI Content Creation',
+  'Business & Freelance': 'Business, Entrepreneurship & Marketing',
+  'Financial Literacy & Money Management': 'Finance, Investing & Trading',
+  'Financial Literacy': 'Finance, Investing & Trading',
+  'UI/UX Design': 'Website & App Design',
+  'Coding & Tech': 'Coding & Programming',
+};
+
+const DURATIONS = ['1 hr', '2 hrs', '3 hrs'];
+const getHours  = d => parseInt(d, 10) || 1;
+const findCat   = name =>
+  SKILL_CATEGORIES.find(c => c.name === name) ||
+  SKILL_CATEGORIES.find(c => c.name === LEGACY_CATEGORY_MAP[name]) ||
+  SKILL_CATEGORIES[0];
 
 export default function EditSkill() {
   const { id } = useParams();
@@ -89,6 +115,16 @@ export default function EditSkill() {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+    if (name === 'duration' && DURATIONS.includes(value)) {
+      setSkill(prev => {
+        const c = findCat(prev.category);
+        const h = getHours(value);
+        const lo = c.min * h, hi = c.max * h;
+        const v = Math.min(hi, Math.max(lo, parseInt(prev.credit_cost, 10) || lo));
+        return { ...prev, duration: value, credit_cost: v };
+      });
+      return;
+    }
     setSkill(prev => ({ ...prev, [name]: value }));
   };
 
@@ -111,6 +147,20 @@ export default function EditSkill() {
     if (!skill.description.trim() || !skill.outcomes.trim()) {
       alert('Description and Outcomes are required.');
       return;
+    }
+
+    if (!hasActiveSessions) {
+      if (!DURATIONS.includes(skill.duration)) {
+        alert('Please choose a session duration (1, 2, or 3 hrs).');
+        return;
+      }
+      const c = findCat(skill.category);
+      const h = getHours(skill.duration);
+      const cost = parseInt(skill.credit_cost, 10);
+      if (isNaN(cost) || cost < c.min * h || cost > c.max * h) {
+        alert(`Credit cost must be between ${c.min * h} and ${c.max * h} credits for a ${skill.duration} session in this category.`);
+        return;
+      }
     }
 
     setSaving(true);
@@ -197,7 +247,9 @@ export default function EditSkill() {
     </div>
   );
 
-  const activeCat = SKILL_CATEGORIES.find(c => c.name === skill.category) || SKILL_CATEGORIES[0];
+  const activeCat = findCat(skill.category);
+  const hours = DURATIONS.includes(skill.duration) ? getHours(skill.duration) : 1;
+  const band  = { min: activeCat.min * hours, max: activeCat.max * hours };
 
   return (
     <div className="min-h-screen bg-[#faf9f6]">
@@ -267,7 +319,7 @@ export default function EditSkill() {
               
               <div className={`bg-gray-50 border border-gray-200 rounded-2xl p-5 ${hasActiveSessions ? 'opacity-70' : ''}`}>
                 <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Credit Cost</p>
-                <p className="text-[10px] text-gray-400 mb-4">{activeCat.min}–{activeCat.max} cr range</p>
+                <p className="text-[10px] text-gray-400 mb-4">{band.min}–{band.max} cr range</p>
                 <div className="flex items-baseline gap-1 mb-4">
                   <span className="text-[38px] font-bold leading-none" style={{ color: hasActiveSessions ? '#9ca3af' : activeCat.color }}>{skill.credit_cost}</span>
                   <span className="text-[14px] font-bold text-gray-400">cr</span>
@@ -275,8 +327,8 @@ export default function EditSkill() {
                 <input 
                   type="range" 
                   name="credit_cost" 
-                  min={activeCat.min} 
-                  max={activeCat.max} 
+                  min={band.min} 
+                  max={band.max} 
                   value={skill.credit_cost} 
                   onChange={handleInputChange}
                   disabled={hasActiveSessions}
@@ -284,7 +336,7 @@ export default function EditSkill() {
                   style={{ accentColor: hasActiveSessions ? '#9ca3af' : activeCat.color }} 
                 />
                 <div className="flex justify-between text-[10px] font-bold text-gray-300 mt-1.5">
-                  <span>Min {activeCat.min}</span><span>Max {activeCat.max}</span>
+                  <span>Min {band.min}</span><span>Max {band.max}</span>
                 </div>
               </div>
 
@@ -299,12 +351,8 @@ export default function EditSkill() {
                       hasActiveSessions ? 'bg-gray-50 border-gray-200 text-gray-400 cursor-not-allowed appearance-none' : 'bg-white border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 text-gray-900 cursor-pointer'
                     }`}
                   >
-                    <option value="30 mins">30 mins</option>
-                    <option value="1 hr">1 hr</option>
-                    <option value="1.5 hrs">1.5 hrs</option>
-                    <option value="2 hrs">2 hrs</option>
-                    <option value="4 hrs">4 hrs</option>
-                    <option value="Project Base">Project Base</option>
+                    {!DURATIONS.includes(skill.duration) && <option value={skill.duration}>{skill.duration} (old)</option>}
+                    {DURATIONS.map(d => <option key={d} value={d}>{d}</option>)}
                   </select>
                 </div>
                 <div>

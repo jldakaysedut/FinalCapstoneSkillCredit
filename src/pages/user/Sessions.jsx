@@ -1,3 +1,4 @@
+import { confirmDialog } from '../../components/confirmDialog';
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
@@ -209,7 +210,7 @@ export default function Sessions() {
         }]);
       } 
       else if (action === 'mark_done') {
-        if (!window.confirm('Mark session as done?')) { setProcessingId(null); return; }
+        if (!await confirmDialog('Mark session as done?')) { setProcessingId(null); return; }
         const isInstructor = session.instructor_id === currentUserId;
         const payload = isInstructor ? { instructor_completed: true } : { student_completed: true };
         const otherDone = isInstructor ? session.student_completed : session.instructor_completed;
@@ -246,7 +247,7 @@ export default function Sessions() {
         }
         await supabase.from('sessions').update(payload).eq('id', session.id);
       } else if (action === 'undo_done') {
-        if (!window.confirm("Undo 'Mark as Done'?")) { setProcessingId(null); return; }
+        if (!await confirmDialog("Undo 'Mark as Done'?")) { setProcessingId(null); return; }
         const isInstructor = session.instructor_id === currentUserId;
         await supabase.from('sessions').update(isInstructor ? { instructor_completed: false } : { student_completed: false }).eq('id', session.id);
       }
@@ -736,7 +737,7 @@ export default function Sessions() {
                                     {/* PENDING (INSTRUCTOR) */}
                                     {session.status === 'pending' && isInstructor && (
                                       <>
-                                        <button onClick={() => { if (window.confirm('Decline?')) handleUpdateStatus(session, 'decline'); }} disabled={isProcessing} className="px-3 py-1.5 bg-rose-50 text-rose-600 border border-rose-200 font-bold rounded-lg text-[11px] transition cursor-pointer">Decline</button>
+                                        <button onClick={async () => { if (await confirmDialog('Decline?')) handleUpdateStatus(session, 'decline'); }} disabled={isProcessing} className="px-3 py-1.5 bg-rose-50 text-rose-600 border border-rose-200 font-bold rounded-lg text-[11px] transition cursor-pointer">Decline</button>
                                         <button onClick={() => { setProposeModal({ isOpen: true, session }); setNewDate(session.scheduled_date); setNewTime(session.scheduled_time); }} disabled={isProcessing} className="px-3 py-1.5 bg-purple-50 text-purple-700 border border-purple-200 font-bold rounded-lg text-[11px] transition cursor-pointer hover:bg-purple-100">Propose Time</button>
                                         {!isExpired && <button onClick={() => handleUpdateStatus(session, 'accept_schedule')} disabled={isProcessing} className="px-3 py-1.5 bg-indigo-700 hover:bg-indigo-800 text-white font-bold rounded-lg text-[11px] shadow-sm transition cursor-pointer">Confirm Schedule</button>}
                                       </>
@@ -746,15 +747,15 @@ export default function Sessions() {
                                     {session.status === 'pending' && !isInstructor && (
                                       <>
                                         {!isExpired
-                                          ? <button onClick={() => { if (window.confirm('Cancel?')) handleUpdateStatus(session, 'cancel'); }} disabled={isProcessing} className="px-3 py-1.5 bg-rose-50 text-rose-600 border border-rose-200 font-bold rounded-lg text-[11px] transition cursor-pointer">Cancel & Refund</button>
-                                          : <button onClick={() => { if (window.confirm('Session expired. Cancel to refund?')) handleUpdateStatus(session, 'cancel'); }} disabled={isProcessing} className="px-3 py-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 font-semibold rounded-lg text-[11px] hover:bg-emerald-100 transition shadow-sm inline-flex items-center gap-1.5 cursor-pointer"><RefreshCw className="w-3.5 h-3.5" /> Claim Refund</button>}
+                                          ? <button onClick={async () => { if (await confirmDialog('Cancel?')) handleUpdateStatus(session, 'cancel'); }} disabled={isProcessing} className="px-3 py-1.5 bg-rose-50 text-rose-600 border border-rose-200 font-bold rounded-lg text-[11px] transition cursor-pointer">Cancel & Refund</button>
+                                          : <button onClick={async () => { if (await confirmDialog('Session expired. Cancel to refund?')) handleUpdateStatus(session, 'cancel'); }} disabled={isProcessing} className="px-3 py-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 font-semibold rounded-lg text-[11px] hover:bg-emerald-100 transition shadow-sm inline-flex items-center gap-1.5 cursor-pointer"><RefreshCw className="w-3.5 h-3.5" /> Claim Refund</button>}
                                       </>
                                     )}
 
                                     {/* PROPOSED (INSTRUCTOR) */}
                                     {session.status === 'reschedule_proposed' && isInstructor && (
                                       <>
-                                        <button onClick={() => { if (window.confirm('Cancel booking entirely?')) handleUpdateStatus(session, 'decline'); }} disabled={isProcessing} className="px-3 py-1.5 bg-rose-50 text-rose-600 border border-rose-200 font-bold rounded-lg text-[11px] transition cursor-pointer">Decline</button>
+                                        <button onClick={async () => { if (await confirmDialog('Cancel booking entirely?')) handleUpdateStatus(session, 'decline'); }} disabled={isProcessing} className="px-3 py-1.5 bg-rose-50 text-rose-600 border border-rose-200 font-bold rounded-lg text-[11px] transition cursor-pointer">Decline</button>
                                         <button onClick={() => { setProposeModal({ isOpen: true, session }); setNewDate(session.scheduled_date); setNewTime(session.scheduled_time); }} disabled={isProcessing} className="px-3 py-1.5 bg-purple-50 text-purple-700 border border-purple-200 font-bold rounded-lg text-[11px] transition cursor-pointer hover:bg-purple-100">Edit Proposed Time</button>
                                         <button disabled className="px-3 py-1.5 bg-gray-100 text-gray-400 font-bold rounded-lg text-[11px] shadow-sm cursor-not-allowed border border-gray-200">Confirm Schedule</button>
                                       </>
@@ -763,7 +764,7 @@ export default function Sessions() {
                                     {/* PROPOSED (LEARNER) */}
                                     {session.status === 'reschedule_proposed' && !isInstructor && (
                                       <>
-                                        <button onClick={() => { if (window.confirm('Decline and cancel session?')) handleUpdateStatus(session, 'cancel'); }} disabled={isProcessing} className="px-3 py-1.5 bg-rose-50 text-rose-600 border border-rose-200 font-bold rounded-lg text-[11px] transition cursor-pointer">Cancel & Refund</button>
+                                        <button onClick={async () => { if (await confirmDialog('Decline and cancel session?')) handleUpdateStatus(session, 'cancel'); }} disabled={isProcessing} className="px-3 py-1.5 bg-rose-50 text-rose-600 border border-rose-200 font-bold rounded-lg text-[11px] transition cursor-pointer">Cancel & Refund</button>
                                         <button onClick={() => handleUpdateStatus(session, 'accept_schedule')} disabled={isProcessing} className="px-3 py-1.5 bg-indigo-700 hover:bg-indigo-800 text-white font-bold rounded-lg text-[11px] shadow-sm transition cursor-pointer">Accept Schedule</button>
                                       </>
                                     )}
@@ -772,10 +773,10 @@ export default function Sessions() {
                                     {session.status === 'upcoming' && isInstructor && (
                                       !isNoShow ? (
                                         <>
-                                          <button onClick={() => { if (window.confirm('Emergency: Cancel this upcoming session? Credits will be refunded to the learner.')) handleUpdateStatus(session, 'cancel'); }} disabled={isProcessing} className="px-3 py-1.5 bg-rose-50 text-rose-600 border border-rose-200 font-bold rounded-lg text-[11px] transition cursor-pointer">
+                                          <button onClick={async () => { if (await confirmDialog('Emergency: Cancel this upcoming session? Credits will be refunded to the learner.')) handleUpdateStatus(session, 'cancel'); }} disabled={isProcessing} className="px-3 py-1.5 bg-rose-50 text-rose-600 border border-rose-200 font-bold rounded-lg text-[11px] transition cursor-pointer">
                                             Cancel Booking
                                           </button>
-                                          <button onClick={() => { if(window.confirm("Start session now? This will begin the duration countdown.")) handleUpdateStatus(session, 'start_session'); }} disabled={isProcessing} className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-[11px] shadow-sm transition cursor-pointer flex items-center gap-1">
+                                          <button onClick={async () => { if(await confirmDialog("Start session now? This will begin the duration countdown.")) handleUpdateStatus(session, 'start_session'); }} disabled={isProcessing} className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-[11px] shadow-sm transition cursor-pointer flex items-center gap-1">
                                             <PlayCircle className="w-3.5 h-3.5" /> Start Session
                                           </button>
                                         </>
@@ -790,8 +791,8 @@ export default function Sessions() {
                                     {session.status === 'upcoming' && !isInstructor && (
                                       <>
                                         {!isNoShow 
-                                          ? <button onClick={() => { if (window.confirm('Cancel booking?')) handleUpdateStatus(session, 'cancel'); }} disabled={isProcessing} className="px-3 py-1.5 bg-rose-50 text-rose-600 border border-rose-200 font-bold rounded-lg text-[11px] transition cursor-pointer">Cancel & Refund</button>
-                                          : <button onClick={() => { if (window.confirm('Teacher is a no-show. Claim your refund now?')) handleUpdateStatus(session, 'cancel_no_show'); }} disabled={isProcessing} className="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-lg text-[11px] shadow-sm transition cursor-pointer flex items-center gap-1">
+                                          ? <button onClick={async () => { if (await confirmDialog('Cancel booking?')) handleUpdateStatus(session, 'cancel'); }} disabled={isProcessing} className="px-3 py-1.5 bg-rose-50 text-rose-600 border border-rose-200 font-bold rounded-lg text-[11px] transition cursor-pointer">Cancel & Refund</button>
+                                          : <button onClick={async () => { if (await confirmDialog('Teacher is a no-show. Claim your refund now?')) handleUpdateStatus(session, 'cancel_no_show'); }} disabled={isProcessing} className="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-lg text-[11px] shadow-sm transition cursor-pointer flex items-center gap-1">
                                               <RefreshCw className="w-3.5 h-3.5" /> Claim Refund (No-Show)
                                             </button>
                                         }

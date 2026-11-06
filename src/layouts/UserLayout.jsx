@@ -631,7 +631,7 @@ export default function UserLayout() {
         .on('postgres_changes',
           { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` },
           (payload) => {
-            if (payload.new) publishNotification(payload.new, true);
+            if (payload.new) publishNotification(payload.new, false);
           })
         .on('postgres_changes',
           { event: 'UPDATE', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` },
@@ -778,6 +778,11 @@ export default function UserLayout() {
 ​
           {/* Right controls */}
           <div className="flex items-center justify-end gap-2 shrink-0">
+
+            
+
+            {/* ── NOTIFICATIONS BELL */}
+            <div className="relative" ref={notifRef}></div>
 ​
             {/* ── NOTIFICATIONS BELL */}
             <div className="relative" ref={notifRef}>
@@ -786,6 +791,8 @@ export default function UserLayout() {
                 className={`relative p-2.5 rounded-full transition cursor-pointer ${
                   isNotifOpen ? 'bg-emerald-50 text-emerald-800' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100'
                 }`}
+
+                
               >
                 <Bell className="w-5 h-5" />
                 {unreadCount > 0 && (
@@ -795,6 +802,7 @@ export default function UserLayout() {
                   </span>
                 )}
               </button>
+
 ​
               {isNotifOpen && (
                 <div className="absolute right-0 mt-3 w-[360px] bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray-100 overflow-hidden z-50">
@@ -877,6 +885,17 @@ export default function UserLayout() {
                 </div>
               )}
             </div>
+
+            
+            {/* ✨ BAGONG CREDITS BALANCE PILL ✨ */}
+            <Link
+              to="/payments"
+              className="hidden sm:flex items-center gap-1.5 bg-amber-50 border border-amber-100 px-3 py-1.5 rounded-full text-amber-700 hover:bg-amber-100 transition cursor-pointer mr-2"
+              title="View Wallet"
+            >
+              <Coins className="w-4 h-4 text-amber-500" />
+              <span className="text-[13px] font-bold">{profile.credits_balance || 0} <span className="font-semibold text-amber-600">CR</span></span>
+            </Link>
 ​
             {/* ── PROFILE PILL */}
             <div className="relative" ref={profileRef}>

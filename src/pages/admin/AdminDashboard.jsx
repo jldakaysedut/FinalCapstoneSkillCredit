@@ -1,11 +1,12 @@
+import useRealtimeRefresh from '../../hooks/useRealtimeRefresh';
 import { useCallback, useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import supabase from '../../supabaseClient';
 import {
-  Activity,
+  ArrowRight,
   BookOpen,
   CalendarDays,
   ChevronRight,
-  CheckCircle2,
   Clock,
   Coins,
   Mail,
@@ -13,6 +14,8 @@ import {
   Wallet,
   X,
 } from 'lucide-react';
+
+const FOCUS_RING = 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2';
 
 const formatNumber = value => Number(value || 0).toLocaleString();
 
@@ -35,65 +38,29 @@ const methodLabel = value => {
   return 'PayMongo';
 };
 
+// Display-only: pill, dot, row accent, and icon tile colours for a top-up status.
 const topupStatusTone = value => {
-  if (value === 'paid') return 'bg-emerald-50 text-emerald-700 ring-emerald-100';
-  if (value === 'pending') return 'bg-amber-50 text-amber-800 ring-amber-100';
-  return 'bg-slate-100 text-slate-600 ring-slate-200';
+  if (value === 'paid') return 'bg-emerald-50 text-emerald-800';
+  if (value === 'pending') return 'bg-amber-50 text-amber-800';
+  return 'bg-gray-100 text-gray-600';
+};
+const topupDotTone = value => {
+  if (value === 'paid') return 'bg-emerald-600';
+  if (value === 'pending') return 'bg-amber-500';
+  return 'bg-gray-400';
+};
+const topupAccentTone = value => {
+  if (value === 'paid') return 'bg-emerald-500';
+  if (value === 'pending') return 'bg-amber-400';
+  return 'bg-gray-300';
+};
+const topupIconTone = value => {
+  if (value === 'paid') return 'bg-emerald-50 text-emerald-700';
+  if (value === 'pending') return 'bg-amber-50 text-amber-700';
+  return 'bg-gray-100 text-gray-500';
 };
 
 const relationOne = value => (Array.isArray(value) ? value[0] : value) || null;
-
-function StatCard({ title, value, icon: Icon, tone }) {
-  return (
-    <article className="min-w-0 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:p-5">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500 sm:text-[11px]">
-            {title}
-          </p>
-          <p className="mt-2 break-words text-2xl font-bold leading-none tracking-tight text-slate-950 sm:text-3xl">
-            {value}
-          </p>
-        </div>
-        <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${tone}`}>
-          <Icon className="h-5 w-5" aria-hidden="true" />
-        </span>
-      </div>
-      <p className="mt-3 text-xs font-medium text-slate-400">Platform snapshot</p>
-    </article>
-  );
-}
-
-function PanelHeader({ icon: Icon, title, description, count, tone = 'text-slate-500' }) {
-  return (
-    <div className="flex items-start justify-between gap-3 border-b border-slate-100 px-4 py-4 sm:px-5">
-      <div className="flex min-w-0 items-start gap-3">
-        <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-100">
-          <Icon className={`h-4 w-4 ${tone}`} aria-hidden="true" />
-        </span>
-        <div className="min-w-0">
-          <h2 className="text-sm font-bold tracking-tight text-slate-900">{title}</h2>
-          <p className="mt-0.5 text-xs leading-relaxed text-slate-500">{description}</p>
-        </div>
-      </div>
-      {count !== undefined && (
-        <span className="shrink-0 rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-bold text-slate-600">
-          {count}
-        </span>
-      )}
-    </div>
-  );
-}
-
-function LoadingRows() {
-  return (
-    <div className="space-y-3 p-4 sm:p-5" aria-label="Loading dashboard data">
-      {[1, 2, 3].map(item => (
-        <div key={item} className="h-[62px] animate-pulse rounded-xl bg-slate-100" />
-      ))}
-    </div>
-  );
-}
 
 function DetailModal({ record, onClose }) {
   useEffect(() => {
@@ -115,7 +82,7 @@ function DetailModal({ record, onClose }) {
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-end justify-center bg-slate-950/45 p-0 backdrop-blur-sm sm:items-center sm:p-5"
+      className="fixed inset-0 z-[600] flex justify-end bg-gray-900/40 backdrop-blur-sm"
       onMouseDown={event => {
         if (event.target === event.currentTarget) onClose();
       }}
@@ -124,69 +91,69 @@ function DetailModal({ record, onClose }) {
         role="dialog"
         aria-modal="true"
         aria-labelledby="admin-detail-title"
-        className="max-h-[calc(100dvh-1rem)] w-full overflow-y-auto rounded-t-3xl border border-slate-200 bg-white shadow-2xl sm:max-h-[calc(100dvh-2.5rem)] sm:max-w-lg sm:rounded-3xl"
+        className="flex h-full w-full max-w-md flex-col bg-white shadow-2xl sm:border-l sm:border-gray-100"
       >
-        <div className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-slate-100 bg-white/95 px-5 py-4 backdrop-blur sm:px-6">
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-emerald-700">
-              New account
-            </p>
-            <h2 id="admin-detail-title" className="mt-1 text-lg font-bold tracking-tight text-slate-950">
-              Account details
-            </h2>
+        {/* Panel header */}
+        <div className="flex shrink-0 items-start justify-between gap-3 border-b border-gray-100 px-6 py-5">
+          <div className="min-w-0">
+            <h2 id="admin-detail-title" className="text-base font-semibold text-gray-900">Account details</h2>
+            <p className="mt-0.5 text-xs text-gray-500">Newly created member</p>
           </div>
           <button
             type="button"
             onClick={onClose}
             aria-label="Close details"
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
+            className={`rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700 ${FOCUS_RING}`}
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
-        <div className="space-y-5 p-5 sm:p-6">
-          <div className="rounded-2xl border p-4 border-emerald-100 bg-emerald-50/70">
-            <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">
-              Member name
-            </p>
-            <p className="mt-2 break-words text-base font-semibold leading-relaxed text-slate-900">
-              {item.full_name || 'New member'}
-            </p>
+        {/* Panel body */}
+        <div className="flex-1 space-y-6 overflow-y-auto p-6 [&::-webkit-scrollbar]:hidden">
+          <div className="flex items-center gap-3 rounded-xl border border-gray-200 p-4">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-emerald-200 bg-emerald-100 text-sm font-semibold text-emerald-800">
+              {(item.full_name || 'M').trim().charAt(0).toUpperCase()}
+            </span>
+            <div className="min-w-0">
+              <p className="text-xs text-gray-500">Member name</p>
+              <p className="break-words text-sm font-semibold text-gray-900">{item.full_name || 'New member'}</p>
+            </div>
           </div>
 
-          <dl className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <div className="min-w-0 rounded-xl border border-slate-200 p-3">
-              <dt className="flex items-center gap-2 text-[11px] font-semibold text-slate-500">
-                <Mail className="h-3.5 w-3.5" /> Email
+          <dl className="divide-y divide-gray-100 rounded-xl border border-gray-200">
+            <div className="min-w-0 p-4">
+              <dt className="flex items-center gap-2 text-xs text-gray-500">
+                <Mail className="h-3.5 w-3.5" aria-hidden="true" /> Email
               </dt>
-              <dd className="mt-1 break-all text-sm font-medium text-slate-900">
+              <dd className="mt-1 break-all text-sm font-medium text-gray-900">
                 {item.email || 'Not provided'}
               </dd>
             </div>
-            
-            <div className="rounded-xl border border-slate-200 p-3">
-              <dt className="flex items-center gap-2 text-[11px] font-semibold text-slate-500">
-                <CalendarDays className="h-3.5 w-3.5" /> Joined
+
+            <div className="p-4">
+              <dt className="flex items-center gap-2 text-xs text-gray-500">
+                <CalendarDays className="h-3.5 w-3.5" aria-hidden="true" /> Joined
               </dt>
-              <dd className="mt-1 text-sm font-medium text-slate-900">{formatDate(item.created_at)}</dd>
+              <dd className="mt-1 text-sm font-medium text-gray-900">{formatDate(item.created_at)}</dd>
             </div>
-            
-            <div className="min-w-0 rounded-xl border border-slate-200 p-3 sm:col-span-2">
-              <dt className="text-[11px] font-semibold text-slate-500">Record ID</dt>
-              <dd className="mt-1 break-all font-mono text-xs text-slate-700">{item.id}</dd>
+
+            <div className="min-w-0 p-4">
+              <dt className="text-xs text-gray-500">Record ID</dt>
+              <dd className="mt-1 break-all font-mono text-xs text-gray-600">{item.id}</dd>
             </div>
           </dl>
+        </div>
 
-          <div className="flex justify-end border-t border-slate-100 pt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="min-h-11 w-full rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-700 sm:w-auto"
-            >
-              Close details
-            </button>
-          </div>
+        {/* Panel footer */}
+        <div className="shrink-0 border-t border-gray-100 px-6 py-4">
+          <button
+            type="button"
+            onClick={onClose}
+            className={`w-full rounded-lg bg-emerald-700 py-2.5 text-[13px] font-semibold text-white shadow-sm transition-colors hover:bg-emerald-800 ${FOCUS_RING}`}
+          >
+            Close
+          </button>
         </div>
       </section>
     </div>
@@ -201,7 +168,9 @@ export default function AdminDashboard() {
   const [topupError, setTopupError] = useState(false);
   const [loading, setLoading] = useState(true);
   const [selectedRecord, setSelectedRecord] = useState(null);
-  
+  const [liveRefreshKey, setLiveRefreshKey] = useState(0);
+  useRealtimeRefresh(() => setLiveRefreshKey(key => key + 1), ['user_profiles', 'skills', 'sessions', 'topup_transactions'], 'web_refresh_admin_dashboard');
+
   const closeDetails = useCallback(() => setSelectedRecord(null), []);
 
   useEffect(() => {
@@ -266,181 +235,257 @@ export default function AdminDashboard() {
 
     fetchDashboardData();
     return () => { isMounted = false; };
-  }, []);
+  }, [liveRefreshKey]);
+
+  // ── Display-only values derived from the stats above ──
+  const metrics = [
+    { label: 'Total users', note: 'Registered platform members', value: stats.users, to: '/admin/users', Icon: Users, tone: 'bg-blue-50 text-blue-700' },
+    { label: 'Active skills', note: 'Published listings available to book', value: stats.skills, to: '/admin/platform', Icon: BookOpen, tone: 'bg-emerald-50 text-emerald-700' },
+    { label: 'Total sessions', note: 'Sessions booked across the platform', value: stats.sessions, to: '/admin/platform', Icon: Clock, tone: 'bg-amber-50 text-amber-700' },
+    { label: 'Platform credits', note: 'Combined member credit balances', value: stats.credits, to: '/admin/users', Icon: Coins, tone: 'bg-violet-50 text-violet-700' },
+  ];
 
   return (
-    <div className="mx-auto w-full max-w-[1440px] px-4 py-5 sm:px-6 sm:py-7 lg:px-8">
-      <header className="mb-6 flex flex-col gap-4 sm:mb-8 sm:flex-row sm:items-end sm:justify-between">
-        <div className="min-w-0">
-          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-700">Admin workspace</p>
-          <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">Platform overview</h1>
-          <p className="mt-1 max-w-2xl text-sm leading-relaxed text-slate-500">
-            Monitor platform activity and high-level system metrics.
+    <div className="max-w-5xl mx-auto space-y-6 font-sans text-gray-700">
+
+      {/* ── PAGE HEADER ── */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight text-gray-900">Platform overview</h1>
+          <p className="mt-1 text-sm text-gray-500">
+            {loading
+              ? 'Loading the latest figures…'
+              : `${formatNumber(stats.users)} ${stats.users === 1 ? 'member' : 'members'} and ${formatNumber(stats.skills)} active ${stats.skills === 1 ? 'skill' : 'skills'} on the platform.`}
           </p>
         </div>
-        <div className="inline-flex w-fit items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3.5 py-2 text-xs font-bold text-emerald-800">
-          <span className="relative flex h-2.5 w-2.5" aria-hidden="true">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-50" />
-            <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-600" />
-          </span>
+        <span
+          className="inline-flex items-center gap-2 self-start rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-800 sm:self-auto"
+          role="status"
+        >
+          <span className="h-2 w-2 rounded-full bg-emerald-500" aria-hidden="true" />
           System online
-        </div>
-      </header>
+        </span>
+      </div>
 
-      <section aria-label="Platform metrics" className="mb-5 grid grid-cols-2 gap-3 sm:mb-6 sm:grid-cols-2 sm:gap-4 xl:grid-cols-4">
-        <StatCard title="Total users" value={loading ? '—' : formatNumber(stats.users)} icon={Users} tone="bg-blue-50 text-blue-700" />
-        <StatCard title="Active skills" value={loading ? '—' : formatNumber(stats.skills)} icon={BookOpen} tone="bg-emerald-50 text-emerald-700" />
-        <StatCard title="Total sessions" value={loading ? '—' : formatNumber(stats.sessions)} icon={Clock} tone="bg-amber-50 text-amber-700" />
-        <StatCard title="Platform credits" value={loading ? '—' : formatNumber(stats.credits)} icon={Coins} tone="bg-violet-50 text-violet-700" />
-      </section>
+      {/* ── ROW 1: PLATFORM METRICS + TOP-UP REVENUE / BREAKDOWN ── */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
 
-      <section className="grid grid-cols-1 gap-5 xl:grid-cols-2">
-        <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
-          <PanelHeader icon={Users} title="Newest accounts" description="The latest members to join the platform" count={loading ? '…' : recentUsers.length} />
-          {loading ? (
-            <LoadingRows />
-          ) : recentUsers.length === 0 ? (
-            <div className="px-5 py-8 text-center text-sm text-slate-500">No recent accounts to show.</div>
-          ) : (
-            <ul className="divide-y divide-slate-100">
-              {recentUsers.map(user => (
-                <li key={user.id}>
-                  <button
-                    type="button"
-                    onClick={() => setSelectedRecord({ type: 'user', item: user })}
-                    className="group flex min-h-[68px] w-full items-center gap-3 px-4 py-3 text-left transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-emerald-400 sm:px-5"
-                  >
-                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-sm font-bold text-emerald-800">
-                      {(user.full_name || 'M').trim().charAt(0).toUpperCase()}
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate text-sm font-semibold text-slate-800">{user.full_name || 'New member'}</span>
-                      <span className="mt-1 block truncate text-xs text-slate-500">{user.email || 'Email not provided'}</span>
-                    </span>
-                    <span className="hidden shrink-0 text-right sm:block">
-                      <span className="block text-[10px] font-bold uppercase tracking-wide text-slate-400">Joined</span>
-                      <span className="mt-1 block text-xs font-medium text-slate-600">{formatDate(user.created_at)}</span>
-                    </span>
-                    <ChevronRight className="h-4 w-4 shrink-0 text-slate-400 transition group-hover:translate-x-0.5 group-hover:text-emerald-700" aria-hidden="true" />
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-          <div className="border-t border-slate-100 px-4 py-3 text-[11px] font-medium text-slate-400 sm:px-5">
-            Showing the 5 most recently created accounts
+        {/* Platform metrics */}
+        <section aria-labelledby="metrics-heading" className="flex flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm lg:col-span-8">
+          <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
+            <h2 id="metrics-heading" className="text-sm font-semibold text-gray-900">Platform metrics</h2>
+            <span className="text-xs text-gray-500">All-time totals</span>
           </div>
-        </div>
-
-        <aside className="rounded-2xl border border-slate-200/80 bg-slate-950 p-5 text-white shadow-sm sm:p-6">
-          <div className="flex items-start gap-3">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/10 text-emerald-300">
-              <Wallet className="h-5 w-5" aria-hidden="true" />
-            </span>
-            <div>
-              <p className="text-sm font-bold">Top-up overview</p>
-              <p className="mt-1 text-xs leading-relaxed text-slate-400">Credit purchases made through PayMongo.</p>
-            </div>
-          </div>
-
-          {topupError ? (
-            <div role="alert" className="mt-5 rounded-xl border border-rose-400/30 bg-rose-500/10 p-3 text-xs leading-relaxed text-rose-200">
-              Could not load top-up data. Make sure the admin read policy for top-ups is in place.
-            </div>
-          ) : (
-            <>
-              <div className="mt-5 grid grid-cols-2 gap-3">
-                <div className="col-span-2 rounded-xl border border-white/10 bg-white/5 p-3">
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Total top-up revenue</p>
-                  <p className="mt-2 text-2xl font-bold">{loading ? '—' : formatPeso(topupStats.revenue)}</p>
-                </div>
-                <div className="rounded-xl border border-white/10 bg-white/5 p-3">
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Credits sold</p>
-                  <p className="mt-2 text-xl font-bold">{loading ? '—' : formatNumber(topupStats.credits)}</p>
-                </div>
-                <div className="rounded-xl border border-white/10 bg-white/5 p-3">
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Paid / Pending</p>
-                  <p className="mt-2 text-xl font-bold">
-                    {loading ? '—' : `${formatNumber(topupStats.paid)} / ${formatNumber(topupStats.pending)}`}
-                  </p>
-                </div>
-              </div>
-
-              <div className="mt-4 space-y-3 rounded-xl bg-white/5 p-3">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Paid by method</p>
-                {[
-                  { label: 'GCash', count: topupStats.gcash },
-                  { label: 'Maya', count: topupStats.maya },
-                ].map(method => {
-                  const pct = topupStats.paid ? Math.round((method.count / topupStats.paid) * 100) : 0;
-                  return (
-                    <div key={method.label}>
-                      <div className="flex items-center justify-between text-xs text-slate-300">
-                        <span>{method.label}</span>
-                        <span>{loading ? '—' : `${formatNumber(method.count)} · ${pct}%`}</span>
-                      </div>
-                      <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-white/10">
-                        <div className="h-full rounded-full bg-emerald-400" style={{ width: `${loading ? 0 : pct}%` }} />
-                      </div>
+          <ul className="flex flex-1 flex-col divide-y divide-gray-100">
+            {metrics.map(({ label, note, value, to, Icon, tone }) => (
+              <li key={label} className="flex flex-1">
+                <Link to={to} className={`group flex flex-1 flex-col gap-4 px-6 py-5 transition-colors hover:bg-gray-50/70 sm:flex-row sm:items-center sm:gap-6 ${FOCUS_RING} focus-visible:ring-inset focus-visible:ring-offset-0`}>
+                  <div className="flex min-w-0 flex-1 items-center gap-4">
+                    <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${tone}`}>
+                      <Icon className="h-5 w-5" aria-hidden="true" />
+                    </span>
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-gray-900">{label}</p>
+                      <p className="mt-0.5 text-xs text-gray-500">{note}</p>
                     </div>
+                  </div>
+
+                  <div className="flex items-center justify-between gap-5 sm:w-[40%] sm:justify-end">
+                    <span className={`text-right text-2xl font-semibold leading-none tabular-nums text-gray-900 transition-opacity ${loading ? 'opacity-30' : ''}`}>
+                      {loading ? '—' : formatNumber(value)}
+                    </span>
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-gray-200 text-gray-400 transition-colors group-hover:border-emerald-300 group-hover:bg-emerald-50 group-hover:text-emerald-700">
+                      <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+                    </span>
+                  </div>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        {/* Top-up revenue + breakdown */}
+        <div className="grid gap-6 sm:grid-cols-2 lg:col-span-4 lg:grid-cols-1 lg:grid-rows-[auto_1fr]">
+          <section aria-labelledby="revenue-heading" className="rounded-2xl bg-emerald-900 p-6 text-white shadow-sm">
+            <div className="flex items-center justify-between">
+              <h2 id="revenue-heading" className="text-sm font-medium text-emerald-100">Top-up revenue</h2>
+              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10 text-emerald-100">
+                <Wallet className="h-4 w-4" aria-hidden="true" />
+              </span>
+            </div>
+            {topupError ? (
+              <div role="alert" className="mt-5 rounded-xl border border-rose-300/30 bg-rose-500/15 p-3 text-xs leading-relaxed text-rose-100">
+                Could not load top-up data. Make sure the admin read policy for top-ups is in place.
+              </div>
+            ) : (
+              <>
+                <p className="mt-5">
+                  <span className={`text-4xl font-semibold leading-none tracking-tight tabular-nums transition-opacity ${loading ? 'opacity-30' : ''}`}>
+                    {loading ? '—' : formatPeso(topupStats.revenue)}
+                  </span>
+                </p>
+                <p className="mt-3 text-xs leading-relaxed text-emerald-100/80">Collected through PayMongo. Only paid top-ups count toward revenue.</p>
+              </>
+            )}
+          </section>
+
+          <section aria-labelledby="breakdown-heading" className="flex flex-col rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+            <h2 id="breakdown-heading" className="text-sm font-semibold text-gray-900">Top-up breakdown</h2>
+            <dl className="grid grid-cols-2 gap-4 pt-4">
+              <div>
+                <dt className="flex items-center gap-1.5 text-xs text-gray-500"><Coins className="h-3.5 w-3.5" aria-hidden="true" /> Credits sold</dt>
+                <dd className={`mt-1.5 text-2xl font-semibold leading-none tabular-nums text-gray-900 transition-opacity ${loading ? 'opacity-30' : ''}`}>
+                  {loading ? '—' : formatNumber(topupStats.credits)}
+                </dd>
+              </div>
+              <div>
+                <dt className="flex items-center gap-1.5 text-xs text-gray-500"><Clock className="h-3.5 w-3.5" aria-hidden="true" /> Paid / pending</dt>
+                <dd className={`mt-1.5 text-2xl font-semibold leading-none tabular-nums text-gray-900 transition-opacity ${loading ? 'opacity-30' : ''}`}>
+                  {loading ? '—' : `${formatNumber(topupStats.paid)} / ${formatNumber(topupStats.pending)}`}
+                </dd>
+              </div>
+            </dl>
+
+            <div className="mt-auto space-y-3 border-t border-gray-100 pt-5">
+              <p className="text-xs font-medium text-gray-900">Paid by method</p>
+              {[
+                { label: 'GCash', count: topupStats.gcash },
+                { label: 'Maya', count: topupStats.maya },
+              ].map(method => {
+                const pct = topupStats.paid ? Math.round((method.count / topupStats.paid) * 100) : 0;
+                return (
+                  <div key={method.label}>
+                    <div className="flex items-center justify-between text-xs text-gray-500">
+                      <span>{method.label}</span>
+                      <span className="tabular-nums">{loading ? '—' : `${formatNumber(method.count)} · ${pct}%`}</span>
+                    </div>
+                    <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-gray-100" role="img" aria-label={`${method.label}: ${loading ? 0 : pct}% of paid top-ups`}>
+                      <div className="h-full rounded-full bg-emerald-600 transition-all duration-500" style={{ width: `${loading ? 0 : pct}%` }} />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        </div>
+      </div>
+
+      {/* ── ROW 2: RECENT TOP-UPS + NEWEST ACCOUNTS ── */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+
+        {/* Recent top-ups feed */}
+        <section aria-labelledby="topups-heading" className="min-w-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm lg:col-span-8">
+          <div className="flex items-center justify-between gap-3 border-b border-gray-100 px-6 py-4">
+            <div>
+              <h2 id="topups-heading" className="text-sm font-semibold text-gray-900">Recent top-ups</h2>
+              <p className="mt-0.5 text-xs text-gray-500">Latest credit purchases, including pending ones</p>
+            </div>
+            {!loading && !topupError && recentTopups.length > 0 && (
+              <span className="rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium tabular-nums text-gray-600">{recentTopups.length} latest</span>
+            )}
+          </div>
+
+          <div aria-busy={loading} className="max-h-[560px] overflow-y-auto [scrollbar-color:#d1d5db_transparent] [scrollbar-width:thin]">
+            {loading ? (
+              <div className="p-12 text-center text-sm text-gray-500" role="status">Loading recent top-ups…</div>
+            ) : topupError ? (
+              <div className="p-12 text-center text-sm text-gray-500">Top-up records are not available right now.</div>
+            ) : recentTopups.length === 0 ? (
+              <div className="p-12 text-center">
+                <span className="mx-auto flex h-11 w-11 items-center justify-center rounded-xl border border-gray-100 bg-gray-50 text-gray-400">
+                  <Wallet className="h-5 w-5" aria-hidden="true" />
+                </span>
+                <p className="mt-3 text-sm font-semibold text-gray-900">No top-ups yet</p>
+                <p className="mt-1 text-xs text-gray-500">Credit purchases will appear here as they come in.</p>
+              </div>
+            ) : (
+              <ul className="divide-y divide-gray-100">
+                {recentTopups.map(topup => {
+                  const member = relationOne(topup.user_profiles);
+                  return (
+                    <li key={topup.id} className="relative flex flex-col gap-3 px-6 py-4 transition-colors hover:bg-gray-50/70 sm:flex-row sm:items-center sm:gap-4">
+                      <span className={`absolute inset-y-0 left-0 w-[3px] ${topupAccentTone(topup.status)}`} aria-hidden="true" />
+
+                      <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${topupIconTone(topup.status)}`}>
+                        <Wallet className="h-[18px] w-[18px]" aria-hidden="true" />
+                      </span>
+
+                      <div className="min-w-0 flex-1">
+                        <p className="max-w-full truncate text-sm font-semibold text-gray-900">{member?.full_name || 'Unknown member'}</p>
+                        <p className="mt-0.5 truncate text-xs text-gray-500">
+                          {methodLabel(topup.payment_method)} top-up · {formatDate(topup.created_at)}
+                        </p>
+                      </div>
+
+                      <div className="flex items-center justify-between gap-4 sm:justify-end">
+                        <div className="text-left sm:w-28 sm:text-right">
+                          <p className="text-sm font-semibold tabular-nums text-gray-900">{formatPeso(topup.amount_php)}</p>
+                          <p className="mt-0.5 text-xs tabular-nums text-gray-400">+{formatNumber(topup.credits_added)} credits</p>
+                        </div>
+                        <span className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium capitalize ${topupStatusTone(topup.status)}`}>
+                          <span className={`h-1.5 w-1.5 rounded-full ${topupDotTone(topup.status)}`} aria-hidden="true" />
+                          {topup.status || 'unknown'}
+                        </span>
+                      </div>
+                    </li>
                   );
                 })}
-              </div>
-            </>
-          )}
+              </ul>
+            )}
+          </div>
+        </section>
 
-          <div className="mt-4 flex items-start gap-2 rounded-xl bg-white/5 p-3 text-xs leading-relaxed text-slate-300">
-            <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-300" aria-hidden="true" />
-            <p>Only paid top-ups count toward revenue and credits sold.</p>
+        {/* Newest accounts */}
+        <aside aria-labelledby="accounts-heading" className="lg:col-span-4">
+          <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm lg:sticky lg:top-[132px]">
+            <div className="flex items-center justify-between gap-3 border-b border-gray-100 px-6 py-4">
+              <div className="flex items-center gap-2.5">
+                <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-50 text-emerald-700">
+                  <Users className="h-4 w-4" aria-hidden="true" />
+                </span>
+                <div>
+                  <h2 id="accounts-heading" className="text-sm font-semibold text-gray-900">Newest accounts</h2>
+                  <p className="mt-0.5 text-xs text-gray-500">Latest members to join</p>
+                </div>
+              </div>
+            </div>
+
+            {loading ? (
+              <div className="p-10 text-center text-sm text-gray-500" role="status">Loading accounts…</div>
+            ) : recentUsers.length === 0 ? (
+              <div className="p-10 text-center">
+                <span className="mx-auto flex h-11 w-11 items-center justify-center rounded-xl border border-gray-100 bg-gray-50 text-gray-400">
+                  <Users className="h-5 w-5" aria-hidden="true" />
+                </span>
+                <p className="mt-3 text-sm font-semibold text-gray-900">No recent accounts</p>
+                <p className="mt-1 text-xs text-gray-500">New members will appear here as they join.</p>
+              </div>
+            ) : (
+              <ul className="divide-y divide-gray-100">
+                {recentUsers.map(user => (
+                  <li key={user.id}>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedRecord({ type: 'user', item: user })}
+                      className={`group flex w-full items-center gap-3 px-6 py-3.5 text-left transition-colors hover:bg-gray-50/70 ${FOCUS_RING} focus-visible:ring-inset focus-visible:ring-offset-0`}
+                    >
+                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-emerald-200 bg-emerald-100 text-sm font-semibold text-emerald-800">
+                        {(user.full_name || 'M').trim().charAt(0).toUpperCase()}
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-sm font-semibold text-gray-900">{user.full_name || 'New member'}</span>
+                        <span className="mt-0.5 block truncate text-xs text-gray-500">{user.email || 'Email not provided'}</span>
+                        <span className="mt-0.5 block text-xs tabular-nums text-gray-400">Joined {formatDate(user.created_at)}</span>
+                      </span>
+                      <ChevronRight className="h-4 w-4 shrink-0 text-gray-300 transition-colors group-hover:text-emerald-700" aria-hidden="true" />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         </aside>
-      </section>
-
-      <section className="mt-5 overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
-        <PanelHeader
-          icon={Wallet}
-          title="Recent top-ups"
-          description="The latest credit purchases on the platform"
-          count={loading ? '…' : recentTopups.length}
-          tone="text-emerald-700"
-        />
-        {loading ? (
-          <LoadingRows />
-        ) : topupError ? (
-          <div className="px-5 py-8 text-center text-sm text-slate-500">Top-up records are not available right now.</div>
-        ) : recentTopups.length === 0 ? (
-          <div className="px-5 py-8 text-center text-sm text-slate-500">No top-ups yet.</div>
-        ) : (
-          <ul className="divide-y divide-slate-100">
-            {recentTopups.map(topup => {
-              const member = relationOne(topup.user_profiles);
-              return (
-                <li key={topup.id} className="flex min-h-[68px] items-center gap-3 px-4 py-3 sm:px-5">
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-sm font-bold text-emerald-800">
-                    {(member?.full_name || 'M').trim().charAt(0).toUpperCase()}
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate text-sm font-semibold text-slate-800">{member?.full_name || 'Unknown member'}</span>
-                    <span className="mt-1 block truncate text-xs text-slate-500">
-                      {methodLabel(topup.payment_method)} · {formatDate(topup.created_at)}
-                    </span>
-                  </span>
-                  <span className="hidden shrink-0 text-right sm:block">
-                    <span className="block text-sm font-bold text-slate-800">{formatPeso(topup.amount_php)}</span>
-                    <span className="mt-1 block text-xs font-medium text-slate-500">+{formatNumber(topup.credits_added)} credits</span>
-                  </span>
-                  <span className={`inline-flex shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ring-1 ring-inset ${topupStatusTone(topup.status)}`}>
-                    {topup.status || 'unknown'}
-                  </span>
-                </li>
-              );
-            })}
-          </ul>
-        )}
-        <div className="border-t border-slate-100 px-4 py-3 text-[11px] font-medium text-slate-400 sm:px-5">
-          Showing the 5 most recent top-ups, including pending ones
-        </div>
-      </section>
+      </div>
 
       <DetailModal record={selectedRecord} onClose={closeDetails} />
     </div>

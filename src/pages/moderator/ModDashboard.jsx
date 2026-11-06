@@ -1,3 +1,4 @@
+import useRealtimeRefresh from '../../hooks/useRealtimeRefresh';
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import supabase from '../../supabaseClient';
@@ -25,6 +26,8 @@ function ModeratorIcon({ name, size = 16, className = '' }) {
   );
 }
 
+const FOCUS_RING = 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2';
+
 export default function ModDashboard() {
   const [loading, setLoading] = useState(true);
   const [currentUserId, setCurrentUserId] = useState(null);
@@ -34,7 +37,7 @@ export default function ModDashboard() {
     pendingReports: 0,
     resolvedTotal: 0,
     myClaims: 0,
-    pendingSkills: 0 // 🚨 BAGONG METRIC PARA SA SKILLS
+    pendingSkills: 0
   });
   const [recentQueue, setRecentQueue] = useState([]);
 
@@ -83,7 +86,7 @@ export default function ModDashboard() {
         .select('*', { count: 'exact', head: true })
         .eq('status', 'resolved');
 
-      // 5. Fetch Pending Skills Count 🚨
+      // 5. Fetch Pending Skills Count
       const { count: pendingSkillsCount } = await supabase
         .from('skills')
         .select('*', { count: 'exact', head: true })
@@ -119,12 +122,12 @@ export default function ModDashboard() {
       (recentData || []).forEach(report => {
         const key = report.reference_id || report.id;
         if (!recentClusters[key]) {
-           recentClusters[key] = { ...report, report_count: 1 };
+          recentClusters[key] = { ...report, report_count: 1 };
         } else {
-           recentClusters[key].report_count += 1;
-           if (report.status === 'pending' && recentClusters[key].status !== 'pending') {
-               recentClusters[key].status = 'pending';
-           }
+          recentClusters[key].report_count += 1;
+          if (report.status === 'pending' && recentClusters[key].status !== 'pending') {
+            recentClusters[key].status = 'pending';
+          }
         }
       });
 
@@ -141,225 +144,218 @@ export default function ModDashboard() {
     fetchDashboardData();
   }, []);
 
+  useRealtimeRefresh(fetchDashboardData, ['skills', 'reports', 'sessions'], 'web_refresh_moddashboard');
+
+  // ── Display-only values derived from the stats above ──
+  const queues = [
+    { label: 'Skill approvals', note: 'Listings awaiting quality review', count: stats.pendingSkills, to: '/moderator/approvals', icon: 'search', tone: 'bg-emerald-50 text-emerald-700', bar: 'bg-emerald-600' },
+    { label: 'Disputes & escrow', note: 'Session cases awaiting a ruling', count: stats.pendingDisputes, to: '/moderator/disputes', icon: 'scale', tone: 'bg-amber-50 text-amber-700', bar: 'bg-amber-500' },
+    { label: 'User reports', note: 'Conduct and profile flags', count: stats.pendingReports, to: '/moderator/reports', icon: 'alert', tone: 'bg-rose-50 text-rose-700', bar: 'bg-rose-500' },
+  ];
+  const totalOpen = queues.reduce((sum, q) => sum + q.count, 0);
+
   return (
-    <div className="max-w-7xl mx-auto space-y-6 font-sans text-slate-700">
-      
-      {/* ── HEADER ── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-slate-200">
+    <div className="max-w-5xl mx-auto space-y-6 font-sans text-gray-700">
+
+      {/* ── PAGE HEADER ── */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">
-            Moderation Overview
-          </h1>
-          <p className="text-xs text-slate-500 mt-1">
-            System health, active escrow liabilities, and unresolved intake queues.
+          <h1 className="text-2xl font-semibold tracking-tight text-gray-900">Moderation overview</h1>
+          <p className="mt-1 text-sm text-gray-500">
+            {loading
+              ? 'Loading the latest figures…'
+              : totalOpen === 0
+                ? 'Nothing is waiting for review right now.'
+                : `${totalOpen} ${totalOpen === 1 ? 'item needs' : 'items need'} review across your queues.`}
           </p>
         </div>
+        <button
+          onClick={fetchDashboardData}
+          className={`inline-flex items-center justify-center gap-2 self-start rounded-lg border border-gray-200 bg-white px-3.5 py-2 text-[13px] font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50 sm:self-auto ${FOCUS_RING}`}
+        >
+          <ModeratorIcon name="refresh" size={15} className={loading ? 'animate-spin' : ''} /> Refresh
+        </button>
+      </div>
 
-        <div className="flex items-center gap-2">
-          <button
-            onClick={fetchDashboardData}
-            className="inline-flex items-center justify-center gap-2 px-3 py-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-lg transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2"
-          >
-            <ModeratorIcon name="refresh" size={15} /> Refresh metrics
-          </button>
-          <Link
-            to="/moderator/disputes"
-            className="inline-flex items-center justify-center gap-2 px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-lg transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2"
-          >
-            <ModeratorIcon name="shield" size={15} /> Disputes queue
-          </Link>
+      {/* ── ROW 1: WORK QUEUES + ESCROW / WORKLOAD ── */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+
+        {/* Work queues */}
+        <section aria-labelledby="queues-heading" className="flex flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm lg:col-span-8">
+          <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
+            <h2 id="queues-heading" className="text-sm font-semibold text-gray-900">Work queues</h2>
+            <span className="text-xs text-gray-500">Share of open items</span>
+          </div>
+          <ul className="flex flex-1 flex-col divide-y divide-gray-100">
+            {queues.map(({ label, note, count, to, icon, tone, bar }) => {
+              const pct = totalOpen > 0 ? Math.round((count / totalOpen) * 100) : 0;
+              return (
+                <li key={to} className="flex flex-1">
+                  <Link to={to} className={`group flex flex-1 flex-col gap-4 px-6 py-5 transition-colors hover:bg-gray-50/70 sm:flex-row sm:items-center sm:gap-6 ${FOCUS_RING} focus-visible:ring-inset focus-visible:ring-offset-0`}>
+                    <div className="flex min-w-0 flex-1 items-center gap-4">
+                      <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${tone}`}>
+                        <ModeratorIcon name={icon} size={20} />
+                      </span>
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-gray-900">{label}</p>
+                        <p className="mt-0.5 text-xs text-gray-500">{note}</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-5 sm:w-[46%]">
+                      <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-gray-100" role="img" aria-label={`${pct}% of open items`}>
+                        <div className={`h-full rounded-full ${bar} transition-all duration-500`} style={{ width: `${pct}%` }} />
+                      </div>
+                      <span className={`w-12 text-right text-2xl font-semibold leading-none tabular-nums text-gray-900 transition-opacity ${loading ? 'opacity-30' : ''}`}>{count}</span>
+                      <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 text-gray-400 transition-colors group-hover:border-emerald-300 group-hover:bg-emerald-50 group-hover:text-emerald-700">
+                        <ModeratorIcon name="arrow" size={14} />
+                      </span>
+                    </div>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+
+        {/* Escrow + workload */}
+        <div className="grid gap-6 sm:grid-cols-2 lg:col-span-4 lg:grid-cols-1 lg:grid-rows-[auto_1fr]">
+          <section aria-labelledby="escrow-heading" className="rounded-2xl bg-emerald-900 p-6 text-white shadow-sm">
+            <div className="flex items-center justify-between">
+              <h2 id="escrow-heading" className="text-sm font-medium text-emerald-100">Escrow held in disputes</h2>
+              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10 text-emerald-100">
+                <ModeratorIcon name="wallet" size={16} />
+              </span>
+            </div>
+            <p className="mt-5 flex items-baseline gap-2">
+              <span className={`text-4xl font-semibold leading-none tracking-tight tabular-nums transition-opacity ${loading ? 'opacity-30' : ''}`}>{stats.escrowLocked}</span>
+              <span className="text-sm font-semibold text-emerald-200">CR</span>
+            </p>
+            <p className="mt-3 text-xs leading-relaxed text-emerald-100/80">Locked across sessions with an open dispute. Released only when a ruling is recorded.</p>
+          </section>
+
+          <section aria-labelledby="workload-heading" className="flex flex-col rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+            <h2 id="workload-heading" className="text-sm font-semibold text-gray-900">Workload</h2>
+            <dl className="mt-auto grid grid-cols-2 gap-4 pt-4">
+              <div>
+                <dt className="flex items-center gap-1.5 text-xs text-gray-500"><ModeratorIcon name="users" size={13} /> Claimed by you</dt>
+                <dd className={`mt-1.5 text-2xl font-semibold leading-none tabular-nums text-gray-900 transition-opacity ${loading ? 'opacity-30' : ''}`}>{stats.myClaims}</dd>
+              </div>
+              <div>
+                <dt className="flex items-center gap-1.5 text-xs text-gray-500"><ModeratorIcon name="check" size={13} /> Resolved total</dt>
+                <dd className={`mt-1.5 text-2xl font-semibold leading-none tabular-nums text-gray-900 transition-opacity ${loading ? 'opacity-30' : ''}`}>{stats.resolvedTotal}</dd>
+              </div>
+            </dl>
+          </section>
         </div>
       </div>
 
-      {/* ── 5 SUMMARY METRIC CARDS ── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-        
-        {/* Metric 1 */}
-        <div className="bg-white border border-slate-200/80 p-5 rounded-xl shadow-sm">
-          <div className="flex items-center justify-between text-xs font-medium text-slate-500">
-            <span>Pending Disputes</span>
-            <ModeratorIcon name="clock" className="text-amber-600" />
-          </div>
-          <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-2xl font-semibold text-slate-900">{stats.pendingDisputes}</span>
-            <span className="text-xs font-medium text-slate-400">Cases</span>
-          </div>
-          <p className="text-xs text-slate-500 mt-1">Requiring adjudication</p>
-        </div>
+      {/* ── ROW 2: INTAKE FEED + PROTOCOL ── */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
 
-        {/* Metric 2 */}
-        <div className="bg-white border border-slate-200/80 p-5 rounded-xl shadow-sm">
-          <div className="flex items-center justify-between text-xs font-medium text-slate-500">
-            <span>Escrow at Stake</span>
-            <span className="inline-flex items-center gap-1 text-xs font-semibold text-slate-400 uppercase"><ModeratorIcon name="wallet" size={14} /> Credits</span>
-          </div>
-          <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-2xl font-semibold text-slate-900">{stats.escrowLocked}</span>
-            <span className="text-xs font-semibold text-slate-500">CR</span>
-          </div>
-          <p className="text-xs text-slate-500 mt-1">Held across open sessions</p>
-        </div>
-
-        {/* Metric 3 */}
-        <div className="bg-white border border-slate-200/80 p-5 rounded-xl shadow-sm">
-          <div className="flex items-center justify-between text-xs font-medium text-slate-500">
-            <span>User Reports</span>
-            <ModeratorIcon name="alert" className="text-rose-600" />
-          </div>
-          <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-2xl font-semibold text-slate-900">{stats.pendingReports}</span>
-            <span className="text-xs font-medium text-slate-400">Tickets</span>
-          </div>
-          <p className="text-xs text-slate-500 mt-1">Conduct & profile flags</p>
-        </div>
-
-        {/* Metric 4 */}
-        <div className="bg-white border border-slate-200/80 p-5 rounded-xl shadow-sm">
-          <div className="flex items-center justify-between text-xs font-medium text-slate-500">
-            <span>Resolved Cases</span>
-            <span className="inline-flex items-center gap-1 text-emerald-700 font-semibold text-xs"><ModeratorIcon name="check" size={14} /> Settled</span>
-          </div>
-          <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-2xl font-semibold text-slate-900">{stats.resolvedTotal}</span>
-            <span className="text-xs font-medium text-slate-400">Total</span>
-          </div>
-          <p className="text-xs text-slate-500 mt-1">Historical closed tickets</p>
-        </div>
-
-        {/* Metric 5: Skill Approvals 🚨 */}
-        <Link to="/moderator/approvals" className="bg-white border border-slate-200/80 p-5 rounded-xl shadow-sm hover:border-indigo-300 hover:shadow-md transition cursor-pointer group">
-          <div className="flex items-center justify-between text-xs font-medium text-slate-500">
-            <span className="group-hover:text-indigo-700 transition">Skill Approvals</span>
-            <ModeratorIcon name="search" className="text-indigo-600" />
-          </div>
-          <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-2xl font-semibold text-slate-900 group-hover:text-indigo-700 transition">{stats.pendingSkills}</span>
-            <span className="text-xs font-medium text-slate-400">Listings</span>
-          </div>
-          <p className="text-xs text-slate-500 mt-1">Awaiting quality review</p>
-        </Link>
-
-      </div>
-
-      {/* ── SPLIT SECTION: INTAKE QUEUE & WORKLOAD ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-        
-        {/* Left Column (3 Cols): Intake Queue Table */}
-        <div className="lg:col-span-3 min-w-0 bg-white border border-slate-200/80 rounded-xl shadow-sm overflow-hidden flex flex-col">
-          <div className="p-4 border-b border-slate-200 flex items-center justify-between">
-            <h2 className="flex items-center gap-2 text-sm font-semibold tracking-tight text-slate-800">
-              <ModeratorIcon name="report" className="text-slate-500" /> Recent intake queue
-            </h2>
-            <span className="text-xs text-slate-400 font-medium">
-              Latest grouped submissions
-            </span>
-          </div>
-
-          <div className="overflow-x-auto [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300 [&::-webkit-scrollbar-track]:bg-slate-100 [scrollbar-width:thin] [scrollbar-color:#cbd5e1_#f1f5f9] overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300 [&::-webkit-scrollbar-track]:bg-slate-100 [scrollbar-width:thin] [scrollbar-color:#cbd5e1_#f1f5f9] max-h-[500px] w-full">
-            {loading ? (
-              <div className="p-10 text-center text-xs text-slate-400 font-medium">
-                Fetching intake telemetry...
-              </div>
-            ) : recentQueue.length === 0 ? (
-              <div className="p-10 text-center text-xs text-slate-400 font-medium">
-                No active records in the intake queue.
-              </div>
-            ) : (
-              <table className="min-w-[760px] w-full text-left text-sm whitespace-nowrap sm:whitespace-normal">
-                <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-semibold text-xs sticky top-0 z-10">
-                  <tr>
-                    <th className="py-2.5 px-4 w-[10%]">Type</th>
-                    <th className="py-2.5 px-4 w-[35%]">Subject / Reason</th>
-                    <th className="py-2.5 px-4 w-[30%]">Parties</th>
-                    <th className="py-2.5 px-4 w-[15%]">Status</th>
-                    <th className="py-2.5 px-4 w-[10%] text-right">Action</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 text-slate-700">
-                  {recentQueue.map((item) => {
-                    const isDispute = item.reference_type === 'session';
-                    return (
-                      <tr key={item.id} className="hover:bg-slate-50/80 transition">
-                        <td className="py-3 px-4">
-                          <span className={`inline-block px-2 py-0.5 rounded text-xs font-semibold border ${
-                            isDispute 
-                              ? 'bg-amber-50 text-amber-700 border-amber-200' 
-                              : 'bg-purple-50 text-purple-700 border-purple-200'
-                          }`}>
-                            {isDispute ? 'Dispute' : 'Report'}
-                          </span>
-                        </td>
-                        <td className="py-3 px-4">
-                          <div className="flex items-center gap-2">
-                             <p className="font-semibold text-slate-900 truncate max-w-[150px] sm:max-w-[200px]">
-                               {item.reason}
-                             </p>
-                             {item.report_count > 1 && (
-                               <span className="px-1.5 py-0.5 rounded-full bg-rose-100 text-rose-700 text-xs font-bold shrink-0" title={`${item.report_count} users reported this`}>
-                                  {item.report_count}x
-                               </span>
-                             )}
-                          </div>
-                          <p className="text-xs text-slate-400 font-mono mt-0.5">
-                            {new Date(item.created_at).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                          </p>
-                        </td>
-                        <td className="py-3 px-4">
-                          <p className="text-xs text-slate-600 truncate max-w-[150px] sm:max-w-[200px]">
-                            {item.report_count > 1 ? 'Multiple Users' : (item.reporter?.full_name || 'Anonymous')} <span aria-hidden="true">→</span> {item.reported?.full_name || 'User'}
-                          </p>
-                        </td>
-                        <td className="py-3 px-4">
-                          <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${
-                            item.status === 'pending'
-                              ? 'bg-amber-50 text-amber-800'
-                              : 'bg-emerald-50 text-emerald-800'
-                          }`}>
-                            {item.status}
-                          </span>
-                        </td>
-                        <td className="py-3 px-4 text-right">
-                          <Link
-                            to={isDispute ? `/moderator/disputes/${item.id}` : `/moderator/reports/${item.id}`}
-                            className="inline-flex items-center gap-1 text-sm font-semibold text-slate-900 hover:text-emerald-600 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2"
-                          >
-                            Inspect <ModeratorIcon name="arrow" size={14} />
-                          </Link>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+        {/* Intake feed */}
+        <section aria-labelledby="intake-heading" className="min-w-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm lg:col-span-8">
+          <div className="flex items-center justify-between gap-3 border-b border-gray-100 px-6 py-4">
+            <div>
+              <h2 id="intake-heading" className="text-sm font-semibold text-gray-900">Recent intake</h2>
+              <p className="mt-0.5 text-xs text-gray-500">Latest submissions, grouped by case</p>
+            </div>
+            {!loading && recentQueue.length > 0 && (
+              <span className="rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium tabular-nums text-gray-600">{recentQueue.length} cases</span>
             )}
           </div>
-        </div>
 
-        {/* Right Column (1 Col): Workload & Operational Directives */}
-        <div className="lg:col-span-1 min-w-0 space-y-4">
-          
-          <div className="bg-white border border-slate-200/80 rounded-xl shadow-sm p-5">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700 mb-3">
-              Adjudication Protocol
-            </h3>
-            <ul className="text-xs text-slate-600 space-y-2.5">
-              <li className="flex gap-2">
-                <span className="font-semibold text-slate-900 shrink-0">1.</span>
-                <span><b>Independent Inspection:</b> Review chat history and attendance telemetry prior to finalizing verdicts.</span>
+          <div aria-busy={loading} className="max-h-[560px] overflow-y-auto [scrollbar-color:#d1d5db_transparent] [scrollbar-width:thin]">
+            {loading ? (
+              <div className="p-12 text-center text-sm text-gray-500" role="status">Loading the intake queue…</div>
+            ) : recentQueue.length === 0 ? (
+              <div className="p-12 text-center">
+                <span className="mx-auto flex h-11 w-11 items-center justify-center rounded-xl border border-gray-100 bg-gray-50 text-gray-400">
+                  <ModeratorIcon name="report" size={20} />
+                </span>
+                <p className="mt-3 text-sm font-semibold text-gray-900">The queue is clear</p>
+                <p className="mt-1 text-xs text-gray-500">New reports and disputes will appear here as they come in.</p>
+              </div>
+            ) : (
+              <ul className="divide-y divide-gray-100">
+                {recentQueue.map((item) => {
+                  const isDispute = item.reference_type === 'session';
+                  const isPending = item.status === 'pending';
+                  return (
+                    <li key={item.id} className="relative flex flex-col gap-3 px-6 py-4 transition-colors hover:bg-gray-50/70 sm:flex-row sm:items-center sm:gap-4">
+                      <span className={`absolute inset-y-0 left-0 w-[3px] ${isPending ? 'bg-amber-400' : 'bg-emerald-500'}`} aria-hidden="true" />
+
+                      <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${isDispute ? 'bg-amber-50 text-amber-700' : 'bg-rose-50 text-rose-700'}`}>
+                        <ModeratorIcon name={isDispute ? 'scale' : 'alert'} size={18} />
+                      </span>
+
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="max-w-full truncate text-sm font-semibold text-gray-900">{item.reason}</p>
+                          {item.report_count > 1 && (
+                            <span
+                              className="shrink-0 rounded-full bg-rose-50 px-1.5 py-0.5 text-xs font-semibold tabular-nums text-rose-700 ring-1 ring-inset ring-rose-100"
+                              title={`${item.report_count} users reported this`}
+                            >
+                              {item.report_count}x
+                            </span>
+                          )}
+                        </div>
+                        <p className="mt-0.5 truncate text-xs text-gray-500">
+                          {isDispute ? 'Dispute' : 'Report'} from {item.report_count > 1 ? 'multiple users' : (item.reporter?.full_name || 'Anonymous')} against {item.reported?.full_name || 'User'}
+                        </p>
+                      </div>
+
+                      <div className="flex items-center justify-between gap-4 sm:justify-end">
+                        <div className="text-left sm:w-28 sm:text-right">
+                          <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium capitalize ${isPending ? 'bg-amber-50 text-amber-800' : 'bg-emerald-50 text-emerald-800'}`}>
+                            <span className={`h-1.5 w-1.5 rounded-full ${isPending ? 'bg-amber-500' : 'bg-emerald-600'}`} aria-hidden="true" />
+                            {item.status}
+                          </span>
+                          <p className="mt-1 text-xs tabular-nums text-gray-400">
+                            {new Date(item.created_at).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                          </p>
+                        </div>
+                        <Link
+                          to={isDispute ? `/moderator/disputes/${item.id}` : `/moderator/reports/${item.id}`}
+                          className={`inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg bg-emerald-700 px-3.5 py-2 text-xs font-semibold text-white sm:w-[116px] shadow-sm transition-colors hover:bg-emerald-800 ${FOCUS_RING}`}
+                        >
+                          Open case <ModeratorIcon name="arrow" size={13} />
+                        </Link>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
+        </section>
+
+        {/* Protocol */}
+        <aside aria-labelledby="protocol-heading" className="lg:col-span-4">
+          <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm lg:sticky lg:top-[132px]">
+            <div className="flex items-center gap-2.5">
+              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-50 text-emerald-700">
+                <ModeratorIcon name="shield" size={16} />
+              </span>
+              <h2 id="protocol-heading" className="text-sm font-semibold text-gray-900">Adjudication protocol</h2>
+            </div>
+            <ul className="mt-5 space-y-4 text-[13px] leading-relaxed text-gray-600">
+              <li>
+                <p className="font-semibold text-gray-900">Inspect independently</p>
+                <p className="mt-0.5">Review the chat history and attendance record before you rule.</p>
               </li>
-              <li className="flex gap-2">
-                <span className="font-semibold text-slate-900 shrink-0">2.</span>
-                <span><b>No Self-Adjudication:</b> Never claim or resolve disputes where your account is an involved party.</span>
+              <li className="border-t border-gray-100 pt-4">
+                <p className="font-semibold text-gray-900">Avoid conflicts</p>
+                <p className="mt-0.5">Never claim or resolve a dispute that your own account is part of.</p>
               </li>
-              <li className="flex gap-2">
-                <span className="font-semibold text-slate-900 shrink-0">3.</span>
-                <span><b>Escrow Finality:</b> Escrow refunds and payout distributions are permanently recorded upon execution.</span>
+              <li className="border-t border-gray-100 pt-4">
+                <p className="font-semibold text-gray-900">Rulings are final</p>
+                <p className="mt-0.5">Escrow refunds and payouts are permanent once executed.</p>
               </li>
             </ul>
           </div>
-
-        </div>
-
+        </aside>
       </div>
 
     </div>

@@ -5,11 +5,11 @@ import {
 } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
 import supabase from '../../supabaseClient';
-​
+
 export default function SkillDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
-​
+
   const [skill,               setSkill]               = useState(null);
   const [loading,             setLoading]             = useState(true);
   const [currentUserId,       setCurrentUserId]       = useState(null);
@@ -23,7 +23,7 @@ export default function SkillDetails() {
   const [preferredDate,       setPreferredDate]       = useState('');
   const [preferredTime,       setPreferredTime]       = useState('');
   const [bookingMessage,      setBookingMessage]      = useState('');
-​
+
   const getLocalDateString = () => {
     const today = new Date();
     const yyyy = today.getFullYear();
@@ -32,7 +32,7 @@ export default function SkillDetails() {
     return `${yyyy}-${mm}-${dd}`;
   };
   const todayDateString = getLocalDateString();
-​
+
   useEffect(() => {
     const fetchSkillDetails = async () => {
       setLoading(true);
@@ -50,7 +50,6 @@ export default function SkillDetails() {
         if (sessionData && sessionData.length > 0) setExistingSession(sessionData[0]);
       }
       
-      // 🚨 FIX: Idinagdag ang !instructor_id dito para hindi malito ang Supabase
       const { data: skillData, error: skillError } = await supabase
         .from('skills')
         .select(`*, user_profiles!instructor_id(id,full_name,avatar_url,bio,role,created_at,availability_schedule,contact_info,booking_restricted_until), reviews(rating, feedback, created_at, student:user_profiles!student_id(full_name, avatar_url), q1_clarity, q2_patience, q3_relevance, q4_professionalism)`)
@@ -74,9 +73,10 @@ export default function SkillDetails() {
     };
     fetchSkillDetails();
   }, [id]);
-​
+
   const handleConfirmBooking = async () => {
     if (!preferredDate || !preferredTime) { setBookingError('Please select a preferred date and time.'); return; }
+    if (!bookingMessage.trim()) { setBookingError('Please provide a message for the instructor.'); return; }
     if (preferredDate < todayDateString)  { setBookingError('You cannot book a session for a past date.'); return; }
     
     const [year, month, day] = preferredDate.split('-').map(Number);
@@ -85,7 +85,7 @@ export default function SkillDetails() {
     const bookingDateObj = new Date(year, month - 1, day, hours, minutes);
     const bookingDateTimeMs = bookingDateObj.getTime();
     const oneHourFromNowMs = Date.now() + (60 * 60 * 1000);
-​
+
     if (bookingDateTimeMs < oneHourFromNowMs) {
       setBookingError('Please select a schedule at least 1 hour from now to give the instructor time to accept.');
       return;
@@ -111,7 +111,7 @@ export default function SkillDetails() {
           credit_amount: skill.credit_cost, 
           scheduled_date: preferredDate, 
           scheduled_time: preferredTime, 
-          message: bookingMessage, 
+          message: bookingMessage.trim(), 
           status: 'pending' 
         }])
         .select()
@@ -119,16 +119,25 @@ export default function SkillDetails() {
         
       if (sessionError) throw sessionError;
       
-      if (bookingMessage && bookingMessage.trim() !== '') {
-        const { error: msgError } = await supabase.from('messages').insert([{
-          session_id: newSession.id,
-          sender_id: currentUserId,
-          receiver_id: skill.instructor_id,
-          content: bookingMessage.trim(),
-          is_deleted: false
-        }]);
-        if (msgError) console.error("Failed to save initial message:", msgError);
-      }
+      // ✨ ADDED: image to the payload
+      const bookingSysContent = `__BOOKING_REQUEST__::${JSON.stringify({
+        skill_id: skill.id,
+        title: skill.title,
+        image: skill.cover_image_url || null,
+        cost: skill.credit_cost,
+        date: preferredDate,
+        time: preferredTime,
+        userMsg: bookingMessage.trim()
+      })}`;
+
+      const { error: msgError } = await supabase.from('messages').insert([{
+        session_id: newSession.id,
+        sender_id: currentUserId,
+        receiver_id: skill.instructor_id,
+        content: bookingSysContent,
+        is_deleted: false
+      }]);
+      if (msgError) console.error("Failed to save initial message:", msgError);
       
       await supabase.from('notifications').insert([{ user_id: skill.instructor_id, type: 'booking', content: `New booking request for "${skill.title}" worth ${skill.credit_cost} CR.`, link_url: '/sessions' }]);
       
@@ -144,14 +153,14 @@ export default function SkillDetails() {
       setBookingError('An error occurred while booking. Please try again.');
     } finally { setBookingLoading(false); }
   };
-​
+
   const closeBookingModal = () => {
     if (!bookingLoading) {
       setShowModal(false);
       setBookingError('');
     }
   };
-​
+
   if (loading) return (
     <div role="status" aria-live="polite" aria-label="Loading skill details" className="min-h-[80vh] bg-[#faf9f6]">
       <div className="mx-auto max-w-[1000px] animate-pulse px-6 py-6 md:px-8">
@@ -165,7 +174,9 @@ export default function SkillDetails() {
         </div>
       </div>
     </div>
-  );  if (!skill) return (
+  );
+
+  if (!skill) return (
     <div className="min-h-[80vh] flex flex-col items-center justify-center p-6 text-center bg-[#faf9f6]">
       <Search className="w-12 h-12 text-emerald-600 mb-4" />
       <h2 className="text-2xl font-bold text-gray-900 mb-2 tracking-tight">Skill Not Found</h2>
@@ -173,7 +184,7 @@ export default function SkillDetails() {
       <button onClick={() => navigate('/dashboard')} className="px-6 py-3 bg-emerald-700 text-white rounded-xl font-bold hover:bg-emerald-800 transition shadow-sm text-xs">Return to Dashboard</button>
     </div>
   );
-​
+
   const isMyListing = skill.instructor_id === currentUserId;
   const profileObj = Array.isArray(skill.user_profiles) ? skill.user_profiles[0] : skill.user_profiles;
   const instructorName     = profileObj?.full_name             || 'Unknown Instructor';
@@ -184,21 +195,21 @@ export default function SkillDetails() {
   const instructorId       = profileObj?.id                    || skill.instructor_id;
   const memberSince        = profileObj?.created_at ? new Date(profileObj.created_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : 'Recently';
   const hasEnoughCredits   = currentUserCredits >= skill.credit_cost;
-​
+
   const now = new Date();
   const instructorRestrictedUntil = profileObj?.booking_restricted_until ? new Date(profileObj.booking_restricted_until) : null;
   const isInstructorRestricted = instructorRestrictedUntil && instructorRestrictedUntil > now;
   
   const learnerRestrictedUntil = bookingRestrictedUntil ? new Date(bookingRestrictedUntil) : null;
   const isLearnerRestricted = learnerRestrictedUntil && learnerRestrictedUntil > now;
-​
+
   const SKILL_STATS = [
     { label: 'Cost',    icon: Coins,         value: `${skill.credit_cost} CR`, color: 'text-emerald-700', bg: 'bg-emerald-50', border: 'border-emerald-100' },
     { label: 'Rating',  icon: Star,          value: skill.avgRating > 0 ? skill.avgRating : 'New', color: 'text-amber-500',  bg: 'bg-amber-50',   border: 'border-amber-100'   },
     { label: 'Reviews', icon: MessageSquare, value: skill.totalReviews, color: 'text-sky-600',     bg: 'bg-sky-50',     border: 'border-sky-100'     },
     { label: 'Time',    icon: Clock,         value: skill.duration || 'N/A', color: 'text-orange-500', bg: 'bg-orange-50',  border: 'border-orange-100'  },
   ];
-​
+
   return (
     <div className="w-full">
       <div className="max-w-[1000px] mx-auto px-6 md:px-8 py-6">
@@ -206,7 +217,7 @@ export default function SkillDetails() {
           <p className="text-[12px] font-semibold uppercase tracking-widest text-emerald-700">Skill Listing</p>
           <button onClick={() => navigate(-1)} className="flex items-center gap-1 text-[11px] font-semibold text-gray-400 hover:text-emerald-700 transition"><ArrowLeft className="w-3.5 h-3.5" /> Back</button>
         </div>
-​
+
         <div className="flex flex-col lg:flex-row gap-6 items-start">
           <div className="w-full lg:w-[260px] shrink-0 lg:sticky lg:top-8 flex flex-col gap-4">
             <div className="bg-emerald-50 border border-gray-200 rounded-2xl p-4 flex flex-col items-center text-center shadow-sm">
@@ -216,16 +227,16 @@ export default function SkillDetails() {
                   ? <img src={instructorAvatar} alt={instructorName} className="w-full h-full object-cover" />
                   : <span className="text-4xl font-bold text-emerald-800">{instructorName.charAt(0)}</span>}
               </div>
-​
+
               <div className="flex flex-wrap gap-1 justify-center mb-1">
                 <span className="text-[10px] font-semibold uppercase tracking-widest bg-white text-emerald-700 border border-emerald-200 px-3 py-0.5 rounded-full">Instructor</span>
                 {skill.totalReviews > 0 && <span className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-widest bg-amber-50 text-amber-600 border border-amber-100 px-3 py-0.5 rounded-full"><Star className="w-3 h-3 fill-amber-400 text-amber-400" /> {skill.avgRating}</span>}
               </div>
-​
+
               <h3 onClick={() => navigate(`/user/${instructorId}`)}
                 className="font-bold text-[15px] text-gray-900 tracking-tight cursor-pointer hover:text-emerald-700 transition mb-1">{instructorName}</h3>
               <p className="text-[11px] text-gray-500 leading-snug mb-3">{instructorBio || 'Platform Instructor and Member'}</p>
-​
+
               {(instructorAvail || instructorContact || memberSince) && (
                 <div className="w-full space-y-2 mb-3">
                   {instructorAvail && (
@@ -252,7 +263,7 @@ export default function SkillDetails() {
               <button onClick={() => navigate(`/user/${instructorId}`)}
                 className="w-full bg-white hover:bg-gray-50 border border-gray-200 text-gray-700 py-2 rounded-xl font-semibold text-[11px] transition flex items-center justify-center gap-1.5">View Full Profile <ArrowRight className="w-3.5 h-3.5" /></button>
             </div>
-​
+
             <div className="grid grid-cols-2 gap-2">
               {SKILL_STATS.map(sc => {
                 const StatIcon = sc.icon;
@@ -265,7 +276,7 @@ export default function SkillDetails() {
                 );
               })}
             </div>
-​
+
             <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
               <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-1">Session Cost</p>
               <div className="flex items-end gap-1 mb-3">
@@ -287,7 +298,7 @@ export default function SkillDetails() {
                   </div>
                 </div>
               )}
-​
+
               {isMyListing ? (
                 <button 
                   onClick={() => navigate(`/edit-skill/${skill.id}`)} 
@@ -323,14 +334,14 @@ export default function SkillDetails() {
               )}
             </div>
           </div>
-​
+
           <div className="flex-1 min-w-0 space-y-4">
             {skill.cover_image_url && (
               <div className="w-full h-64 bg-white rounded-2xl overflow-hidden border border-gray-200 shadow-sm">
                 <img src={skill.cover_image_url} alt={skill.title} className="w-full h-full object-cover" />
               </div>
             )}
-​
+
             <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm">
               <div className="flex flex-wrap gap-1.5 mb-3">
                 {skill.format   && <span className="text-[10px] font-semibold uppercase tracking-widest bg-emerald-50 text-emerald-700 border border-emerald-100 px-2.5 py-0.5 rounded-full">{skill.format}</span>}
@@ -342,7 +353,7 @@ export default function SkillDetails() {
               <p className="text-[10px] text-gray-400 font-bold mt-1">
                 Posted on {new Date(skill.created_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
               </p>
-​
+
               {skill.portfolio_url && (
                 <div className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between">
                   <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400">Portfolio / Demo</p>
@@ -353,19 +364,19 @@ export default function SkillDetails() {
                 </div>
               )}
             </div>
-​
+
             <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm">
               <p className="text-sm font-bold tracking-tight text-gray-900 mb-3">About This Session</p>
               <p className="text-[13px] text-gray-600 leading-relaxed whitespace-pre-wrap">{skill.description}</p>
             </div>
-​
+
             {skill.outcomes && (
               <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm">
                 <p className="flex items-center gap-1.5 text-sm font-bold tracking-tight text-gray-900 mb-3"><Target className="w-4 h-4 text-emerald-600" /> What You Will Walk Away With</p>
                 <p className="text-[13px] text-gray-600 leading-relaxed whitespace-pre-wrap">{skill.outcomes}</p>
               </div>
             )}
-​
+
             {skill.reviewsList && skill.reviewsList.length > 0 && (
               <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm">
                 <p className="flex items-center gap-1.5 text-sm font-bold tracking-tight text-gray-900 mb-4"><MessageSquare className="w-4 h-4 text-sky-600" /> Student Feedback ({skill.totalReviews})</p>
@@ -375,7 +386,7 @@ export default function SkillDetails() {
                     const studentData = Array.isArray(review.student) ? review.student[0] : review.student;
                     const reviewerName = studentData?.full_name || 'Anonymous Student';
                     const reviewerAvatar = studentData?.avatar_url || null;
-​
+
                     return (
                       <div key={idx} className="pb-4 border-b border-gray-50 last:border-0 last:pb-0">
                         <div className="flex items-center gap-3 mb-2">
@@ -403,7 +414,7 @@ export default function SkillDetails() {
           </div>
         </div>
       </div>
-​
+
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={closeBookingModal} />
@@ -419,7 +430,7 @@ export default function SkillDetails() {
                   <button onClick={closeBookingModal} aria-label="Close booking dialog" className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 transition cursor-pointer"><X className="w-4 h-4" /></button>
                 </div>
                 <p className="text-[11px] text-gray-400 mb-4">Credits are deducted and held securely in escrow.</p>
-​
+
                 <div className="bg-emerald-50 border border-emerald-100 rounded-xl px-4 py-2.5 mb-4 flex items-center justify-between">
                   <div>
                     <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400">Session</p>
@@ -430,7 +441,7 @@ export default function SkillDetails() {
                     <p className="text-[16px] font-bold text-emerald-700">{skill.credit_cost} CR</p>
                   </div>
                 </div>
-​
+
                 <div className="space-y-3 mb-4">
                   <div>
                     <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-1">Preferred Date *</p>
@@ -443,15 +454,15 @@ export default function SkillDetails() {
                       className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-[13px] text-gray-800 outline-none focus:border-emerald-400 transition" />
                   </div>
                   <div>
-                    <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-1">Message (Optional)</p>
-                    <textarea value={bookingMessage} onChange={e => setBookingMessage(e.target.value)}
+                    <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-1">Message *</p>
+                    <textarea value={bookingMessage} onChange={e => setBookingMessage(e.target.value)} required
                       placeholder="Tell the instructor about your goals or preferred schedule..."
                       className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-[13px] text-gray-700 outline-none resize-none h-20 focus:border-emerald-400 transition" />
                   </div>
                 </div>
-​
+
                 {bookingError && <div className="mb-3 p-3 bg-red-50 border border-red-100 text-red-600 text-[11px] font-bold rounded-xl">{bookingError}</div>}
-​
+
                 <div className={`p-3 rounded-xl flex justify-between items-center text-[11px] font-bold border mb-4 ${
                   hasEnoughCredits ? 'bg-emerald-50 text-emerald-800 border-emerald-100' : 'bg-red-50 text-red-700 border-red-100'
                 }`}>
@@ -462,7 +473,7 @@ export default function SkillDetails() {
                   </span>
                   <span>{currentUserCredits} / {skill.credit_cost} CR</span>
                 </div>
-​
+
                 <div className="grid grid-cols-2 gap-3 border-t border-gray-100 pt-3">
                   <button onClick={closeBookingModal} disabled={bookingLoading}
                     className="inline-flex h-11 w-full items-center justify-center rounded-xl bg-gray-100 px-2 text-center text-[11px] font-bold leading-tight text-gray-600 transition hover:bg-gray-200 cursor-pointer">Cancel</button>

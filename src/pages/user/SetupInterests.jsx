@@ -32,7 +32,7 @@ export default function SetupInterests() {
   const [selected, setSelected] = useState([]);
   const [isSaving, setIsSaving] = useState(false);
   const [user, setUser] = useState(null);
-  const [progress, setProgress] = useState(0); // Para sa loading bar
+  const [progress, setProgress] = useState(0); 
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -43,17 +43,16 @@ export default function SetupInterests() {
     checkAuth();
   }, [navigate]);
 
-  // ANIMATION EFFECT PARA SA LOADING BAR
   useEffect(() => {
     if (isSaving) {
       const startTime = Date.now();
-      const duration = 4000; // 4 seconds
+      const duration = 4000; 
       const interval = setInterval(() => {
         const elapsed = Date.now() - startTime;
         const newProgress = Math.min((elapsed / duration) * 100, 100);
         setProgress(newProgress);
         if (newProgress >= 100) clearInterval(interval);
-      }, 50); // Update every 50ms for smooth bar movement
+      }, 50); 
       return () => clearInterval(interval);
     }
   }, [isSaving]);
@@ -69,17 +68,61 @@ export default function SetupInterests() {
     setIsSaving(true);
     
     try {
+      // 1. Kunin muna ang current data para sure
+      const { data: profile } = await supabase
+        .from('user_profiles')
+        .select('credits_balance, has_set_interests')
+        .eq('id', user.id)
+        .single();
+        
+      // Kung naka-set na dati (baka nag-refresh lang), derecho na sa dashboard
+      if (profile?.has_set_interests) {
+        navigate('/dashboard', { replace: true });
+        return;
+      }
+
+      const currentBalance = profile?.credits_balance || 0;
+      
+      // ✨ BULLETPROOF FIX: Para iwas maging 40
+      // Kung 0 pa lang, gawing 20. Kung may 20 na dahil sa default sa DB mo, 20 pa rin.
+      const finalBalance = currentBalance === 0 ? 20 : currentBalance;
+
+      // 2. Isang bagsakan na Update (Interests, Flag, at Balance)
       const { error } = await supabase
         .from('user_profiles')
         .update({ 
           interests: selected, 
-          has_set_interests: true 
+          has_set_interests: true,
+          credits_balance: finalBalance
         })
         .eq('id', user.id);
 
       if (error) throw error;
+
+      // 3. I-check kung may notif na ba para iwas doble
+      const { data: existingNotif } = await supabase
+        .from('notifications')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('type', 'system')
+        .ilike('%20 CR starting bonus%')
+        .limit(1);
+
+      if (!existingNotif || existingNotif.length === 0) {
+        await supabase
+          .from('notifications')
+          .insert([{
+            user_id: user.id,
+            type: 'system',
+            content: '🎉 Welcome to SkillCredit! You received a 20 CR starting bonus. Use it to book your first session!',
+            link_url: '/dashboard',
+            is_read: false
+          }]);
+      }
+
+      // 4. Set trigger para sa Gold Modal natin
+      localStorage.setItem('showWelcomeBonus', 'true');
       
-      // UX Trick: 4-second artificial delay for the loading screen
       await new Promise(resolve => setTimeout(resolve, 4000));
 
       navigate('/dashboard', { replace: true });
@@ -90,12 +133,9 @@ export default function SetupInterests() {
     }
   };
 
-  // 🚨 THE PREMIUM LOADING SCREEN 🚨
   if (isSaving) {
     return (
       <div className="min-h-screen bg-[#faf9f6] flex flex-col items-center justify-center p-6 animate-in fade-in duration-500">
-        
-        {/* Logo Container with Soft Glow */}
         <div className="relative mb-8">
           <div className="absolute inset-0 bg-emerald-400 blur-2xl opacity-20 animate-pulse rounded-full" />
           <div className="w-28 h-28 bg-white rounded-[2rem] shadow-sm border border-emerald-50 flex items-center justify-center relative z-10">
@@ -109,7 +149,6 @@ export default function SetupInterests() {
           Curating skills and building recommendations based on your selected interests.
         </p>
 
-        {/* Dynamic Progress Bar */}
         <div className="w-full max-w-[260px] space-y-2.5">
           <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-widest">
             <span className="text-gray-400">Loading resources</span>
@@ -122,27 +161,25 @@ export default function SetupInterests() {
             />
           </div>
         </div>
-
       </div>
     );
   }
 
-  // NORMAL SELECTION SCREEN
   return (
     <div className="min-h-screen bg-[#faf9f6] flex flex-col">
-      <div className="flex-1 max-w-4xl mx-auto px-6 py-12 flex flex-col">
+      <div className="flex-1 max-w-4xl mx-auto px-4 sm:px-6 py-10 sm:py-12 flex flex-col">
         
-        <div className="text-center mb-10 mt-8">
+        <div className="text-center mb-8 sm:mb-10 mt-4 sm:mt-8">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 mb-5 shadow-sm">
             <Sparkles className="w-8 h-8" />
           </div>
-          <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight mb-3">What are you interested in?</h1>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight mb-3">What are you interested in?</h1>
           <p className="text-gray-500 max-w-lg mx-auto font-medium">
             Pick a few topics you'd like to learn or teach. We'll use this to personalize your SkillCredit dashboard.
           </p>
         </div>
 
-        <div className="flex-1 flex flex-wrap justify-center gap-3 md:gap-4 mb-12">
+        <div className="flex-1 flex flex-wrap justify-center gap-2.5 sm:gap-3 md:gap-4 mb-12">
           {CATEGORIES.map(cat => {
             const isSelected = selected.includes(cat.name);
             const Icon = cat.icon;
@@ -150,9 +187,9 @@ export default function SetupInterests() {
               <button
                 key={cat.name}
                 onClick={() => toggleCategory(cat.name)}
-                className={`relative flex items-center gap-2.5 px-5 py-3.5 rounded-2xl border-2 transition-all duration-200 cursor-pointer ${
+                className={`relative flex items-center gap-2.5 px-4 sm:px-5 py-3 sm:py-3.5 rounded-2xl border-2 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-emerald-500/20 cursor-pointer ${
                   isSelected 
-                    ? 'border-emerald-500 bg-emerald-50 shadow-[0_4px_16px_rgba(16,185,129,0.15)] scale-105' 
+                    ? 'border-emerald-500 bg-emerald-50 shadow-[0_3px_12px_rgba(16,185,129,0.10)]' 
                     : 'border-gray-200 bg-white hover:border-emerald-300 hover:shadow-sm'
                 }`}
               >
@@ -174,7 +211,6 @@ export default function SetupInterests() {
 
       </div>
 
-      {/* Sticky Bottom Bar */}
       <div className="sticky bottom-0 bg-white/80 backdrop-blur-xl border-t border-gray-200 p-4 shadow-[0_-4px_24px_rgba(0,0,0,0.02)] z-10">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <p className="text-sm font-bold text-gray-500 hidden sm:block">
@@ -183,7 +219,7 @@ export default function SetupInterests() {
           <button
             onClick={handleSave}
             disabled={selected.length === 0 || isSaving}
-            className="w-full sm:w-auto px-8 py-3.5 bg-emerald-700 text-white font-bold rounded-xl shadow-md hover:bg-emerald-800 disabled:opacity-50 disabled:cursor-not-allowed transition cursor-pointer"
+            className="w-full sm:w-auto px-8 py-3.5 bg-emerald-700 text-white font-bold rounded-xl shadow-md hover:bg-emerald-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-150 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-emerald-500/20 cursor-pointer"
           >
             Continue to Dashboard
           </button>

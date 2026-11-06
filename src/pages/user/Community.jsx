@@ -1,3 +1,4 @@
+import { confirmDialog } from '../../components/confirmDialog';
 // ─────────────────────────────────────────────────────────────────────
 // COMMUNITY — "Messenger Clean" design language
 // Matches Messages.jsx: Tailwind, emerald palette, same typography scale
@@ -10,7 +11,7 @@ import {
   Pencil, Sparkles, Trash2, Users, X
 } from 'lucide-react';
 import supabase from '../../supabaseClient';
-​
+
 const MACRO_CATEGORIES = [
   'Tech, Coding & UI/UX', 'Creative, Arts & Media', 'Academics & Languages',
   'Business & Finance', 'Lifestyle, Health & Home', 'Hobbies & Practical Skills',
@@ -21,7 +22,7 @@ const buildCommunityActivityLink = (postId, commentId = null, activityId = null)
   if (activityId) params.set('activity', activityId);
   return `/community?${params.toString()}#post-${postId}`;
 };
-​
+
 const createCommunityActivityNotification = async ({ recipientId, actorId, type, content, linkUrl }) => {
   if (!recipientId || recipientId === actorId) return;
   const { error } = await supabase.from('notifications').insert({
@@ -33,12 +34,12 @@ const createCommunityActivityNotification = async ({ recipientId, actorId, type,
   });
   if (error) console.error('Could not create community notification:', error);
 };
-​
+
 const POST_TYPES = [
   'General Q&A', 'Looking for a Mentor', 'Offering a Skill',
   'Project Showcase', 'Pricing Advice',
 ];
-​
+
 // ── Avatar ──────────────────────────────
 const Avatar = ({ src, name, size = 'md', isMe = false }) => {
   const s = size === 'sm' ? 'w-8 h-8 text-sm'
@@ -54,10 +55,10 @@ const Avatar = ({ src, name, size = 'md', isMe = false }) => {
     </div>
   );
 };
-​
+
 function PostImageCollage({ mediaUrls = [], onOpen, compact = false }) {
   if (!mediaUrls.length) return null;
-​
+
   const total = mediaUrls.length;
   const visibleImages = mediaUrls.slice(0, 5);
   const count = visibleImages.length;
@@ -68,7 +69,7 @@ function PostImageCollage({ mediaUrls = [], onOpen, compact = false }) {
     'grid-cols-2 grid-rows-2 aspect-[4/3]',
     'grid-cols-[2fr_1fr_1fr] grid-rows-2 aspect-[16/9]',
   ][count - 1];
-​
+
   return (
     <div className={`grid w-full min-w-0 gap-1 overflow-hidden bg-[#f0f2ee] ${compact ? 'max-h-[200px] sm:max-h-[240px]' : ''} ${gridClass}`}>
       {visibleImages.map((url, index) => {
@@ -101,10 +102,10 @@ function PostImageCollage({ mediaUrls = [], onOpen, compact = false }) {
     </div>
   );
 }
-​
+
 function ImageGalleryModal({ images = [], initialIndex = 0, onClose }) {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
-​
+
   useEffect(() => setCurrentIndex(initialIndex), [initialIndex]);
   useEffect(() => {
     const handleKeyDown = (event) => {
@@ -116,12 +117,12 @@ function ImageGalleryModal({ images = [], initialIndex = 0, onClose }) {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [images.length, onClose]);
-​
+
   if (!images.length) return null;
-​
+
   const showPrevious = () => setCurrentIndex(index => (index - 1 + images.length) % images.length);
   const showNext = () => setCurrentIndex(index => (index + 1) % images.length);
-​
+
   return (
     <div
       role="dialog"
@@ -141,7 +142,7 @@ function ImageGalleryModal({ images = [], initialIndex = 0, onClose }) {
           className="flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
         ><X className="h-5 w-5" /></button>
       </div>
-​
+
       <div className="flex min-h-0 flex-1 items-center justify-center gap-2 sm:gap-4">
         {images.length > 1 && (
           <button
@@ -169,7 +170,7 @@ function ImageGalleryModal({ images = [], initialIndex = 0, onClose }) {
     </div>
   );
 }
-​
+
 // ── Nested Comment Thread ─────────────────────────────────────────────
 function CommentThread({
   comments, currentUserId, currentUserProfile,
@@ -183,17 +184,17 @@ function CommentThread({
   const [replyText,  setReplyText]  = useState('');
   const [collapsed,  setCollapsed]  = useState({});
   const [submitting, setSubmitting] = useState(false);
-​
+
   const roots = comments.filter(c => (c.parent_comment_id ?? null) === parentId);
   if (!roots.length) return null;
-​
+
   const submitReply = async (parentComment) => {
     if (!replyText.trim() || submitting) return;
     setSubmitting(true);
     await onAddReply(postId, parentComment.id, replyText.trim());
     setReplyText(''); setReplyingTo(null); setSubmitting(false);
   };
-​
+
   const saveCommentEdit = async (commentId) => {
     const content = editingCommentText.trim();
     if (!content || savingCommentEdit) return;
@@ -205,7 +206,7 @@ function CommentThread({
       setSavingCommentEdit(false);
     }
   };
-​
+
   return (
     <div className={depth > 0 ? 'ml-4 pl-3 border-l-2 border-gray-100' : ''}>
       {roots.map(c => {
@@ -228,7 +229,7 @@ function CommentThread({
                   size="sm" isMe={isMe}
                 />
               </button>
-​
+
               <div className="flex flex-col items-start gap-1 max-w-[75%]">
                 {/* Comment bubble or inline edit form */}
                 {editingCommentId === c.id ? (
@@ -340,7 +341,7 @@ function CommentThread({
     </div>
   );
 }
-​
+
 // ── Comment Modal (mirrors Messages chat panel aesthetic) ─────────────
 function CommentModal({
   post, onClose, currentUserId, currentUserProfile,
@@ -350,7 +351,7 @@ function CommentModal({
   const commentsEndRef = useRef(null);
   const inputRef       = useRef(null);
   const previousCommentsRef = useRef({ postId: null, count: null });
-​
+
   useEffect(() => {
     const count = post?.comments?.length ?? 0;
     const previous = previousCommentsRef.current;
@@ -367,22 +368,22 @@ function CommentModal({
     }, 180);
     return () => window.clearTimeout(timer);
   }, [post?.id, focusCommentId]);
-​
+
   useEffect(() => {
     const h = (e) => { if (e.key === 'Escape' && !isImageGalleryOpen) onClose(); };
     window.addEventListener('keydown', h);
     return () => window.removeEventListener('keydown', h);
   }, [onClose, isImageGalleryOpen]);
-​
+
   if (!post) return null;
-​
+
   return (
     <div
       onClick={e => e.target === e.currentTarget && onClose()}
       className="fixed inset-0 z-[200] bg-black/50 flex items-center justify-center p-4"
     >
       <div className="bg-white rounded-2xl w-full max-w-[560px] max-h-[90vh] flex flex-col shadow-2xl">
-​
+
         {/* Header — mirrors Messages chat header */}
         <div className="px-5 py-3.5 border-b border-gray-100 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
@@ -404,7 +405,7 @@ function CommentModal({
             <X className="w-4 h-4" />
           </button>
         </div>
-​
+
         {/* Post and comments share one scroll area; header and composer stay fixed */}
         <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <div className="border-b border-gray-100 px-5 py-4">
@@ -415,7 +416,7 @@ function CommentModal({
               </div>
             )}
           </div>
-​
+
           <div className="flex flex-col px-5 py-4">
             {post.comments.length === 0 ? (
               <div className="py-8 text-center">
@@ -439,7 +440,7 @@ function CommentModal({
             <div ref={commentsEndRef} />
           </div>
         </div>
-​
+
         {/* Input bar — mirrors Messages input bar */}
         <form
           onSubmit={e => { e.preventDefault(); onAddComment(post.id); }}
@@ -471,7 +472,7 @@ function CommentModal({
     </div>
   );
 }
-​
+
 // ── Create Post Modal ─────────────────────────────────────────────────
 function CreatePostModal({
   isOpen, onClose, currentUserProfile,
@@ -487,7 +488,7 @@ function CreatePostModal({
     return () => window.removeEventListener('keydown', h);
   }, [isOpen, onClose]);
   if (!isOpen) return null;
-​
+
   return (
     <div
       onClick={e => e.target === e.currentTarget && onClose()}
@@ -518,7 +519,7 @@ function CreatePostModal({
             <X className="h-4 w-4" />
           </button>
         </div>
-​
+
         <form onSubmit={onSubmit} className="flex min-h-0 flex-1 flex-col">
           <div className="min-h-0 flex-1 space-y-5 overflow-y-auto px-5 py-5 sm:px-6">
             {/* Author and post settings */}
@@ -544,7 +545,7 @@ function CreatePostModal({
                 </div>
               </div>
             </div>
-​
+
             {/* Post text */}
             <div className="relative">
               <label htmlFor="community-post-content" className="mb-2 block text-xs font-semibold text-gray-700">Your post</label>
@@ -570,7 +571,7 @@ function CreatePostModal({
                 </div>
               )}
             </div>
-​
+
             {/* Image attachments — show the entire image without cropping */}
             <div>
               <div className="mb-2 flex items-center justify-between gap-3">
@@ -621,7 +622,7 @@ function CreatePostModal({
               )}
             </div>
           </div>
-​
+
           {/* Footer — stays visible while the form scrolls */}
           <div className="flex items-center justify-between gap-3 border-t border-gray-100 bg-white px-5 py-4 sm:px-6">
             <p className="hidden text-xs text-gray-500 sm:block">Your post will be shared with the community.</p>
@@ -642,7 +643,7 @@ function CreatePostModal({
     </div>
   );
 }
-​
+
 // ── Main Community ────────────────────────────────────────────────────
 export default function Community() {
   const navigate     = useNavigate();
@@ -650,7 +651,7 @@ export default function Community() {
   const fileInputRef = useRef(null);
   const editPostFileInputRef = useRef(null);
   const textareaRef  = useRef(null);
-​
+
   const [currentUserId,      setCurrentUserId]      = useState(null);
   const [currentUserProfile, setCurrentUserProfile] = useState(null);
   const [loading,            setLoading]            = useState(true);
@@ -685,17 +686,17 @@ export default function Community() {
   const [editingPostFiles,   setEditingPostFiles]    = useState([]);
   const [editingPostPreviews,setEditingPostPreviews] = useState([]);
   const [savingPostEdit,     setSavingPostEdit]      = useState(false);
-​
+
   const focusPostId = new URLSearchParams(location.search).get('post');
   const focusCommentId = new URLSearchParams(location.search).get('comment');
-​
+
   useEffect(() => {
     if (!focusPostId) return;
     setSearchQuery('');
     setSelectedCategory('All');
     setSelectedPostType('All');
   }, [focusPostId]);
-​
+
   useEffect(() => {
     const init = async () => {
       setLoading(true);
@@ -708,8 +709,57 @@ export default function Community() {
       setLoading(false);
     };
     init();
+
+    // ✨ REALTIME LISTENER PARA SA POSTS & DELETION ✨
+    const channel = supabase.channel('community_realtime')
+      
+      // 1. Kapag may BAGONG POST (INSERT)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'community_posts' }, async (payload) => {
+        if (payload.new && payload.new.is_active) {
+          // Kunin natin yung buong details ng post kasama author info
+          const { data: newPost } = await supabase
+            .from('community_posts')
+            .select('*, author:user_profiles!community_posts_user_id_fkey(full_name, avatar_url, role)')
+            .eq('id', payload.new.id)
+            .single();
+            
+          if (newPost) {
+            setPosts(prev => {
+              // Check kung nandiyan na para iwas duplicate sa mismong nag-post
+              if (prev.some(p => p.id === newPost.id)) return prev;
+              // Ipatong sa pinakataas (may empty comments at likes default)
+              return [{ ...newPost, comments: [], likes: [] }, ...prev];
+            });
+          }
+        }
+      })
+      
+      // 2. Kapag ginawang is_active = false (Soft delete)
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'community_posts' }, (payload) => {
+        if (payload.new && payload.new.is_active === false) {
+          setPosts(prev => prev.filter(post => post.id !== payload.new.id));
+        }
+      })
+      
+      // 3. Kapag dinelete ng tuluyan ng moderator (Hard delete)
+      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'community_posts' }, (payload) => {
+        setPosts(prev => prev.filter(post => post.id !== payload.old.id));
+      })
+      
+      // 4. Kapag dinelete ang comment ng moderator
+      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'community_comments' }, (payload) => {
+        setPosts(prev => prev.map(post => ({
+          ...post,
+          comments: post.comments.filter(c => c.id !== payload.old.id)
+        })));
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [navigate]);
-​
+
   // ─── NEW RESTRICTION CHECKER HELPER ───
   const checkRestriction = () => {
     if (currentUserProfile?.community_restricted_until) {
@@ -722,12 +772,12 @@ export default function Community() {
     }
     return false;
   };
-​
+
   const fetchUserReports = async (uid) => {
     const { data } = await supabase.from('reports').select('reference_id').eq('reporter_id', uid);
     if (data) setSubmittedReports(data.map(r => r.reference_id));
   };
-​
+
   const fetchPosts = async () => {
     const { data: postsData }    = await supabase.from('community_posts')
       .select('*, author:user_profiles!community_posts_user_id_fkey(full_name, avatar_url, role)')
@@ -758,7 +808,7 @@ export default function Community() {
       setGlobalTags(sorted.map(t => t.original));
     }
   };
-​
+
   const handleContentChange = (e) => {
     const text = e.target.value;
     setNewPostContent(text);
@@ -768,14 +818,14 @@ export default function Community() {
       setTagSuggestions(filtered.slice(0, 5)); setShowSuggestions(filtered.length > 0);
     } else setShowSuggestions(false);
   };
-​
+
   const handleTagSelect = (tag) => {
     const c = textareaRef.current.selectionStart;
     setNewPostContent(newPostContent.slice(0, c).replace(/#\w+$/, `${tag} `) + newPostContent.slice(c));
     setShowSuggestions(false);
     setTimeout(() => textareaRef.current?.focus(), 0);
   };
-​
+
   const renderContentWithTags = (content) => {
     if (!content) return null;
     return content.split(/(#\w+)/g).map((part, i) =>
@@ -784,7 +834,7 @@ export default function Community() {
         : <span key={i}>{part}</span>
     );
   };
-​
+
   const handleCreatePost = async (e) => {
     e.preventDefault();
     if (checkRestriction()) return;
@@ -803,13 +853,13 @@ export default function Community() {
       fetchPosts();
     } catch (err) { console.error(err); } finally { setIsSubmitting(false); }
   };
-​
+
   const handleDeletePost = async (id) => {
-    if (!window.confirm('Delete this post?')) return;
+    if (!await confirmDialog('Delete this post?')) return;
     await supabase.from('community_posts').update({ is_active: false }).eq('id', id);
     fetchPosts();
   };
-​
+
   const startPostEdit = (post) => {
     editingPostPreviews.forEach(URL.revokeObjectURL);
     setEditingPostId(post.id);
@@ -818,7 +868,7 @@ export default function Community() {
     setEditingPostFiles([]);
     setEditingPostPreviews([]);
   };
-​
+
   const cancelPostEdit = () => {
     editingPostPreviews.forEach(URL.revokeObjectURL);
     setEditingPostId(null);
@@ -827,25 +877,25 @@ export default function Community() {
     setEditingPostFiles([]);
     setEditingPostPreviews([]);
   };
-​
+
   const handleEditPostFileSelect = (event) => {
     const files = Array.from(event.target.files || []).filter(file => file.type.startsWith('image/'));
     setEditingPostFiles(current => [...current, ...files]);
     setEditingPostPreviews(current => [...current, ...files.map(file => URL.createObjectURL(file))]);
     event.target.value = '';
   };
-​
+
   const removeEditPostImage = (index) => {
     setEditingPostMedia(current => current.filter((_, i) => i !== index));
   };
-​
+
   const removeEditPostFile = (index) => {
     const preview = editingPostPreviews[index];
     if (preview) URL.revokeObjectURL(preview);
     setEditingPostFiles(current => current.filter((_, i) => i !== index));
     setEditingPostPreviews(current => current.filter((_, i) => i !== index));
   };
-​
+
   const handleUpdatePost = async (postId) => {
     if (checkRestriction()) return;
     if (!currentUserId || savingPostEdit) return;
@@ -886,7 +936,7 @@ export default function Community() {
       setSavingPostEdit(false);
     }
   };
-​
+
   const handleFileSelect = (e) => {
     const files = Array.from(e.target.files);
     setNewPostFiles(p => [...p, ...files]);
@@ -896,7 +946,7 @@ export default function Community() {
     setNewPostFiles(p => p.filter((_, j) => j !== i));
     setFilePreviews(p => p.filter((_, j) => j !== i));
   };
-​
+
   const handleAddComment = async (postId) => {
     if (checkRestriction()) return;
     const text = newComment[postId]?.trim();
@@ -923,7 +973,7 @@ export default function Community() {
     setNewComment(prev => ({ ...prev, [postId]: '' }));
     await fetchPosts();
   };
-​
+
   const handleAddReply = async (postId, parentCommentId, text) => {
     if (checkRestriction()) return;
     if (!text?.trim() || !currentUserProfile?.id) return;
@@ -938,7 +988,7 @@ export default function Community() {
       console.error('Could not post community reply:', error);
       return;
     }
-​
+
     const recipients = new Set([parentComment?.user_id, post?.user_id]
       .filter(id => id && id !== currentUserProfile.id));
     for (const recipientId of recipients) {
@@ -955,7 +1005,7 @@ export default function Community() {
     }
     await fetchPosts();
   };
-​
+
   const handleUpdateComment = async (commentId, content) => {
     if (checkRestriction()) return false;
     if (!currentUserId || !content?.trim()) return false;
@@ -973,9 +1023,9 @@ export default function Community() {
     await fetchPosts();
     return true;
   };
-​
+
   const handleDeleteComment = async (commentId) => {
-    if (!currentUserId || !window.confirm('Delete your comment?')) return;
+    if (!currentUserId || !await confirmDialog('Delete your comment?')) return;
     const { error } = await supabase.from('community_comments')
       .delete()
       .eq('id', commentId)
@@ -987,7 +1037,7 @@ export default function Community() {
     }
     await fetchPosts();
   };
-​
+
   const toggleLike = async (postId) => {
     if (checkRestriction()) return;
     const post = posts.find(item => item.id === postId);
@@ -1018,10 +1068,10 @@ export default function Community() {
     }
     await fetchPosts();
   };
-​
+
   const openReportModal = (id, type, reportedId) =>
     setReportModal({ isOpen: true, referenceId: id, referenceType: type, reportedUserId: reportedId });
-​
+
   const handleSubmitReport = async (e) => {
     e.preventDefault();
     if (!reportDetails.trim()) return;
@@ -1035,7 +1085,7 @@ export default function Community() {
     } catch { alert('Failed to submit report.'); }
     finally { setIsSubmittingReport(false); }
   };
-​
+
   const filteredPosts = useMemo(() => posts.filter(p => {
     const matchesSearch = p.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
       p.author?.full_name?.toLowerCase().includes(searchQuery.toLowerCase());
@@ -1044,7 +1094,7 @@ export default function Community() {
     return matchesSearch && (selectedCategory === 'All' || p.category === selectedCategory) && matchesPostType;
   }), [posts, searchQuery, selectedCategory, selectedPostType, currentUserId]);
   const userPostCount = posts.filter(p => p.user_id === currentUserId).length;
-​
+
   useEffect(() => {
     if (!focusPostId) {
       deepLinkHandledRef.current = null;
@@ -1052,16 +1102,16 @@ export default function Community() {
       return;
     }
     if (loading || !filteredPosts.some(post => post.id === focusPostId)) return;
-​
+
     const key = `${focusPostId}:${focusCommentId || ''}`;
     if (deepLinkHandledRef.current === key) return;
     const targetPost = posts.find(post => post.id === focusPostId);
     if (!targetPost) return;
-​
+
     deepLinkHandledRef.current = key;
     setHighlightedPostId(focusPostId);
     if (focusCommentId) setCommentModal(targetPost);
-​
+
     const focusTimer = window.setTimeout(() => {
       const targetId = focusCommentId ? `comment-${focusCommentId}` : `post-${focusPostId}`;
       const target = document.getElementById(targetId) || document.getElementById(`post-${focusPostId}`);
@@ -1074,7 +1124,7 @@ export default function Community() {
     };
   }, [focusPostId, focusCommentId, filteredPosts, loading, posts]);
   const openImageGallery = (images, index) => setImageGallery({ images, index });
-​
+
   if (loading) return (
     <div role="status" aria-live="polite" aria-label="Loading community" className="min-h-[calc(100vh-64px)] bg-[#f7f8f6] text-[#202522]">
       <div className="mx-auto flex w-full max-w-[1600px] flex-col lg:h-[calc(100vh-64px)] lg:flex-row lg:overflow-hidden">
@@ -1108,12 +1158,12 @@ export default function Community() {
       </div>
     </div>
   );
-​
+
   // ── RENDER ────────────────────────────────────────────────────────────
   return (
     <div className="min-h-[calc(100vh-64px)] bg-[#f7f8f6] text-[#202522]">
       <div className="mx-auto flex w-full max-w-[1600px] flex-col lg:h-[calc(100vh-64px)] lg:flex-row lg:overflow-hidden">
-​
+
         {/* LEFT: compact, fixed navigation */}
         <aside
           aria-label="Community navigation"
@@ -1123,7 +1173,7 @@ export default function Community() {
             <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-emerald-700">The Commons</p>
             <h1 className="mt-1 text-[22px] font-bold tracking-tight text-[#202522]">Community</h1>
           </div>
-​
+
           <label className="flex min-h-11 items-center gap-2 rounded-xl border border-[#e7e9e5] bg-[#fafbf9] px-3.5 transition focus-within:border-emerald-300 focus-within:ring-2 focus-within:ring-emerald-100">
             <Search className="h-4 w-4 shrink-0 text-[#858b86]" aria-hidden="true" />
             <input
@@ -1145,7 +1195,7 @@ export default function Community() {
               ><X className="h-4 w-4" /></button>
             )}
           </label>
-​
+
           <section aria-labelledby="community-topics-heading">
             <label id="community-topics-heading" htmlFor="community-topic-filter" className="mb-2 block px-1 text-[12px] font-bold uppercase tracking-[0.12em] text-[#777d78]">Topics</label>
             <select
@@ -1158,7 +1208,7 @@ export default function Community() {
               {MACRO_CATEGORIES.map(category => <option key={category} value={category}>{category}</option>)}
             </select>
           </section>
-​
+
           <section aria-labelledby="trending-heading" className="rounded-2xl border border-[#e9ece8] bg-[#fcfdfb] p-3">
             <h2 id="trending-heading" className="mb-2 flex items-center gap-2 text-[13px] font-bold text-[#303833]">
               Trending <Flame className="h-4 w-4 text-orange-500" aria-hidden="true" />
@@ -1183,7 +1233,7 @@ export default function Community() {
               </div>
             )}
           </section>
-​
+
           <button
             type="button"
             onClick={() => navigate(`/user/${currentUserId}`)}
@@ -1197,7 +1247,7 @@ export default function Community() {
             <ArrowUpRight className="h-4 w-4 shrink-0 text-[#858b86]" aria-hidden="true" />
           </button>
         </aside>
-​
+
         {/* CENTER: only desktop panel that scrolls */}
         <main className="min-w-0 flex-1 px-4 py-5 sm:px-6 lg:h-full lg:overflow-y-auto lg:overscroll-contain lg:px-7 lg:py-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <div className="mx-auto w-full max-w-[760px]">
@@ -1210,7 +1260,7 @@ export default function Community() {
               <span className="flex min-h-10 flex-1 items-center rounded-xl bg-[#f5f7f4] px-4 text-[14px] text-[#7d857f]">What would you like to share?</span>
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-700 text-white"><Plus className="h-4 w-4" /></span>
             </button>
-​
+
             <div className="mb-4 flex flex-nowrap gap-2 overflow-x-auto pb-1 lg:justify-start [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" role="group" aria-label="Filter posts by type">
               {['All', 'My Post', ...POST_TYPES].map(type => (
                 <button
@@ -1226,7 +1276,7 @@ export default function Community() {
                 >{type}</button>
               ))}
             </div>
-​
+
             <div className="flex flex-col gap-4">
               {filteredPosts.length === 0 ? (
                 <section className="rounded-[20px] border border-dashed border-[#dfe4dd] bg-white px-6 py-12 text-center">
@@ -1346,7 +1396,7 @@ export default function Community() {
             </div>
           </div>
         </main>
-​
+
         {/* RIGHT: community posting guide */}
         <aside
           aria-label="Community posting guide"
@@ -1379,7 +1429,7 @@ export default function Community() {
           </div>
         </aside>
       </div>
-​
+
       {/* ══ CREATE POST MODAL ══ */}
       <CreatePostModal
         isOpen={isCreateModalOpen}
@@ -1393,7 +1443,7 @@ export default function Community() {
         tagSuggestions={tagSuggestions} showSuggestions={showSuggestions} onTagSelect={handleTagSelect}
         isSubmitting={isSubmitting} onSubmit={handleCreatePost}
       />
-​
+
       {/* ══ COMMENT MODAL ══ */}
       {commentModal && (
         <CommentModal
@@ -1412,7 +1462,7 @@ export default function Community() {
           }}
         />
       )}
-​
+
       {imageGallery && (
         <ImageGalleryModal
           images={imageGallery.images}
@@ -1420,7 +1470,7 @@ export default function Community() {
           onClose={() => setImageGallery(null)}
         />
       )}
-​
+
       {/* ══ REPORT MODAL ══ */}
       {reportModal.isOpen && (
         <div className="fixed inset-0 z-[600] bg-black/50 flex items-center justify-center p-4">

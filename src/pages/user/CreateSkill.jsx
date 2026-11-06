@@ -2,39 +2,42 @@ import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, ArrowRight, BookOpen, Briefcase, Check, ChefHat, Clock,
-  Code2, Dumbbell, ExternalLink, FileText, Film, Gamepad2, Hammer,
+  Code2, Dumbbell, ExternalLink, FileText, Film, Hammer,
   Leaf, MessageCircle, Monitor, Music2, Palette, PenLine,
   PiggyBank, Rocket, Scissors, Settings, Sparkles, Target, Video, Wrench, X
 } from 'lucide-react';
 import supabase from '../../supabaseClient';
-​
+
+// min/max = allowed credits for a 1-hour session (Table 2). 2-hr and 3-hr bands = x2 and x3.
 const SKILL_CATEGORIES = [
-  { name: 'Cooking & Baking',                      tier: 'Tier 1', min: 9,  max: 22,  icon: ChefHat, iconColor: 'text-orange-500', color: '#f97316' },
-  { name: 'Gardening & Farming',                   tier: 'Tier 1', min: 9,  max: 18,  icon: Leaf, iconColor: 'text-green-500', color: '#22c55e' },
-  { name: 'Home & DIY',                            tier: 'Tier 1', min: 9,  max: 20,  icon: Hammer, iconColor: 'text-yellow-600', color: '#a78bfa' },
-  { name: 'Health & Fitness',                      tier: 'Tier 1', min: 9,  max: 25,  icon: Dumbbell, iconColor: 'text-red-500', color: '#ef4444' },
-  { name: 'Beauty & Grooming',                     tier: 'Tier 1', min: 9,  max: 20,  icon: Scissors, iconColor: 'text-pink-500', color: '#ec4899' },
-  { name: 'Gaming & Hobbies',                      tier: 'Tier 1', min: 9,  max: 20,  icon: Gamepad2, iconColor: 'text-violet-500', color: '#6366f1' },
-  { name: 'Electronics, Appliance & Basic Repair', tier: 'Tier 2', min: 17, max: 42,  icon: Wrench, iconColor: 'text-blue-500', color: '#64748b' },
-  { name: 'School & Tutoring',                     tier: 'Tier 2', min: 19, max: 39,  icon: BookOpen, iconColor: 'text-indigo-500', color: '#0ea5e9' },
-  { name: 'Writing & Content',                     tier: 'Tier 2', min: 17, max: 45,  icon: PenLine, iconColor: 'text-teal-500', color: '#8b5cf6' },
-  { name: 'Languages & Speaking',                  tier: 'Tier 2', min: 21, max: 42,  icon: MessageCircle, iconColor: 'text-cyan-500', color: '#14b8a6' },
-  { name: 'Singing & Instruments',                 tier: 'Tier 2', min: 17, max: 47,  icon: Music2, iconColor: 'text-fuchsia-500', color: '#f43f5e' },
-  { name: 'Art & Graphic Design',                  tier: 'Tier 2', min: 19, max: 52,  icon: Palette, iconColor: 'text-rose-500', color: '#f59e0b' },
-  { name: 'Video & Animation',                     tier: 'Tier 2', min: 22, max: 56,  icon: Film, iconColor: 'text-amber-500', color: '#dc2626' },
-  { name: 'Business & Freelance',                  tier: 'Tier 3', min: 28, max: 75,  icon: Briefcase, iconColor: 'text-slate-600', color: '#0d9488' },
-  { name: 'Financial Literacy & Money Management', tier: 'Tier 3', min: 25, max: 60,  icon: PiggyBank, iconColor: 'text-emerald-600', color: '#ca8a04' },
-  { name: 'UI/UX Design',                          tier: 'Tier 3', min: 38, max: 94,  icon: Monitor,        iconColor: 'text-sky-500', color: '#7c3aed' },
-  { name: 'Coding & Tech',                         tier: 'Tier 3', min: 38, max: 100, icon: Code2,    iconColor: 'text-lime-600', color: '#10b981' },
+  { name: 'Cooking & Baking',                       min: 8,  max: 15, icon: ChefHat, iconColor: 'text-orange-500', color: '#f97316' },
+  { name: 'Gardening & Plant Care',                 min: 7,  max: 13, icon: Leaf, iconColor: 'text-green-500', color: '#22c55e' },
+  { name: 'Home Repair & DIY',                      min: 7,  max: 14, icon: Hammer, iconColor: 'text-yellow-600', color: '#a78bfa' },
+  { name: 'Fitness & Sports',                       min: 11, max: 21, icon: Dumbbell, iconColor: 'text-red-500', color: '#ef4444' },
+  { name: 'Beauty & Personal Care',                 min: 9,  max: 17, icon: Scissors, iconColor: 'text-pink-500', color: '#ec4899' },
+  { name: 'Computer, Phone & Electronics Help',     min: 7,  max: 14, icon: Wrench, iconColor: 'text-blue-500', color: '#64748b' },
+  { name: 'School Subjects & Tutoring',             min: 8,  max: 15, icon: BookOpen, iconColor: 'text-indigo-500', color: '#0ea5e9' },
+  { name: 'Writing & Editing',                      min: 11, max: 20, icon: PenLine, iconColor: 'text-teal-500', color: '#8b5cf6' },
+  { name: 'Languages & Public Speaking',            min: 22, max: 42, icon: MessageCircle, iconColor: 'text-cyan-500', color: '#14b8a6' },
+  { name: 'Music & Singing',                        min: 13, max: 24, icon: Music2, iconColor: 'text-fuchsia-500', color: '#f43f5e' },
+  { name: 'Graphic Design & Digital Art',           min: 11, max: 21, icon: Palette, iconColor: 'text-rose-500', color: '#f59e0b' },
+  { name: 'Video, Animation & AI Content Creation', min: 11, max: 21, icon: Film, iconColor: 'text-amber-500', color: '#dc2626' },
+  { name: 'Business, Entrepreneurship & Marketing', min: 10, max: 19, icon: Briefcase, iconColor: 'text-slate-600', color: '#0d9488' },
+  { name: 'Finance, Investing & Trading',           min: 15, max: 27, icon: PiggyBank, iconColor: 'text-emerald-600', color: '#ca8a04' },
+  { name: 'Website & App Design',                   min: 19, max: 35, icon: Monitor, iconColor: 'text-sky-500', color: '#7c3aed' },
+  { name: 'Coding & Programming',                   min: 15, max: 28, icon: Code2, iconColor: 'text-lime-600', color: '#10b981' },
 ];
-​
+
+const DURATIONS = ['1 hr', '2 hrs', '3 hrs'];
+const getHours  = d => parseInt(d, 10) || 1;
+
 const STEPS = [
   { num: 1, label: 'Category',      icon: Target },
   { num: 2, label: 'Skill Info',    icon: PenLine },
   { num: 3, label: 'Session Setup', icon: Settings },
   { num: 4, label: 'Publish',       icon: Rocket },
 ];
-​
+
 export default function CreateSkill() {
   const navigate = useNavigate();
   const [step, setStep]                 = useState(1);
@@ -45,10 +48,10 @@ export default function CreateSkill() {
   const [coverImage, setCoverImage] = useState(null);
   const [previewUrl, setPreviewUrl]  = useState(null);
   const [formData, setFormData] = useState({
-    title: '', category: 'Coding & Tech', description: '', outcomes: '',
-    format: 'Video Call', duration: '1 hr', creditCost: '38', portfolioUrl: ''
+    title: '', category: 'Coding & Programming', description: '', outcomes: '',
+    format: 'Video Call', duration: '1 hr', creditCost: '15', portfolioUrl: ''
   });
-​
+
   useEffect(() => {
     (async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -60,7 +63,7 @@ export default function CreateSkill() {
       setPageLoading(false);
     })();
   }, []);
-​
+
   // ─── BOOKING RESTRICTION CHECKER ───
   const checkRestriction = () => {
     if (currentUserProfile?.booking_restricted_until) {
@@ -73,20 +76,22 @@ export default function CreateSkill() {
     }
     return false; 
   };
-​
+
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [step]);
-​
+
   const cat = SKILL_CATEGORIES.find(c => c.name === formData.category) || SKILL_CATEGORIES.at(-1);
   const CategoryIcon = cat.icon;
+  const hours = getHours(formData.duration);
+  const band  = { min: cat.min * hours, max: cat.max * hours };
   const getFormatIcon = f => ({ 'Video Call': Video, 'Chat/Text': MessageCircle, 'Docs': FileText, 'All Formats': Sparkles }[f] ?? Sparkles);
   const FormatIcon = getFormatIcon(formData.format);
-​
+
   const handleChange = e => setFormData(p => ({ ...p, [e.target.name]: e.target.value }));
   const handleCategorySelect = name => {
     const c = SKILL_CATEGORIES.find(x => x.name === name);
-    setFormData(p => ({ ...p, category: name, creditCost: String(c.min) }));
+    setFormData(p => ({ ...p, category: name, creditCost: String(c.min * getHours(p.duration)) }));
   };
   const handleImageChange = e => {
     const file = e.target.files[0]; if (!file) return;
@@ -111,6 +116,10 @@ export default function CreateSkill() {
   const handlePublish = async e => {
     e.preventDefault(); 
     if (checkRestriction()) return; // 🔒 Guard check again bago mag publish
+    const cost = parseInt(formData.creditCost, 10);
+    if (isNaN(cost) || cost < band.min || cost > band.max) {
+      alert(`Credit cost must be between ${band.min} and ${band.max} credits for a ${formData.duration} ${formData.category} session.`); return;
+    }
     setIsSubmitting(true);
     try {
       const { data: { user }, error: ue } = await supabase.auth.getUser();
@@ -134,7 +143,7 @@ export default function CreateSkill() {
     } catch (err) { alert('Error: ' + err.message); }
     finally { setIsSubmitting(false); }
   };
-​
+
   if (pageLoading) return (
     <div role="status" aria-live="polite" aria-label="Loading create skill form" className="min-h-screen bg-[#faf9f6]">
       <div className="mx-auto max-w-[1000px] animate-pulse px-6 py-6 md:px-8">
@@ -146,7 +155,7 @@ export default function CreateSkill() {
       </div>
     </div>
   );
-​
+
   return (
     <div className="min-h-screen bg-[#faf9f6]">
       <div className="max-w-[1000px] mx-auto px-6 md:px-8 py-6">
@@ -182,13 +191,13 @@ export default function CreateSkill() {
             </div>
           </div>
         </div>
-​
+
         <div className="flex flex-col lg:flex-row gap-5 items-start">
-​
+
           <div className="w-full lg:w-[250px] shrink-0">
             <div className="sticky top-6 space-y-3">
               <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-300">Live Preview</p>
-​
+
               <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm relative">
                 <div className="relative h-44 flex items-center justify-center overflow-hidden"
                   style={{ background: previewUrl ? 'transparent' : cat.color }}>
@@ -199,7 +208,7 @@ export default function CreateSkill() {
                         <CategoryIcon className="w-24 h-24 text-white opacity-20 select-none" />
                         <div className="absolute inset-0 flex flex-col items-center justify-center gap-1">
                           <CategoryIcon className="w-10 h-10 text-white" />
-                          <span className="text-[10px] font-semibold uppercase tracking-widest text-white/80">{cat.tier}</span>
+                          <span className="text-[10px] font-semibold uppercase tracking-widest text-white/80">{cat.min}–{cat.max} cr/hr</span>
                         </div>
                       </>
                     )}
@@ -208,7 +217,7 @@ export default function CreateSkill() {
                     <span className="text-[10px] text-white/70 ml-0.5">cr</span>
                   </div>
                 </div>
-​
+
                 <div className="absolute top-[152px] left-4 p-0.5 bg-white rounded-xl shadow-md border border-gray-100 z-20">
                   <div className="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm text-white overflow-hidden"
                     style={{ background: cat.color }}>
@@ -217,7 +226,7 @@ export default function CreateSkill() {
                       : currentUserProfile.full_name?.charAt(0) || 'U'}
                   </div>
                 </div>
-​
+
                 <div className="p-4 pt-8">
                   <div className="mb-2">
                     <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2.5 py-0.5 rounded-full border"
@@ -239,12 +248,12 @@ export default function CreateSkill() {
                   </div>
                 </div>
               </div>
-​
+
               <div className="grid grid-cols-3 gap-2">
                 {[
-                  { label: 'Tier',   value: cat.tier.replace('Tier ','T'), color: cat.color },
-                  { label: 'Min',    value: cat.min+'cr',                  color: '#10b981' },
-                  { label: 'Max',    value: cat.max+'cr',                  color: '#f59e0b' },
+                  { label: 'Hours',  value: hours + 'h',                  color: cat.color },
+                  { label: 'Min',    value: band.min+'cr',                 color: '#10b981' },
+                  { label: 'Max',    value: band.max+'cr',                 color: '#f59e0b' },
                 ].map(({ label, value, color }) => (
                   <div key={label} className="bg-white border border-gray-200 rounded-xl p-2 text-center">
                     <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-300">{label}</p>
@@ -252,7 +261,7 @@ export default function CreateSkill() {
                   </div>
                 ))}
               </div>
-​
+
               <div className="bg-white border border-gray-200 rounded-2xl p-4">
                 <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-300 mb-3">Progress</p>
                 {[
@@ -273,63 +282,60 @@ export default function CreateSkill() {
               </div>
             </div>
           </div>
-​
+
           <div className="flex-1 min-w-0">
-​
+
             {step === 1 && (
               <div>
                 <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-1">Step 1 · Pick a Category</p>
-                <p className="text-[12px] text-gray-400 mb-5">Sets your credit price range and tier badge.</p>
-​
-                {['Tier 1','Tier 2','Tier 3'].map(tier => (
-                  <div key={tier} className="mb-5">
-                    <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-300 mb-2">{tier}</p>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                      {SKILL_CATEGORIES.filter(c => c.tier === tier).map(c => {
-                        const isSel = formData.category === c.name;
-                        const CategoryIcon = c.icon;
-                        return (
-                          <button key={c.name} type="button"
-                            onClick={() => handleCategorySelect(c.name)}
-                            className="group relative p-3 rounded-2xl border-2 text-left transition-all overflow-hidden"
-                            style={{
-                              borderColor: isSel ? c.color         : 'transparent',
-                              background:  isSel ? c.color+'14'    : '#fff',
-                              boxShadow:   isSel
-                                ? `0 0 0 1px ${c.color}35, 0 4px 12px ${c.color}20`
-                                : '0 1px 3px rgba(0,0,0,0.05)',
-                            }}>
-                            {isSel && (
-                              <div className="absolute top-2 right-2 w-5 h-5 rounded-full flex items-center justify-center text-white shadow-sm"
-                                style={{ background: c.color }}><Check className="w-3.5 h-3.5" /></div>
-                            )}
-                            <CategoryIcon className={`absolute -right-2 -bottom-2 w-12 h-12 opacity-[0.07] select-none pointer-events-none ${c.iconColor}`} />
-                            <CategoryIcon className={`w-7 h-7 block mb-1.5 relative z-10 ${c.iconColor}`} />
-                            <p className="text-[11px] font-bold tracking-tight text-gray-800 leading-tight relative z-10">{c.name}</p>
-                            <p className="text-[10px] font-bold mt-1 relative z-10"
-                              style={{ color: isSel ? c.color : '#d1d5db' }}>
-                              {c.min}–{c.max} credits
-                            </p>
-                          </button>
-                        );
-                      })}
-                    </div>
+                <p className="text-[12px] text-gray-400 mb-5">Sets your credit price range per hour.</p>
+
+                <div className="mb-5">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {SKILL_CATEGORIES.map(c => {
+                      const isSel = formData.category === c.name;
+                      const CategoryIcon = c.icon;
+                      return (
+                        <button key={c.name} type="button"
+                          onClick={() => handleCategorySelect(c.name)}
+                          className="group relative p-3 rounded-2xl border-2 text-left transition-all overflow-hidden"
+                          style={{
+                            borderColor: isSel ? c.color         : 'transparent',
+                            background:  isSel ? c.color+'14'    : '#fff',
+                            boxShadow:   isSel
+                              ? `0 0 0 1px ${c.color}35, 0 4px 12px ${c.color}20`
+                              : '0 1px 3px rgba(0,0,0,0.05)',
+                          }}>
+                          {isSel && (
+                            <div className="absolute top-2 right-2 w-5 h-5 rounded-full flex items-center justify-center text-white shadow-sm"
+                              style={{ background: c.color }}><Check className="w-3.5 h-3.5" /></div>
+                          )}
+                          <CategoryIcon className={`absolute -right-2 -bottom-2 w-12 h-12 opacity-[0.07] select-none pointer-events-none ${c.iconColor}`} />
+                          <CategoryIcon className={`w-7 h-7 block mb-1.5 relative z-10 ${c.iconColor}`} />
+                          <p className="text-[11px] font-bold tracking-tight text-gray-800 leading-tight relative z-10">{c.name}</p>
+                          <p className="text-[10px] font-bold mt-1 relative z-10"
+                            style={{ color: isSel ? c.color : '#d1d5db' }}>
+                            {c.min}–{c.max} cr/hr
+                          </p>
+                        </button>
+                      );
+                    })}
                   </div>
-                ))}
+                </div>
               </div>
             )}
-​
+
             {step === 2 && (
               <div className="space-y-4">
                 <div className="flex items-center gap-2">
                   <span className="inline-flex items-center gap-1.5 text-[10px] font-bold px-3 py-1.5 rounded-xl border"
                     style={{ color: cat.color, borderColor: cat.color+'40', background: cat.color+'10' }}>
-                    <CategoryIcon className={`inline w-3.5 h-3.5 mr-1 align-[-0.15em] ${cat.iconColor}`} /> {formData.category} · {cat.tier} · {cat.min}–{cat.max} cr
+                    <CategoryIcon className={`inline w-3.5 h-3.5 mr-1 align-[-0.15em] ${cat.iconColor}`} /> {formData.category} · {cat.min}–{cat.max} cr/hr
                   </span>
                   <button type="button" onClick={() => setStep(1)}
                     className="text-[10px] font-bold text-gray-400 hover:text-gray-600 underline">Change</button>
                 </div>
-​
+
                 <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-5">
                   <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-2">Cover Image</p>
                   <input type="file" accept="image/*" className="hidden" ref={fileInputRef} onChange={handleImageChange} />
@@ -349,7 +355,7 @@ export default function CreateSkill() {
                     )}
                   </div>
                 </div>
-​
+
                 <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-5 space-y-4">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
@@ -385,7 +391,7 @@ export default function CreateSkill() {
                 </div>
               </div>
             )}
-​
+
             {step === 3 && (
               <div className="space-y-4">
                 <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-5">
@@ -410,13 +416,18 @@ export default function CreateSkill() {
                     ))}
                   </div>
                 </div>
-​
+
                 <div className="grid grid-cols-2 gap-4">
                   <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-5">
                     <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-3">Duration</p>
                     <div className="space-y-2">
-                      {['30 mins','1 hr','4 hrs'].map(d => (
-                        <button key={d} type="button" onClick={() => setFormData(p => ({ ...p, duration: d }))}
+                      {DURATIONS.map(d => (
+                        <button key={d} type="button" onClick={() => setFormData(p => {
+                          const h = getHours(d);
+                          const lo = cat.min * h, hi = cat.max * h;
+                          const v = Math.min(hi, Math.max(lo, parseInt(p.creditCost, 10) || lo));
+                          return { ...p, duration: d, creditCost: String(v) };
+                        })}
                           className="w-full py-2.5 rounded-xl border-2 text-[12px] font-bold transition-all"
                           style={{
                             borderColor: formData.duration === d ? cat.color : '#f3f4f6',
@@ -426,35 +437,35 @@ export default function CreateSkill() {
                       ))}
                     </div>
                   </div>
-​
+
                   <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-5">
                     <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-1">Credit Cost</p>
-                    <p className="text-[10px] text-gray-400 mb-4">{cat.min}–{cat.max} cr range</p>
+                    <p className="text-[10px] text-gray-400 mb-4">{band.min}–{band.max} cr range</p>
                     <div className="flex items-baseline gap-1 mb-4">
                       <span className="text-[38px] font-bold leading-none" style={{ color: cat.color }}>{formData.creditCost}</span>
                       <span className="text-[14px] font-bold text-gray-400">cr</span>
                     </div>
-                    <input type="range" name="creditCost" min={cat.min} max={cat.max} value={formData.creditCost} onChange={handleChange}
+                    <input type="range" name="creditCost" min={band.min} max={band.max} value={formData.creditCost} onChange={handleChange}
                       className="w-full h-2 rounded-lg appearance-none cursor-pointer" style={{ accentColor: cat.color }} />
                     <div className="flex justify-between text-[10px] font-bold text-gray-300 mt-1.5">
-                      <span>Min {cat.min}</span><span>Max {cat.max}</span>
+                      <span>Min {band.min}</span><span>Max {band.max}</span>
                     </div>
                   </div>
                 </div>
               </div>
             )}
-​
+
             {step === 4 && (
               <div className="space-y-4">
                 <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-4">Review your listing</p>
-​
+
                 <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
                   {[
-                    { label: 'Category',    value: formData.category,                              icon: cat.icon, iconColor: cat.iconColor, sub: cat.tier },
+                    { label: 'Category',    value: formData.category,                              icon: cat.icon, iconColor: cat.iconColor, sub: null },
                     { label: 'Title',       value: formData.title || '—',                          sub: null },
                     { label: 'Format',      value: formData.format,                                icon: getFormatIcon(formData.format), iconColor: 'text-emerald-600', sub: null },
                     { label: 'Duration',    value: formData.duration,                              sub: null },
-                    { label: 'Credit Cost', value: `${formData.creditCost} credits`,               sub: `${cat.min}–${cat.max} range` },
+                    { label: 'Credit Cost', value: `${formData.creditCost} credits`,               sub: `${band.min}–${band.max} range` },
                     { label: 'Portfolio',   value: formData.portfolioUrl || 'Not provided',        sub: null },
                   ].map(({ label, value, sub, icon: Icon, iconColor }, i) => (
                     <div key={label} className={`flex items-center justify-between px-5 py-3.5 ${
@@ -468,7 +479,7 @@ export default function CreateSkill() {
                     </div>
                   ))}
                 </div>
-​
+
                 <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-4 flex items-center gap-3">
                   <Sparkles className="w-6 h-6 text-emerald-600 shrink-0" />
                   <div>
@@ -478,13 +489,13 @@ export default function CreateSkill() {
                 </div>
               </div>
             )}
-​
+
             <div className="mx-auto mt-5 grid w-full max-w-[340px] grid-cols-2 gap-3">
               <button onClick={handlePrev} disabled={step === 1}
                 className={`inline-flex h-11 w-full items-center justify-center gap-1 rounded-xl border border-gray-200 bg-white px-3 text-[12px] font-bold text-gray-600 transition-all hover:border-gray-300 ${
                   step === 1 ? 'opacity-0 pointer-events-none' : ''
                 }`}><ArrowLeft className="h-3.5 w-3.5" />Back</button>
-​
+
               {step < 4
                 ? <button onClick={handleNext}
                     className="inline-flex h-11 w-full items-center justify-center gap-1 rounded-xl px-3 text-[12px] font-bold text-white shadow-sm transition-all hover:opacity-90"

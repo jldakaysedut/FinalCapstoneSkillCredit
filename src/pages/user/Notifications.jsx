@@ -322,33 +322,34 @@ export default function Notifications() {
       }
 
       if (type === 'support_reply' || type === 'ticket_updated') {
-        const { data: ticket } = await supabase
-          .from('support_tickets')
-          .select('id')
-          .eq('user_id', currentUserId)
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .single();
-
-        if (ticket) {
-          navigate(`/messages?ticket=${ticket.id}`);
+        // Prefer the exact ticket ID recorded in the notification.
+        if (isInternalLink(notif.link_url) && notif.link_url.startsWith('/messages?')) {
+          navigate(notif.link_url);
         } else {
-          navigate('/messages');
+          // Legacy notifications did not store a ticket link: preserve old fallback.
+          const { data: ticket } = await supabase
+            .from('support_tickets')
+            .select('id')
+            .eq('user_id', currentUserId)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .single();
+          navigate(ticket ? `/messages?ticket=${ticket.id}` : '/messages');
         }
       } 
       else if (type === 'session_disputed' || type === 'dispute') {
-        navigate('/sessions', { state: { tab: 'Disputed' } });
+        navigate(isInternalLink(notif.link_url) ? notif.link_url : '/sessions', { state: { tab: 'Disputed' } });
       }
       else if (type === 'session_expired') {
-        navigate('/sessions', { state: { tab: 'Pending' } });
+        navigate(isInternalLink(notif.link_url) ? notif.link_url : '/sessions', { state: { tab: 'Pending' } });
       }
       // Dito hindi ko isinama yung mga bagong types sa condition na ito para umabot sila sa else statement
       // Sa else statement, dederecho sila eksakto kung saan sila naka-link (e.g., /sessions?session=123)
       else if (type === 'booking' || type === 'session') {
-        navigate('/sessions');
+        navigate(isInternalLink(notif.link_url) ? notif.link_url : '/sessions');
       } 
       else if (type === 'review') {
-        navigate('/profile');
+        navigate(isInternalLink(notif.link_url) ? notif.link_url : '/profile');
       } 
       else {
         // Lahat ng hindi nahuli sa taas (katulad ng session_started, booking_accepted) ay didiretso dito 

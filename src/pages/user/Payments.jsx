@@ -1,3 +1,4 @@
+import useRealtimeRefresh from '../../hooks/useRealtimeRefresh';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import supabase from '../../supabaseClient';
@@ -29,6 +30,8 @@ const TOPUP_PACKAGES = [
 export default function Payments() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
+  const [liveRefreshKey, setLiveRefreshKey] = useState(0);
+  useRealtimeRefresh(() => setLiveRefreshKey(key => key + 1), ['user_profiles', 'topup_transactions', 'sessions'], 'web_refresh_payment_display');
   const [currentUser, setCurrentUser] = useState(null);
   const [balance, setBalance] = useState(0);
   const [ledger, setLedger] = useState([]);
@@ -174,7 +177,7 @@ export default function Payments() {
     };
  
     fetchPaymentData();
-  }, [navigate]);
+  }, [navigate, liveRefreshKey]);
  
   // Handles the redirect back from PayMongo (?status=success&tx=...)
   useEffect(() => {

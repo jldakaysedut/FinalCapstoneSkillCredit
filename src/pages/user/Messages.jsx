@@ -1,7 +1,8 @@
+import { confirmDialog } from '../../components/confirmDialog';
 // ─────────────────────────────────────────────────────────────────────
-// MESSAGES V10 — "Global Live Updates + Unrestricted Role Filters"
+// MESSAGES V12 — "Global Live Updates + Amber Booking Card w/ Image"
 // ─────────────────────────────────────────────────────────────────────
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { Fragment, useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   ArrowLeft, Bell, BellOff, BookOpen, Briefcase, CheckCircle2, ChefHat, ChevronDown,
@@ -94,6 +95,32 @@ function stripReplyPrefix(content) {
   return content.slice(end + REPLY_SUFFIX.length);
 }
 
+// ✨ ADDED: Booking Request Parser
+const BOOKING_PREFIX = '__BOOKING_REQUEST__::';
+
+function parseBookingRequest(content) {
+  if (!content || !content.startsWith(BOOKING_PREFIX)) return null;
+  try {
+    const json = content.slice(BOOKING_PREFIX.length);
+    return JSON.parse(json); 
+  } catch { return null; }
+}
+
+// one-line preview for the chat list (never show raw JSON)
+const previewText = (content, fileUrl) => {
+  if (parseBookingRequest(content)) return 'Booking request';
+  return (stripReplyPrefix(content || '') || '').trim() || (fileUrl ? 'Sent an attachment' : '');
+};
+
+// centered line + label between messages (new day -> date, over 1 hour -> time)
+const ChatDivider = ({ label }) => (
+  <div className="flex items-center gap-3 mt-4 mb-3 select-none">
+    <div className="flex-1 h-px bg-gray-200" />
+    <span className="text-[12px] font-bold text-gray-400">{label}</span>
+    <div className="flex-1 h-px bg-gray-200" />
+  </div>
+);
+
 export default function Messages() {
   const navigate          = useNavigate();
   const location          = useLocation();
@@ -124,6 +151,11 @@ export default function Messages() {
   const [mutedContacts,      setMutedContacts]      = useState({});
   const [replyingTo,         setReplyingTo]         = useState(null); 
   const [isProcessingDone,   setIsProcessingDone]   = useState(false);
+  const [liveMeta,           setLiveMeta]           = useState({}); // { [contactId]: { preview, at, unread } }
+  const contactsRef   = useRef([]);
+  const selectedIdRef = useRef(null);
+  contactsRef.current   = contacts;
+  selectedIdRef.current = selectedContact?.id || null;
 
   const focusedMessageRef = useRef(null);
   const focusMessageId = new URLSearchParams(location.search).get('message');
@@ -136,7 +168,7 @@ export default function Messages() {
       setCurrentUserId(user.id);
       
       const { data: sessionData } = await supabase.from('sessions')
-        .select(`id, status, skill:skills(title,category), student_id, instructor_id, instructor_completed, student_completed,
+        .select(`id, status, created_at, skill:skills(title,category), student_id, instructor_id, instructor_completed, student_completed,
           student:user_profiles!student_id(id,full_name,avatar_url),
           instructor:user_profiles!instructor_id(id,full_name,avatar_url)`)
         .or(`student_id.eq.${user.id},instructor_id.eq.${user.id}`)
@@ -202,7 +234,6 @@ export default function Messages() {
     initUserAndContacts();
   }, [location.search]);
 
-  // ✨ GLOBAL SESSION LISTENER: Ensures any update (like canceling in Sessions.jsx) reflects live here!
   useEffect(() => {
     if (!currentUserId) return;
     
@@ -309,6 +340,97 @@ export default function Messages() {
     return () => window.cancelAnimationFrame(frame);
   }, [focusMessageId, selectedContact, loadingMessages, messages]);
 
+  // ─── ADDED: new message from someone else -> that chat jumps to the top + turns bold
+  useEffect(() => {
+    if (!currentUserId) return;
+    const listCh = supabase.channel(`msglist_${currentUserId}_${Date.now()}`)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, (payload) => {
+        const msg = payload.new;
+        const contactId = msg?.session_id || msg?.ticket_id;
+        if (!contactId || msg.sender_id === currentUserId) return;
+        if (!contactsRef.current.some(c => c.id === contactId)) return;
+        setLiveMeta(prev => ({
+          ...prev,
+          [contactId]: { preview: previewText(msg.content, msg.file_url), at: msg.created_at, unread: selectedIdRef.current !== contactId },
+        }));
+      })
+      .subscribe((status, err) => { console.log('[messages list realtime]', status, err?.message || ''); });
+    return () => { supabase.removeChannel(listCh); };
+  }, [currentUserId]);
+
+  // ─── ADDED: load the LAST message of every chat when the page opens, so the list shows
+  //     "You: ..." / their message, is ordered by latest message, and unread chats are bold even
+  //     if the message came while this page was closed.
+  //     Unread = last message is from the other person AND its "message" notification is still unread.
+  const contactIdsKey = contacts.map(c => c.id).join(',');
+  useEffect(() => {
+    if (!currentUserId || !contactIdsKey) return;
+    let cancelled = false;
+
+    const loadLastMessages = async () => {
+      try {
+        const list = contactsRef.current;
+        const sessionIds = list.filter(c => c.type === 'session').map(c => c.id);
+        const ticketIds  = list.filter(c => c.type === 'ticket').map(c => c.id);
+        const cols = 'session_id, ticket_id, sender_id, content, file_url, created_at';
+        const [sRes, tRes, nRes] = await Promise.all([
+          sessionIds.length
+            ? supabase.from('messages').select(cols).in('session_id', sessionIds).order('created_at', { ascending: false }).limit(500)
+            : { data: [] },
+          ticketIds.length
+            ? supabase.from('messages').select(cols).in('ticket_id', ticketIds).order('created_at', { ascending: false }).limit(500)
+            : { data: [] },
+          supabase.from('notifications').select('link_url').eq('user_id', currentUserId).eq('type', 'message').eq('is_read', false),
+        ]);
+        if (cancelled) return;
+
+        const latest = {};
+        [...(sRes.data || []), ...(tRes.data || [])].forEach(m => {
+          const id = m.session_id || m.ticket_id;
+          if (id && (!latest[id] || new Date(m.created_at) > new Date(latest[id].created_at))) latest[id] = m;
+        });
+
+        const unreadIds = new Set();
+        (nRes.data || []).forEach(n => {
+          const hit = /(?:session|ticket)=([^&]+)/.exec(n.link_url || '');
+          if (hit) unreadIds.add(hit[1]);
+        });
+
+        setLiveMeta(prev => {
+          const next = { ...prev };
+          Object.keys(latest).forEach(id => {
+            const m = latest[id];
+            if (next[id] && new Date(next[id].at) >= new Date(m.created_at)) return; // live info is newer
+            const mine = m.sender_id === currentUserId;
+            next[id] = {
+              preview: `${mine ? 'You: ' : ''}${previewText(m.content, m.file_url)}`,
+              at: m.created_at,
+              unread: !mine && unreadIds.has(id) && selectedIdRef.current !== id,
+            };
+          });
+          return next;
+        });
+      } catch (e) { console.log('Could not load last messages:', e?.message || e); }
+    };
+
+    loadLastMessages();
+    const onVisible = () => { if (document.visibilityState === 'visible') loadLastMessages(); };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => { cancelled = true; document.removeEventListener('visibilitychange', onVisible); };
+  }, [currentUserId, contactIdsKey]);
+
+  // ─── ADDED: opening a chat = not bold anymore + its message notifications become read
+  useEffect(() => {
+    if (!currentUserId || !selectedContact) return;
+    const chatId = selectedContact.id;
+    setLiveMeta(prev => (prev[chatId]?.unread ? { ...prev, [chatId]: { ...prev[chatId], unread: false } } : prev));
+    const markRead = () => supabase.from('notifications').update({ is_read: true })
+      .eq('user_id', currentUserId).eq('type', 'message').like('link_url', `%=${chatId}%`)
+      .then(() => {}, () => {});
+    markRead();
+    return markRead; // also when leaving the chat (messages that came while it was open)
+  }, [currentUserId, selectedContact?.id]);
+
   const startLongPress = useCallback((msg) => {
     longPressRef.current = setTimeout(() => {
       const isMe      = msg.sender_id === currentUserId;
@@ -403,6 +525,16 @@ export default function Messages() {
       } else if (data) {
         setMessages(prev => prev.map(m => m.id === tempId ? data : m));
 
+        // move this chat to the top of the list + show "You: message"
+        setLiveMeta(prev => ({
+          ...prev,
+          [selectedContact.id]: {
+            preview: `You: ${previewText(finalContent, uploadedFileUrl)}`,
+            at: data.created_at || new Date().toISOString(),
+            unread: false,
+          },
+        }));
+
         if (selectedContact.type === 'session' && selectedContact.userId && selectedContact.userId !== currentUserId) {
           const { data: actor } = await supabase
             .from('user_profiles')
@@ -438,7 +570,7 @@ export default function Messages() {
   const handleQuickLike = () => { executeMessageSend('💚'); };
 
   const handleDeleteMessage = async (messageId) => {
-    if (!window.confirm('Delete this message?')) return;
+    if (!await confirmDialog('Delete this message?')) return;
     setMessages(prev => prev.map(m =>
       m.id === messageId ? { ...m, is_deleted: true, content: 'This message was deleted', file_url: null } : m
     ));
@@ -507,7 +639,7 @@ export default function Messages() {
       return;
     }
 
-    if (window.confirm('Mark session as done?')) {
+    if (await confirmDialog('Mark session as done?')) {
       const payload = isInstructor ? { instructor_completed: true } : { student_completed: true };
       
       if (otherCompletedLocal) {
@@ -562,7 +694,6 @@ export default function Messages() {
     navigate(`/profile/${selectedContact.userId}`);
   };
 
-  // ✨ CHANGED: Removed the status restriction on Teachers and Students tabs
   const TAB_FILTERS = {
     All:       ()  => true,
     Unread:    (c) => c.sessionStatus === 'active',
@@ -577,7 +708,7 @@ export default function Messages() {
       contact.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       contact.skillCategory.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesSearch && (TAB_FILTERS[activeTab]?.(contact) ?? true);
-  });
+  }).sort((a, b) => new Date(liveMeta[b.id]?.at || b.sortDate) - new Date(liveMeta[a.id]?.at || a.sortDate));
 
   const isContactInstructor = selectedContact?.isInstructor;
   const myCompleted = selectedContact ? (isContactInstructor ? selectedContact.instructorCompleted : selectedContact.studentCompleted) : false;
@@ -783,6 +914,7 @@ export default function Messages() {
           ) : filteredContacts.map(contact => {
             const isActive = selectedContact?.id === contact.id;
             const closed   = ['completed','resolved','cancelled'].includes(contact.sessionStatus);
+            const meta     = liveMeta[contact.id];
             return (
               <div key={contact.id} onClick={() => setSelectedContact(contact)}
                 className={`px-3 py-2 flex items-center gap-3 cursor-pointer rounded-xl mx-2 mb-0.5 transition ${
@@ -794,12 +926,12 @@ export default function Messages() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2">
-                    <h3 className={`font-bold text-[14px] truncate ${closed ? 'text-gray-400' : 'text-gray-900'}`}>
+                    <h3 className={`${meta?.unread ? 'font-extrabold' : 'font-bold'} text-[14px] truncate ${closed ? 'text-gray-400' : 'text-gray-900'}`}>
                       {contact.name} {mutedContacts[contact.id] && <BellOff className="inline w-3 h-3 text-gray-400" />}
                     </h3>
                     <span className="text-[11px] text-gray-400 shrink-0">{closed ? <Lock className="w-3.5 h-3.5" /> : 'now'}</span>
                   </div>
-                  <p className="flex items-center gap-1.5 text-[12px] text-gray-400 truncate">{contact.skillCategory && <CategoryIcon category={contact.skillCategory} className="w-3.5 h-3.5 shrink-0" />}{contact.skillCategory}</p>
+                  <p className={`flex items-center gap-1.5 text-[12px] truncate ${meta?.unread ? 'font-bold text-gray-900' : 'text-gray-400'}`}>{meta?.preview ? meta.preview : <>{contact.skillCategory && <CategoryIcon category={contact.skillCategory} className="w-3.5 h-3.5 shrink-0" />}{contact.skillCategory}</>}</p>
                 </div>
               </div>
             );
@@ -903,18 +1035,31 @@ export default function Messages() {
                   <p className="flex items-center justify-center gap-1 text-[13px] text-gray-500 mt-3">Say hello and start the conversation <Hand className="w-3.5 h-3.5 text-amber-500" /></p>
                 </div>
               ) : (
-                messages.map(msg => {
-                  const isMe      = msg.sender_id === currentUserId;
-                  const reply     = !msg.is_deleted ? parseReply(msg.content) : null;
-                  const bodyText  = reply ? stripReplyPrefix(msg.content) : msg.content;
-                  const hasText   = bodyText && bodyText.trim().length > 0;
-                  const isImage   = msg.file_url && (msg.file_type === 'image' || msg.file_type?.startsWith('image/'));
-                  const isFile    = msg.file_url && !isImage;
+                messages.map((msg, i) => {
+                  // ✨ UPDATED LOGIC: Booking Data Parsing
+                  const isMe        = msg.sender_id === currentUserId;
+                  const reply       = !msg.is_deleted ? parseReply(msg.content) : null;
+                  const bookingData = !msg.is_deleted ? parseBookingRequest(msg.content) : null;
+                  const bodyText    = reply ? stripReplyPrefix(msg.content) : msg.content;
+                  const hasText     = bodyText && bodyText.trim().length > 0 && !bookingData;
+                  const isImage     = msg.file_url && (msg.file_type === 'image' || msg.file_type?.startsWith('image/'));
+                  const isFile      = msg.file_url && !isImage;
                   const messageTime = new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
+                  // divider above this message: new day -> date, over 1 hour since the last message -> time
+                  const prevMsg  = messages[i - 1];
+                  const thisDate = new Date(msg.created_at);
+                  let dividerLabel = null;
+                  if (!prevMsg || thisDate.toDateString() !== new Date(prevMsg.created_at).toDateString()) {
+                    dividerLabel = thisDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+                  } else if (thisDate - new Date(prevMsg.created_at) > 60 * 60 * 1000) {
+                    dividerLabel = messageTime;
+                  }
+
                   return (
+                    <Fragment key={msg.id}>
+                    {dividerLabel && <ChatDivider label={dividerLabel} />}
                     <div
-                      key={msg.id}
                       id={`msg-${msg.id}`}
                       className={`flex w-full mb-2 transition-all ${ isMe ? 'justify-end' : 'justify-start' }`}
                     >
@@ -951,8 +1096,61 @@ export default function Messages() {
                             </a>
                           )}
 
+                          {/* ✨ BOOKING REQUEST CARD UI ✨ */}
+                          {bookingData && !msg.is_deleted && (
+                            <>
+                              <div className={`w-full min-w-[220px] max-w-[250px] rounded-xl overflow-hidden border shadow-sm ${isMe ? 'bg-amber-50 border-amber-200' : 'bg-white border-gray-200'}`}>
+                                <div className={`px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-white flex items-center gap-1.5 ${isMe ? 'bg-amber-500' : 'bg-gray-800'}`}>
+                                  <CalendarDays className="w-3.5 h-3.5" />
+                                  Booking Request
+                                </div>
+                                <div className="p-3 flex flex-col gap-2">
+                                  <div className="flex items-center gap-3">
+                                    {bookingData.image ? (
+                                      <div className="w-12 h-12 rounded-lg overflow-hidden shrink-0 border border-black/5 bg-gray-100">
+                                        <img src={bookingData.image} alt="" className="w-full h-full object-cover" />
+                                      </div>
+                                    ) : (
+                                      <div className="w-12 h-12 rounded-lg shrink-0 border border-black/5 bg-amber-100 flex items-center justify-center text-amber-500">
+                                        <CalendarDays className="w-6 h-6" />
+                                      </div>
+                                    )}
+                                    <div className="min-w-0">
+                                      <p className={`font-bold text-[13px] leading-tight truncate ${isMe ? 'text-amber-950' : 'text-gray-900'}`}>{bookingData.title}</p>
+                                      <p className={`text-[10px] font-semibold mt-1 ${isMe ? 'text-amber-700' : 'text-gray-500'}`}>
+                                        {new Date(bookingData.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} • {bookingData.time}
+                                      </p>
+                                      <p className={`text-[11px] font-bold mt-0.5 ${isMe ? 'text-amber-800' : 'text-gray-700'}`}>
+                                        {bookingData.cost} CR
+                                      </p>
+                                    </div>
+                                  </div>
+
+                                  <button
+                                    onClick={() => navigate(`/skill/${bookingData.skill_id}`)}
+                                    className={`mt-1 w-full py-1.5 text-[10px] font-bold rounded-lg transition shadow-sm cursor-pointer ${isMe ? 'bg-amber-500 text-white hover:bg-amber-600' : 'bg-gray-900 text-white hover:bg-black'}`}
+                                  >
+                                    View Details
+                                  </button>
+                                </div>
+                              </div>
+
+                              {/* ✨ NORMAL BUBBLE PARA SA MENSAHE NG USER (Nasa labas ng card) */}
+                              {bookingData.userMsg && (
+                                <div className={`px-4 py-2.5 mt-0.5 text-[14px] leading-snug break-words max-w-[280px] ${
+                                  isMe
+                                    ? 'bg-emerald-600 text-white rounded-2xl rounded-br-sm'
+                                    : 'bg-gray-100 text-gray-900 rounded-2xl rounded-bl-sm'
+                                }`}>
+                                  {renderTextWithLinks(bookingData.userMsg, isMe)}
+                                </div>
+                              )}
+                            </>
+                          )}
+
+                          {/* NORMAL TEXT BUBBLE (Hide this if it's a booking card, because it's rendered manually above) */}
                           {(hasText || msg.is_deleted) && (
-                            <div className={`px-4 py-2.5 text-[14px] leading-snug break-words ${
+                            <div className={`px-4 py-2.5 text-[14px] leading-snug break-words max-w-[280px] ${
                               msg.is_deleted
                                 ? 'bg-gray-100 text-gray-400 italic rounded-2xl'
                                 : isMe
@@ -991,6 +1189,7 @@ export default function Messages() {
                         </div>
                       </div>
                     </div>
+                    </Fragment>
                   );
                 })
               )}

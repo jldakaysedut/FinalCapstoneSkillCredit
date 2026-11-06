@@ -1,18 +1,25 @@
-import { useEffect, useState } from 'react';
-import { Outlet, NavLink, useNavigate, Navigate } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
+import { Outlet, NavLink, useNavigate, Navigate, Link, useLocation } from 'react-router-dom';
 import {
   AlertOctagon,
   ArrowLeftRight,
+  ChevronDown,
   ClipboardList,
   Globe,
   LayoutDashboard,
   LogOut,
-  Menu,
   ShieldAlert,
   Users,
-  X,
 } from 'lucide-react';
 import supabase from '../supabaseClient';
+
+// ────────────────────────────────────────────────────────────────
+// ADMIN LAYOUT — top bar + tab navigation (no sidebar)
+// Same language as the Moderator console: brand and account on the
+// first row, work areas as tabs on the second.
+// ────────────────────────────────────────────────────────────────
+
+const FOCUS_RING = 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2';
 
 const NAV_LINKS = [
   { to: '/admin', icon: LayoutDashboard, label: 'Overview', exact: true },
@@ -24,9 +31,13 @@ const NAV_LINKS = [
 
 export default function AdminLayout() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [isAuthorized, setIsAuthorized] = useState(null);
   const [adminId, setAdminId] = useState(null);
-  const [isMobileOpen, setIsMobileOpen] = useState(false);
+
+  // UI-only: account dropdown (replaces the old mobile drawer)
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const menuRef = useRef(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -54,19 +65,18 @@ export default function AdminLayout() {
     return () => { isMounted = false; };
   }, []);
 
+  // Close the account menu on outside click / Escape / route change
   useEffect(() => {
-    if (!isMobileOpen) return undefined;
-    const onKeyDown = event => {
-      if (event.key === 'Escape') setIsMobileOpen(false);
-    };
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    window.addEventListener('keydown', onKeyDown);
+    const onDown = event => { if (menuRef.current && !menuRef.current.contains(event.target)) setIsMenuOpen(false); };
+    const onKey = event => { if (event.key === 'Escape') setIsMenuOpen(false); };
+    document.addEventListener('mousedown', onDown);
+    document.addEventListener('keydown', onKey);
     return () => {
-      document.body.style.overflow = previousOverflow;
-      window.removeEventListener('keydown', onKeyDown);
+      document.removeEventListener('mousedown', onDown);
+      document.removeEventListener('keydown', onKey);
     };
-  }, [isMobileOpen]);
+  }, []);
+  useEffect(() => { setIsMenuOpen(false); window.scrollTo(0, 0); }, [location.pathname]);
 
   const logSystemAction = async (actionType, details) => {
     if (!adminId) return;
@@ -88,123 +98,144 @@ export default function AdminLayout() {
     navigate('/dashboard');
   };
 
+  const isTabActive = link => (link.exact ? location.pathname === link.to : location.pathname.startsWith(link.to));
+  const activeLink = NAV_LINKS.find(isTabActive);
+  const routeName = activeLink?.label || 'Admin Console';
+  const todayLabel = new Date().toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+
+  useEffect(() => { document.title = `${routeName} · Admin`; }, [routeName]);
+
   if (isAuthorized === null) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50 px-4 text-center">
-        <span className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-900 text-white shadow-lg">
-          <ShieldAlert className="h-7 w-7 animate-pulse" />
-        </span>
-        <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-500">Securing connection</p>
-        <p className="mt-1 text-xs text-slate-400">Verifying admin access…</p>
+      <div className="grid min-h-screen place-items-center bg-[#faf9f6] px-4 font-sans text-gray-900">
+        <div className="flex items-center gap-3 rounded-xl border border-gray-200 bg-white px-5 py-4 shadow-sm" role="status" aria-live="polite">
+          <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-50 text-emerald-700">
+            <ShieldAlert className="h-5 w-5 animate-pulse" />
+          </span>
+          <div>
+            <p className="text-sm font-semibold">Securing connection</p>
+            <p className="mt-0.5 text-xs text-gray-500">Verifying admin access…</p>
+          </div>
+        </div>
       </div>
     );
   }
 
   if (isAuthorized === false) return <Navigate to="/" replace />;
 
-  const renderNavLinks = mobile => NAV_LINKS.map(({ to, icon: Icon, label, exact }) => (
-    <NavLink
-      key={to}
-      to={to}
-      end={exact}
-      onClick={() => { if (mobile) setIsMobileOpen(false); }}
-      className={({ isActive }) => `flex min-h-11 items-center gap-3 rounded-xl px-3.5 text-sm font-semibold transition ${
-        isActive ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-950'
-      }`}
-    >
-      <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
-      <span className="flex-1">{label}</span>
-    </NavLink>
-  ));
-
-  const renderAccountActions = () => (
-    <div className="space-y-1.5 border-t border-slate-100 p-3">
-      <button
-        type="button"
-        onClick={() => { setIsMobileOpen(false); switchToUser(); }}
-        className="flex min-h-11 w-full items-center gap-3 rounded-xl px-3.5 text-left text-sm font-semibold text-slate-600 transition hover:bg-slate-100"
-      >
-        <ArrowLeftRight className="h-4 w-4 shrink-0" aria-hidden="true" /> Switch to User Mode
-      </button>
-      <button
-        type="button"
-        onClick={() => { setIsMobileOpen(false); handleLogout(); }}
-        className="flex min-h-11 w-full items-center gap-3 rounded-xl px-3.5 text-left text-sm font-semibold text-rose-700 transition hover:bg-rose-50"
-      >
-        <LogOut className="h-4 w-4 shrink-0" aria-hidden="true" /> Terminate Session
-      </button>
-    </div>
-  );
-
   return (
-    <div className="flex min-h-screen w-full bg-slate-50 font-sans text-slate-900">
-      {/* Desktop sidebar */}
-      <aside className="sticky top-0 hidden h-screen w-[260px] shrink-0 flex-col border-r border-slate-200 bg-white shadow-[4px_0_24px_rgba(0,0,0,0.02)] lg:flex">
-        <div className="flex items-center gap-3 border-b border-slate-100 p-5 xl:p-6">
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-900 text-white shadow-sm">
-            <ShieldAlert className="h-5 w-5" />
-          </span>
-          <div className="min-w-0">
-            <h1 className="truncate text-base font-bold tracking-tight text-slate-950">Admin Console</h1>
-            <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">Superuser access</p>
-          </div>
-        </div>
-        <nav aria-label="Admin navigation" className="flex-1 space-y-1.5 overflow-y-auto p-3 xl:p-4">
-          {renderNavLinks(false)}
-        </nav>
-        {renderAccountActions()}
-      </aside>
+    <div className="min-h-screen bg-[#faf9f6] font-sans text-gray-900">
+      <a href="#admin-main" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-3 focus:z-[60] focus:rounded-lg focus:bg-white focus:px-3 focus:py-2 focus:text-sm focus:font-semibold focus:text-emerald-800 focus:shadow-lg">Skip to content</a>
 
-      <div className="flex min-h-screen min-w-0 flex-1 flex-col">
-        {/* Mobile header */}
-        <header className="sticky top-0 z-40 flex h-16 items-center justify-between border-b border-slate-200 bg-white/95 px-4 backdrop-blur lg:hidden">
-          <div className="flex min-w-0 items-center gap-2.5">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-900 text-white">
-              <ShieldAlert className="h-5 w-5" />
-            </span>
-            <div className="min-w-0">
-              <p className="truncate text-sm font-bold text-slate-950">Admin Console</p>
-              <p className="text-[9px] font-bold uppercase tracking-[0.13em] text-slate-400">Admin workspace</p>
+      {/* ══ HEADER: brand row + tab row */}
+      <header className="sticky top-0 z-40 border-b border-gray-200 bg-white/90 backdrop-blur-xl">
+
+        {/* Row 1 — brand, workspace, account */}
+        <div className="mx-auto flex h-16 max-w-[1440px] items-center justify-between gap-4 px-4 md:px-6">
+          <div className="flex min-w-0 items-center gap-3">
+            <Link to="/admin" className={`flex shrink-0 items-center gap-2.5 rounded-lg ${FOCUS_RING}`}>
+              <img src="/logo.png" alt="SkillCredit" className="h-8 w-8 object-contain" />
+              <span className="hidden text-xl font-bold tracking-tight text-emerald-900 sm:block">SkillCredit</span>
+            </Link>
+            <span className="hidden h-6 w-px bg-gray-200 sm:block" aria-hidden="true" />
+            <div className="flex min-w-0 items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 rounded-md border border-emerald-100 bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-800">
+                <ShieldAlert className="h-3.5 w-3.5" /> Admin console
+              </span>
+              {!activeLink && <span className="truncate text-sm font-semibold text-gray-900" aria-current="page">{routeName}</span>}
             </div>
           </div>
-          <button
-            type="button"
-            onClick={() => setIsMobileOpen(open => !open)}
-            aria-label={isMobileOpen ? 'Close navigation menu' : 'Open navigation menu'}
-            aria-expanded={isMobileOpen}
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-slate-600 transition hover:bg-slate-100"
-          >
-            {isMobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-          </button>
-        </header>
 
-        {/* Mobile navigation drawer */}
-        {isMobileOpen && (
-          <div className="fixed inset-0 z-50 bg-slate-950/40 backdrop-blur-sm lg:hidden" onMouseDown={() => setIsMobileOpen(false)}>
-            <aside
-              aria-label="Admin navigation menu"
-              className="absolute inset-y-0 left-0 flex w-[min(88vw,320px)] max-w-full flex-col bg-white shadow-2xl"
-              onMouseDown={event => event.stopPropagation()}
-            >
-              <div className="flex items-center justify-between border-b border-slate-100 p-4">
-                <div className="flex min-w-0 items-center gap-3">
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-900 text-white"><ShieldAlert className="h-5 w-5" /></span>
-                  <div className="min-w-0"><p className="truncate text-sm font-bold text-slate-950">Admin Console</p><p className="mt-0.5 text-[10px] text-slate-400">Secure workspace</p></div>
+          <div className="flex shrink-0 items-center gap-3">
+            <span className="hidden text-xs text-gray-500 lg:block">{todayLabel}</span>
+
+            {/* Account */}
+            <div className="relative" ref={menuRef}>
+              <button
+                type="button"
+                onClick={() => setIsMenuOpen(open => !open)}
+                aria-haspopup="menu"
+                aria-expanded={isMenuOpen}
+                className={`flex items-center gap-2 rounded-full border py-1.5 pl-1.5 pr-3 transition-colors ${FOCUS_RING} ${isMenuOpen ? 'border-emerald-200 bg-emerald-50/80' : 'border-gray-200 bg-white shadow-sm hover:border-gray-300'}`}
+              >
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-700 text-white">
+                  <ShieldAlert className="h-3.5 w-3.5" />
+                </span>
+                <span className="hidden text-left leading-tight sm:block">
+                  <span className="block text-[13px] font-semibold text-gray-900">Admin</span>
+                  <span className="block text-[10px] text-gray-500">Superuser access</span>
+                </span>
+                <ChevronDown className={`h-3.5 w-3.5 text-gray-400 transition-transform duration-200 ${isMenuOpen ? 'rotate-180' : ''}`} />
+              </button>
+
+              {isMenuOpen && (
+                <div role="menu" className="absolute right-0 z-50 mt-2.5 w-64 overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
+                  <div className="flex items-center gap-3 border-b border-gray-100 px-4 py-3.5">
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-700 text-white">
+                      <ShieldAlert className="h-5 w-5" />
+                    </span>
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-semibold text-gray-900">Admin Console</p>
+                      <p className="text-xs text-gray-500">Superuser access</p>
+                    </div>
+                  </div>
+                  <div className="p-2">
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={() => { setIsMenuOpen(false); switchToUser(); }}
+                      className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-900"
+                    >
+                      <ArrowLeftRight className="h-4 w-4 text-gray-400" /> Switch to user mode
+                    </button>
+                  </div>
+                  <div className="border-t border-gray-100 p-2">
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={() => { setIsMenuOpen(false); handleLogout(); }}
+                      className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-rose-600 transition-colors hover:bg-rose-50"
+                    >
+                      <LogOut className="h-4 w-4 text-rose-500" /> Terminate session
+                    </button>
+                  </div>
                 </div>
-                <button type="button" onClick={() => setIsMobileOpen(false)} aria-label="Close menu" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-slate-500 hover:bg-slate-100"><X className="h-5 w-5" /></button>
-              </div>
-              <nav aria-label="Admin navigation" className="flex-1 space-y-1.5 overflow-y-auto p-3">
-                {renderNavLinks(true)}
-              </nav>
-              {renderAccountActions()}
-            </aside>
+              )}
+            </div>
           </div>
-        )}
+        </div>
 
-        <main className="min-w-0 flex-1">
-          <Outlet />
-        </main>
-      </div>
+        {/* Row 2 — section tabs */}
+        <nav aria-label="Admin navigation" className="border-t border-gray-100">
+          <div className="mx-auto max-w-[1440px] px-4 md:px-6">
+            {/* auto margins centre the tabs when they fit and fall back to scrolling when they don't */}
+            <div className="-mx-3 min-w-0 overflow-x-auto md:mx-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              <div className="mx-auto flex w-max gap-1">
+                {NAV_LINKS.map(({ to, icon: Icon, label, exact }) => (
+                  <NavLink
+                    key={to}
+                    to={to}
+                    end={exact}
+                    className={({ isActive }) => `inline-flex shrink-0 items-center gap-2 border-b-2 px-3 py-3 text-[13px] font-medium transition-colors ${FOCUS_RING} focus-visible:ring-inset focus-visible:ring-offset-0 ${isActive ? 'border-emerald-700 text-emerald-900' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-900'}`}
+                  >
+                    {({ isActive }) => (
+                      <>
+                        <Icon className={`h-4 w-4 ${isActive ? 'text-emerald-700' : 'text-gray-400'}`} aria-hidden="true" />
+                        {label}
+                      </>
+                    )}
+                  </NavLink>
+                ))}
+              </div>
+            </div>
+          </div>
+        </nav>
+      </header>
+
+      {/* ══ PAGE CONTENT */}
+      <main id="admin-main" tabIndex={-1} className="mx-auto w-full max-w-[1440px] min-w-0 px-4 py-6 outline-none md:px-6 md:py-8">
+        <Outlet />
+      </main>
     </div>
   );
 }

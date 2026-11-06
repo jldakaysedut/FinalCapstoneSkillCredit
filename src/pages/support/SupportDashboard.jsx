@@ -2,13 +2,15 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, CheckCircle2, Clock3, Headset, Star, Ticket, Users } from 'lucide-react';
 import supabase from '../../supabaseClient';
-​
+
+const FOCUS_RING = 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yellow-500 focus-visible:ring-offset-2';
+
 export default function SupportDashboard() {
   const [stats, setStats] = useState({ open: 0, inProgress: 0, resolved: 0, total: 0 });
   const [topAgents, setTopAgents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState(null);
-​
+
   useEffect(() => {
     const fetchDashboardData = async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -16,11 +18,11 @@ export default function SupportDashboard() {
         const { data: profileData } = await supabase.from('user_profiles').select('full_name').eq('id', user.id).single();
         setProfile(profileData);
       }
-​
+
       const { data: tickets, error } = await supabase
         .from('support_tickets')
         .select('status, rating, agent:user_profiles!support_tickets_assigned_to_fkey(id, full_name, avatar_url)');
-​
+
       if (!error && tickets) {
         setStats({
           open: tickets.filter(ticket => ticket.status === 'open').length,
@@ -28,7 +30,7 @@ export default function SupportDashboard() {
           resolved: tickets.filter(ticket => ticket.status === 'resolved').length,
           total: tickets.length,
         });
-​
+
         const agentCounts = {};
         tickets.filter(ticket => ticket.status === 'resolved' && ticket.agent).forEach(ticket => {
           const agentId = ticket.agent.id;
@@ -45,119 +47,205 @@ export default function SupportDashboard() {
       }
       setLoading(false);
     };
-​
+
     fetchDashboardData();
     const channel = supabase.channel('support_dashboard_stats')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'support_tickets' }, fetchDashboardData)
       .subscribe();
     return () => supabase.removeChannel(channel);
   }, []);
-​
+
   if (loading) {
     return (
-      <div className="grid min-h-[55vh] place-items-center">
-        <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-5 py-4 shadow-sm">
-          <span className="h-8 w-8 animate-spin rounded-full border-[3px] border-emerald-500 border-t-transparent" />
-          <span><span className="block text-sm font-semibold text-slate-800">Loading overview</span><span className="mt-0.5 block text-xs text-slate-400">Gathering queue data</span></span>
+      <div className="space-y-6 font-sans text-gray-700" role="status" aria-busy="true" aria-live="polite">
+        <span className="sr-only">Loading overview</span>
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight text-gray-900">Welcome back.</h1>
+          <p className="mt-1 text-sm text-gray-500">Loading the latest figures…</p>
+        </div>
+        <div className="grid animate-pulse grid-cols-1 gap-6 lg:grid-cols-12" aria-hidden="true">
+          <div className="h-72 rounded-2xl border border-gray-200 bg-white lg:col-span-8" />
+          <div className="grid gap-6 sm:grid-cols-2 lg:col-span-4 lg:grid-cols-1">
+            <div className="h-36 rounded-2xl bg-yellow-100" />
+            <div className="h-32 rounded-2xl border border-gray-200 bg-white" />
+          </div>
         </div>
       </div>
     );
   }
-​
+
   const resolutionRate = stats.total ? Math.round((stats.resolved / stats.total) * 100) : 0;
-  const metricCards = [
-    { label: 'Open queue', value: stats.open, hint: 'Waiting for an agent', Icon: Ticket, color: 'amber' },
-    { label: 'In progress', value: stats.inProgress, hint: 'Being handled now', Icon: Clock3, color: 'blue' },
-    { label: 'Resolved', value: stats.resolved, hint: 'Successfully closed', Icon: CheckCircle2, color: 'emerald' },
-    { label: 'All requests', value: stats.total, hint: `${resolutionRate}% resolution rate`, Icon: Headset, color: 'slate' },
+
+  // ── Display-only values derived from the stats above ──
+  const queues = [
+    { label: 'Open queue', note: 'Waiting for an agent', count: stats.open, icon: Ticket, tone: 'bg-amber-50 text-amber-700', bar: 'bg-amber-500' },
+    { label: 'In progress', note: 'Being handled now', count: stats.inProgress, icon: Clock3, tone: 'bg-blue-50 text-blue-700', bar: 'bg-blue-500' },
+    { label: 'Resolved', note: 'Successfully closed', count: stats.resolved, icon: CheckCircle2, tone: 'bg-emerald-50 text-emerald-700', bar: 'bg-emerald-500' },
   ];
-  const tone = {
-    amber: 'bg-amber-50 text-amber-700 ring-amber-100',
-    blue: 'bg-blue-50 text-blue-700 ring-blue-100',
-    emerald: 'bg-emerald-50 text-emerald-700 ring-emerald-100',
-    slate: 'bg-slate-100 text-slate-700 ring-slate-200',
-  };
-​
+
+  // Team rating: add up each agent's own average rating, then divide by how many agents have a rating.
+  const ratedAgents = topAgents.filter(agent => agent.ratedTickets > 0);
+  const overallRating = ratedAgents.length > 0
+    ? (ratedAgents.reduce((sum, agent) => sum + agent.totalStars / agent.ratedTickets, 0) / ratedAgents.length).toFixed(1)
+    : '—';
+
   return (
-    <div className="mx-auto max-w-7xl space-y-6 font-sans text-slate-700 animate-in fade-in duration-300">
-      <section className="flex flex-col justify-between gap-4 border-b border-slate-200 pb-5 sm:flex-row sm:items-end">
+    <div className="max-w-5xl mx-auto space-y-6 font-sans text-gray-700">
+
+      {/* ── PAGE HEADER ── */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-emerald-100 bg-emerald-50 px-3 py-1.5 text-[11px] font-semibold text-emerald-800">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> Support operations
-          </div>
-          <h2 className="text-2xl font-semibold tracking-tight text-slate-900 sm:text-[28px]">Welcome back{profile?.full_name ? `, ${profile.full_name.split(' ')[0]}` : ''}.</h2>
-          <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-500">Here’s the current pulse of your support team and customer queue.</p>
+          <h1 className="text-2xl font-semibold tracking-tight text-gray-900">Welcome back{profile?.full_name ? `, ${profile.full_name.split(' ')[0]}` : ''}.</h1>
+          <p className="mt-1 max-w-xl text-sm text-gray-500">Here’s the current pulse of your support team and customer queue.</p>
         </div>
-        <Link to="/support/tickets" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-emerald-700 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2">
-          Open ticket queue <ArrowRight className="h-4 w-4" />
+        <Link to="/support/tickets" className={`inline-flex items-center justify-center gap-2 self-start rounded-lg bg-yellow-400 px-3.5 py-2 text-[13px] font-semibold text-gray-900 shadow-sm transition-colors hover:bg-yellow-500 sm:self-auto ${FOCUS_RING}`}>
+          Open ticket queue <ArrowRight className="h-3.5 w-3.5" />
         </Link>
-      </section>
-​
-      <section aria-label="Ticket summary" className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {metricCards.map(({ label, value, hint, Icon, color }) => (
-          <article key={label} className="rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm transition hover:border-slate-300 hover:shadow-md">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <p className="text-[12px] font-semibold text-slate-500">{label}</p>
-                <p className="mt-3 text-[34px] font-bold leading-none tracking-tight text-[#303833]">{value}</p>
-              </div>
-              <span className={`flex h-10 w-10 items-center justify-center rounded-xl ring-1 ${tone[color]}`}><Icon className="h-[19px] w-[19px]" /></span>
-            </div>
-            <p className="mt-4 text-[11px] font-medium text-slate-400">{hint}</p>
-          </article>
-        ))}
-      </section>
-​
-      <section className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1.25fr)_minmax(320px,0.75fr)]">
-        <div className="rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm sm:p-6">
-          <div className="mb-5 flex items-start justify-between gap-4">
-            <div>
-              <div className="flex items-center gap-2 text-[#303833]"><Users className="h-4 w-4 text-emerald-600" /><h3 className="text-[15px] font-bold">Agent performance</h3></div>
-              <p className="mt-1.5 text-xs text-slate-500">Resolved tickets and customer ratings</p>
-            </div>
-            <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-slate-500">Top 5</span>
+      </div>
+
+      {/* ── ROW 1: WORK QUEUES + RESOLUTION / WORKLOAD ── */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+
+        {/* Work queues (the only place the open / in progress / resolved counts appear) */}
+        <section aria-labelledby="queues-heading" className="flex flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm lg:col-span-8">
+          <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
+            <h2 id="queues-heading" className="text-sm font-semibold text-gray-900">Ticket queues</h2>
+            <span className="text-xs text-gray-500">Share of all requests</span>
           </div>
+          <ul className="flex flex-1 flex-col divide-y divide-gray-100">
+            {queues.map(({ label, note, count, icon: Icon, tone, bar }) => {
+              const pct = stats.total > 0 ? Math.round((count / stats.total) * 100) : 0;
+              return (
+                <li key={label} className="flex flex-1">
+                  <Link to="/support/tickets" className={`group flex flex-1 flex-col gap-4 px-6 py-5 transition-colors hover:bg-gray-50/70 sm:flex-row sm:items-center sm:gap-6 ${FOCUS_RING} focus-visible:ring-inset focus-visible:ring-offset-0`}>
+                    <div className="flex min-w-0 flex-1 items-center gap-4">
+                      <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${tone}`}>
+                        <Icon className="h-5 w-5" />
+                      </span>
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-gray-900">{label}</p>
+                        <p className="mt-0.5 text-xs text-gray-500">{note}</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-5 sm:w-[46%]">
+                      <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-gray-100" role="img" aria-label={`${pct}% of all requests`}>
+                        <div className={`h-full rounded-full ${bar} transition-all duration-500`} style={{ width: `${pct}%` }} />
+                      </div>
+                      <span className="w-12 text-right text-2xl font-semibold leading-none tabular-nums text-gray-900">{count}</span>
+                      <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 text-gray-400 transition-colors group-hover:border-yellow-400 group-hover:bg-yellow-50 group-hover:text-yellow-700">
+                        <ArrowRight className="h-3.5 w-3.5" />
+                      </span>
+                    </div>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+
+        {/* Resolution rate + workload */}
+        <div className="grid gap-6 sm:grid-cols-2 lg:col-span-4 lg:grid-cols-1 lg:grid-rows-[auto_1fr]">
+          <section aria-labelledby="rate-heading" className="rounded-2xl bg-yellow-400 p-6 text-gray-900 shadow-sm">
+            <div className="flex items-center justify-between">
+              <h2 id="rate-heading" className="text-sm font-medium text-yellow-950/80">Resolution rate</h2>
+              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-black/10">
+                <CheckCircle2 className="h-4 w-4" />
+              </span>
+            </div>
+            <p className="mt-5 flex items-baseline gap-1">
+              <span className="text-4xl font-semibold leading-none tracking-tight tabular-nums">{resolutionRate}</span>
+              <span className="text-sm font-semibold text-yellow-950/80">%</span>
+            </p>
+            <p className="mt-3 text-xs leading-relaxed text-yellow-950/80">Share of all support requests that have been successfully closed.</p>
+          </section>
+
+          <section aria-labelledby="workload-heading" className="flex flex-col rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+            <h2 id="workload-heading" className="text-sm font-semibold text-gray-900">Workload</h2>
+            <dl className="mt-auto grid grid-cols-2 gap-4 pt-4">
+              <div>
+                <dt className="flex items-center gap-1.5 text-xs text-gray-500"><Headset className="h-3.5 w-3.5" /> All requests</dt>
+                <dd className="mt-1.5 text-2xl font-semibold leading-none tabular-nums text-gray-900">{stats.total}</dd>
+              </div>
+              <div>
+                <dt className="flex items-center gap-1.5 text-xs text-gray-500"><Star className="h-3.5 w-3.5" /> Avg. rating</dt>
+                <dd className="mt-1.5 text-2xl font-semibold leading-none tabular-nums text-gray-900">{overallRating}</dd>
+              </div>
+            </dl>
+          </section>
+        </div>
+      </div>
+
+      {/* ── ROW 2: AGENT PERFORMANCE + NEXT STEP ── */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+
+        {/* Agent performance */}
+        <section aria-labelledby="agents-heading" className="min-w-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm lg:col-span-8">
+          <div className="flex items-center justify-between gap-3 border-b border-gray-100 px-6 py-4">
+            <div>
+              <h2 id="agents-heading" className="text-sm font-semibold text-gray-900">Agent performance</h2>
+              <p className="mt-0.5 text-xs text-gray-500">Resolved tickets and customer ratings</p>
+            </div>
+            {topAgents.length > 0 && (
+              <span className="rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-600">Top {topAgents.length}</span>
+            )}
+          </div>
+
           {topAgents.length === 0 ? (
-            <div className="grid min-h-48 place-items-center rounded-xl border border-dashed border-slate-200 bg-slate-50/70 px-4 text-center">
-              <div><span className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl bg-white text-slate-400 shadow-sm"><Users className="h-5 w-5" /></span><p className="mt-3 text-sm font-semibold text-slate-700">No resolved tickets yet</p><p className="mt-1 text-xs text-slate-400">Agent performance will appear here.</p></div>
+            <div className="p-12 text-center">
+              <span className="mx-auto flex h-11 w-11 items-center justify-center rounded-xl border border-gray-100 bg-gray-50 text-gray-400">
+                <Users className="h-5 w-5" />
+              </span>
+              <p className="mt-3 text-sm font-semibold text-gray-900">No resolved tickets yet</p>
+              <p className="mt-1 text-xs text-gray-500">Agent performance will appear here.</p>
             </div>
           ) : (
-            <div className="divide-y divide-slate-100">
+            <ul className="divide-y divide-gray-100">
               {topAgents.map((agent, index) => {
                 const avgRating = agent.ratedTickets > 0 ? (agent.totalStars / agent.ratedTickets).toFixed(1) : '—';
                 const maxCount = Math.max(...topAgents.map(item => item.count), 1);
                 return (
-                  <div key={agent.id} className="flex items-center gap-3 py-3.5 first:pt-0 last:pb-0">
-                    <span className="w-5 text-center text-[11px] font-bold text-slate-400">{String(index + 1).padStart(2, '0')}</span>
-                    {agent.avatar_url ? <img src={agent.avatar_url} alt="" className="h-10 w-10 rounded-xl object-cover" /> : <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-sm font-bold text-emerald-800">{agent.full_name?.charAt(0) || 'A'}</span>}
+                  <li key={agent.id} className="relative flex items-center gap-4 px-6 py-4 transition-colors hover:bg-gray-50/70">
+                    <span className="absolute inset-y-0 left-0 w-[3px] bg-yellow-400" aria-hidden="true" />
+                    <span className="w-5 text-center text-xs font-semibold tabular-nums text-gray-400">{String(index + 1).padStart(2, '0')}</span>
+                    {agent.avatar_url
+                      ? <img src={agent.avatar_url} alt="" className="h-10 w-10 shrink-0 rounded-xl object-cover" />
+                      : <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-yellow-100 text-sm font-semibold text-yellow-800">{agent.full_name?.charAt(0) || 'A'}</span>}
                     <div className="min-w-0 flex-1">
-                      <div className="flex items-center justify-between gap-3"><p className="truncate text-[13px] font-semibold text-slate-800">{agent.full_name || 'Support agent'}</p><span className="shrink-0 text-[11px] font-semibold text-slate-500">{agent.count} resolved</span></div>
-                      <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-100"><div className="h-full rounded-full bg-emerald-400" style={{ width: `${Math.max(8, (agent.count / maxCount) * 100)}%` }} /></div>
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="truncate text-sm font-semibold text-gray-900">{agent.full_name || 'Support agent'}</p>
+                        <span className="shrink-0 text-xs tabular-nums text-gray-500">{agent.count} resolved</span>
+                      </div>
+                      <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-gray-100">
+                        <div className="h-full rounded-full bg-yellow-400 transition-all duration-500" style={{ width: `${Math.max(8, (agent.count / maxCount) * 100)}%` }} />
+                      </div>
                     </div>
-                    <span className="inline-flex w-12 shrink-0 items-center justify-end gap-1 text-xs font-bold text-slate-700"><Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />{avgRating}</span>
-                  </div>
+                    <span className="inline-flex w-12 shrink-0 items-center justify-end gap-1 text-xs font-semibold tabular-nums text-gray-700">
+                      <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />{avgRating}
+                    </span>
+                  </li>
                 );
               })}
-            </div>
+            </ul>
           )}
-        </div>
-​
-        <div className="relative overflow-hidden rounded-xl border border-slate-200/80 bg-white p-6 text-[#303833] shadow-sm sm:p-7">
-          <div className="relative flex h-full flex-col justify-between gap-8">
-            <div>
-              <span className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-700 text-white shadow-sm"><Headset className="h-5 w-5" /></span>
-              <p className="mt-6 text-[11px] font-bold uppercase tracking-[0.17em] text-emerald-800">Stay on top of every request</p>
-              <h3 className="mt-2 max-w-sm text-2xl font-bold leading-tight tracking-tight text-[#303833]">A calmer queue starts with a clear next step.</h3>
-              <p className="mt-3 max-w-sm text-[13px] leading-6 text-[#68716a]">Review unassigned requests, pick up a ticket, and keep customers moving toward a resolution.</p>
+        </section>
+
+        {/* Next step */}
+        <aside aria-labelledby="next-heading" className="lg:col-span-4">
+          <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm lg:sticky lg:top-[132px]">
+            <div className="flex items-center gap-2.5">
+              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-yellow-50 text-yellow-700">
+                <Headset className="h-4 w-4" />
+              </span>
+              <h2 id="next-heading" className="text-sm font-semibold text-gray-900">Stay on top of every request</h2>
             </div>
-            <div>
-              <div className="mb-4 flex items-center gap-2 text-xs text-[#68716a]"><span className="h-2 w-2 rounded-full bg-amber-400" />{stats.open} waiting <span className="text-slate-300">·</span> <span className="h-2 w-2 rounded-full bg-blue-400" />{stats.inProgress} in progress</div>
-              <Link to="/support/tickets" className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-emerald-700 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-800">Go to queue <ArrowRight className="h-4 w-4" /></Link>
-            </div>
+            <p className="mt-4 text-[13px] leading-relaxed text-gray-600">
+              A calmer queue starts with a clear next step. Review unassigned requests, pick up a ticket, and keep customers moving toward a resolution.
+            </p>
           </div>
-        </div>
-      </section>
+        </aside>
+      </div>
+
     </div>
   );
 }
-​

@@ -1,3 +1,4 @@
+import { confirmDialog } from '../../components/confirmDialog';
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import supabase from '../../supabaseClient';
@@ -184,7 +185,7 @@ export default function Profile() {
     finally { setUploadingProject(false); }
   };
   const handleDeletePortfolio = async (projectId) => {
-    if (!confirm("Delete this item?")) return;
+    if (!await confirmDialog("Delete this item?")) return;
     await supabase.from('portfolio_items').delete().eq('id', projectId);
     setPortfolioItems(prev => prev.filter(item => item.id !== projectId)); setSelectedProject(null);
   };

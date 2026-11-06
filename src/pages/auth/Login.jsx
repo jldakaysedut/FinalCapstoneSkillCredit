@@ -92,7 +92,7 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative" style={{ background: "#faf8f4", fontFamily: "'DM Sans', sans-serif" }}>
+    <div className="min-h-screen flex items-center justify-center py-16 px-4 sm:px-6 lg:px-8 relative" style={{ background: "#faf8f4", fontFamily: "'DM Sans', sans-serif" }}>
       
       <Link 
         to="/" 
@@ -102,7 +102,7 @@ export default function Login() {
         Back to Home
       </Link>
 
-      <div className="max-w-md w-full bg-white p-8 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-[#e8e2d9]">
+      <div className="max-w-md w-full bg-white p-6 sm:p-8 rounded-2xl shadow-[0_12px_38px_rgb(0,0,0,0.06)] border border-[#e8e2d9] transition-shadow duration-200 hover:shadow-[0_16px_44px_rgb(0,0,0,0.075)]">
         
         <div className="text-center mb-8">
           <h2 className="text-3xl font-bold text-[#111]" style={{ fontFamily:"'Fraunces',serif", letterSpacing:"-0.02em" }}>Welcome back</h2>
@@ -123,7 +123,7 @@ export default function Login() {
               required 
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full border border-gray-300 rounded-xl p-3.5 outline-none focus:border-[#2d6a4f] focus:ring-1 focus:ring-[#2d6a4f] transition bg-gray-50 focus:bg-white" 
+              className="w-full border border-gray-300 rounded-xl p-3.5 outline-none focus:border-[#2d6a4f] focus:ring-2 focus:ring-[#2d6a4f]/15 transition-colors duration-150 bg-gray-50 focus:bg-white" 
               placeholder="you@example.com"
             />
           </div>
@@ -140,7 +140,7 @@ export default function Login() {
               required 
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full border border-gray-300 rounded-xl p-3.5 outline-none focus:border-[#2d6a4f] focus:ring-1 focus:ring-[#2d6a4f] transition bg-gray-50 focus:bg-white" 
+              className="w-full border border-gray-300 rounded-xl p-3.5 outline-none focus:border-[#2d6a4f] focus:ring-2 focus:ring-[#2d6a4f]/15 transition-colors duration-150 bg-gray-50 focus:bg-white" 
               placeholder="••••••••"
             />
           </div>
@@ -148,7 +148,7 @@ export default function Login() {
           <button 
             type="submit" 
             disabled={loading}
-            className="w-full py-3.5 mt-2 bg-[#2d6a4f] text-white font-bold rounded-xl hover:bg-[#1b4332] transition shadow-md disabled:opacity-50"
+            className="w-full py-3.5 mt-2 bg-[#2d6a4f] text-white font-bold rounded-xl hover:bg-[#1b4332] transition-colors duration-150 shadow-sm hover:shadow-md focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-emerald-600/20 disabled:opacity-50"
           >
             {loading ? 'Logging in...' : 'Log In'}
           </button>

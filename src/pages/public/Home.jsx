@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import supabase from "../../supabaseClient";
+import DownloadAppSection from "../../components/DownloadAppSection";
 
 // 🚨 ADDED: Imported all necessary modern Lucide Icons
 import {
@@ -58,11 +59,15 @@ export default function Home() {
   const [topRated, setTopRated] = useState([]);
 
   useEffect(() => {
+    if (typeof IntersectionObserver === "undefined") {
+      document.querySelectorAll(".reveal").forEach(el => el.classList.add("visible"));
+      return;
+    }
     const observer = new IntersectionObserver(
       entries => entries.forEach(e => {
         if (e.isIntersecting) { e.target.classList.add("visible"); observer.unobserve(e.target); }
       }),
-      { threshold: 0.1 }
+      { threshold: 0.1, rootMargin: "0px 0px 45px 0px" }
     );
     document.querySelectorAll(".reveal").forEach(el => observer.observe(el));
     return () => observer.disconnect();
@@ -128,8 +133,29 @@ export default function Home() {
   }, []);
 
   return (
-    <div style={{ background:"#faf8f4", fontFamily:"'DM Sans',sans-serif", overflowX:"hidden", width: "100%" }}>
+    <div className="sc-home" style={{ background:"#faf8f4", fontFamily:"'DM Sans',sans-serif", overflowX:"hidden", width: "100%" }}>
       <style>{`
+        .sc-home { color:#162b21; }
+        .sc-home section { scroll-margin-top:75px; }
+        .sc-home a:focus-visible { outline:3px solid #66b88d; outline-offset:4px; }
+        .sc-home ::selection { background:#c7eed5; color:#10452d; }
+        .sc-home .hero-section { position:relative;isolation:isolate;background:radial-gradient(circle at 78% 24%,#e3f2e5 0%,transparent 40%),radial-gradient(circle at 0% 100%,#f3eadd,transparent 40%); }
+        .sc-home .hero-section:before {content:"";position:absolute;inset:0;pointer-events:none;opacity:.2;background-image:radial-gradient(#45845e 0.75px,transparent 0.75px);background-size:24px 24px;mask-image:linear-gradient(90deg,transparent,#000 80%);z-index:-1;}
+        .sc-home .hero-shell {max-width:1200px;margin:0 auto;padding:26px 48px;width:100%;}
+        .sc-home .hero-download-link {display:inline-flex;align-items:center;gap:9px;margin-top:7px;font-size:13px;font-weight:800;color:#2d6a4f;text-decoration:none;border-bottom:1px solid transparent;transition:gap .2s,border-color .2s;}
+        .sc-home .hero-download-link:hover {gap:14px;border-color:#2d6a4f;}
+        .sc-home .hero-preview {transform:perspective(1100px) rotateY(-3deg);transition:transform .6s ease,box-shadow .6s ease;}
+        .sc-home .hero-preview:hover {transform:perspective(1100px) rotateY(0) translateY(-5px);}
+        .sc-home .section-pad h2 {text-wrap:balance;}
+        .sc-home .feature-card {position:relative;overflow:hidden;}
+        .sc-home .feature-card:before {content:"";position:absolute;left:0;right:0;top:0;height:3px;background:linear-gradient(90deg,#2d6a4f,#93c8a5);opacity:0;transition:opacity .25s;}
+        .sc-home .feature-card:hover:before {opacity:1;}
+        .sc-home .topic-pill:hover {border-color:#9fd5b4!important;}
+        .sc-home .site-footer a:focus-visible {outline-color:white;}
+        .sc-home .home-anchor {display:inline-flex;gap:7px;align-items:center;text-decoration:none;font-weight:800;color:#297d50;font-size:13px;padding:10px 15px;border:1px solid #cfe3d2;border-radius:999px;background:white;transition:transform .2s,box-shadow .2s;}
+        .sc-home .home-anchor:hover {transform:translateY(-3px);box-shadow:0 8px 20px rgba(45,106,79,.1);}
+        @media(max-width:768px){.sc-home .hero-shell{padding:24px 22px}.sc-home .hero-section{min-height:unset!important;padding:55px 0 70px!important}.sc-home .hero-preview{transform:none}.sc-home .hero-h1-text{font-size:clamp(40px,9vw,58px)!important}.sc-home .section-pad h2{font-size:clamp(30px,7vw,42px)!important}}
+        @media(prefers-reduced-motion:reduce){.sc-home *, .sc-home *:before, .sc-home *:after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}.sc-home .reveal{opacity:1;transform:none}}
         @keyframes fadeUp      {from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
         @keyframes pulse       {0%,100%{opacity:1}50%{opacity:0.4}}
         
@@ -182,8 +208,8 @@ export default function Home() {
       `}</style>
 
       {/* ── HERO ── */}
-      <section style={{ minHeight:"calc(100vh - 64px)", display:"flex", alignItems:"center", width:"100%", padding:"40px 0" }}>
-        <div style={{ maxWidth:1200, margin:"0 auto", padding:"0 48px", width:"100%" }}>
+      <section className="hero-section" style={{ minHeight:"calc(100vh - 64px)", display:"flex", alignItems:"center", width:"100%", padding:"40px 0" }}>
+        <div className="hero-shell">
           <div className="hero-grid">
             <div>
               <div className="hero-tag" style={{ display:"inline-flex", alignItems:"center", gap:8, background:"#e8f4e8", border:"1.5px solid #b7e4c7", padding:"6px 16px", borderRadius:999, marginBottom:24 }}>
@@ -207,7 +233,8 @@ export default function Home() {
                     Log in →
                   </Link>
                 </div>
-                <p style={{ fontSize:12, color:"#aaa", marginBottom:28 }}>No credit card required · Free forever to start</p>
+                <p style={{ fontSize:12, color:"#888", marginBottom:12 }}>No credit card required · Free to get started</p>
+                <a href="#download-app" className="hero-download-link"><Smartphone size={16}/> Prefer mobile? Get the Android app <span aria-hidden="true">→</span></a>
               </div>
 
               <div className="hero-proof" style={{ display:"flex", alignItems:"center", gap:12, background:"#fff", border:"1.5px solid #e8e2d9", borderRadius:16, padding:"14px 18px", boxShadow:"0 2px 12px rgba(0,0,0,.04)", maxWidth:420 }}>
@@ -229,14 +256,14 @@ export default function Home() {
             <div className="preview-col" style={{ position:"relative" }}>
               <div style={{ position:"absolute", top:"10%", left:"10%", width:"80%", height:"80%", background:"radial-gradient(ellipse,rgba(45,106,79,0.1) 0%,transparent 70%)", pointerEvents:"none", borderRadius:"50%" }} />
               
-              <div style={{ position:"relative", borderRadius:24, overflow:"hidden", boxShadow:"0 32px 80px rgba(0,0,0,0.14),0 0 0 1.5px #e8e2d9", background:"#fff" }}>
+              <div className="hero-preview" style={{ position:"relative", borderRadius:24, overflow:"hidden", boxShadow:"0 32px 80px rgba(0,0,0,0.14),0 0 0 1.5px #e8e2d9", background:"#fff" }}>
                 
                 {/* Fake Browser Header */}
                 <div style={{ background:"#f5f0e8", padding:"10px 16px", display:"flex", alignItems:"center", gap:8, borderBottom:"1.5px solid #e8e2d9" }}>
                   <div style={{ display:"flex", gap:5 }}>
                     {["#fc605b","#fdbc40","#34c84a"].map(c => <div key={c} style={{ width:11, height:11, borderRadius:"50%", background:c }} />)}
                   </div>
-                  <div style={{ flex:1, background:"#fff", borderRadius:6, padding:"4px 12px", fontSize:11, color:"#aaa", fontWeight:600 }}>skillcredit.ph</div>
+                  <div style={{ flex:1, background:"#fff", borderRadius:6, padding:"4px 12px", fontSize:11, color:"#aaa", fontWeight:600 }}>skillcredit-ph.vercel.app</div>
                 </div>
 
                 {/* Container for Cards */}
@@ -452,6 +479,9 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ── ANDROID APP DOWNLOAD — isolated reusable UI component ── */}
+      <DownloadAppSection />
+
       {/* ── FINAL CTA ── */}
       <section className="section-pad reveal" style={{ background:"linear-gradient(135deg,#1a3d2e 0%,#2d6a4f 50%,#1a4a35 100%)", padding:"96px 48px", textAlign:"center", position:"relative", overflow:"hidden" }}>
         <div style={{ position:"absolute", top:-60, left:"10%", width:300, height:300, borderRadius:"50%", background:"rgba(255,255,255,0.04)" }} />
@@ -476,7 +506,7 @@ export default function Home() {
       </section>
 
       {/* ── FOOTER ── */}
-      <footer style={{ background:"#111", padding:"32px 48px" }}>
+      <footer className="site-footer" style={{ background:"#111", padding:"32px 48px" }}>
         <div className="footer-inner">
           <div style={{ display:"flex", alignItems:"center" }}>
             <span style={{ fontFamily:"'Fraunces',serif", fontSize:18, fontWeight:900, color:"#2d6a4f" }}>Skill</span>

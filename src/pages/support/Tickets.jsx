@@ -1,7 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowDownToLine, ArrowRight, Clock3, Search, Ticket as TicketIcon, Users } from 'lucide-react';
+import { ArrowDownToLine, ArrowRight, Search, Ticket as TicketIcon, X, AlertTriangle } from 'lucide-react';
 import supabase from '../../supabaseClient';
+
+const FOCUS_RING = 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yellow-500 focus-visible:ring-offset-2';
+
+// One column template shared by the header row and every ticket row (desktop),
+// so all columns line up exactly.
+const ROW_GRID = 'lg:grid lg:grid-cols-[minmax(0,2.2fr)_minmax(0,1.4fr)_minmax(0,1.3fr)_minmax(0,1.2fr)_124px_136px] lg:items-center lg:gap-6';
 
 const STATUS_META = {
   open: { label: 'Open', style: 'bg-amber-50 text-amber-800 ring-amber-200', dot: 'bg-amber-500' },
@@ -83,97 +89,240 @@ export default function Tickets() {
     URL.revokeObjectURL(url);
   };
 
+  // ── Display-only: the four filter tabs ──
+  const tabs = [
+    { id: 'open', label: 'Open', hint: 'Waiting for an agent', count: counts.open },
+    { id: 'in_progress', label: 'Investigating', hint: 'Being handled now', count: counts.in_progress },
+    { id: 'resolved', label: 'Resolved', hint: 'Closed', count: counts.resolved },
+    { id: 'all', label: 'All tickets', hint: 'Everything on record', count: counts.all },
+  ];
+
   return (
-    <div className="mx-auto max-w-7xl space-y-6 font-sans text-slate-700 animate-in fade-in duration-300">
-      <section className="flex flex-col justify-between gap-4 border-b border-slate-200 pb-5 sm:flex-row sm:items-end">
+    <div className="max-w-5xl mx-auto space-y-6 font-sans text-gray-700">
+
+      {/* ── PAGE HEADER ── */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-emerald-100 bg-emerald-50 px-3 py-1.5 text-[11px] font-semibold text-emerald-800">
-            <TicketIcon className="h-3.5 w-3.5" /> Support operations
-          </div>
-          <h2 className="text-2xl font-semibold tracking-tight text-slate-900 sm:text-[28px]">Ticket queue</h2>
-          <p className="mt-2 text-sm leading-6 text-slate-500">Find the right request, review ownership, and move it forward.</p>
+          <h1 className="text-2xl font-semibold tracking-tight text-gray-900">Ticket queue</h1>
+          <p className="mt-1 max-w-xl text-sm text-gray-500">
+            Find the right request, review ownership, and move it forward.
+          </p>
         </div>
-        <button onClick={handleExportCSV} disabled={filteredTickets.length === 0} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50">
-          <ArrowDownToLine className="h-4 w-4" /> Export CSV
+        <button
+          onClick={handleExportCSV}
+          disabled={filteredTickets.length === 0}
+          className={`inline-flex items-center justify-center gap-2 self-start rounded-lg border border-gray-200 bg-white px-3.5 py-2 text-[13px] font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 sm:self-auto ${FOCUS_RING}`}
+        >
+          <ArrowDownToLine className="h-3.5 w-3.5" /> Export CSV
         </button>
-      </section>
+      </div>
 
-      <section aria-label="Queue totals" className="grid grid-cols-2 gap-4 xl:grid-cols-4">
-        {[
-          { label: 'All tickets', status: 'all', Icon: TicketIcon, color: 'text-slate-700 bg-slate-100' },
-          { label: 'Open', status: 'open', Icon: Clock3, color: 'text-amber-700 bg-amber-50' },
-          { label: 'Investigating', status: 'in_progress', Icon: Users, color: 'text-blue-700 bg-blue-50' },
-          { label: 'Resolved', status: 'resolved', Icon: TicketIcon, color: 'text-emerald-700 bg-emerald-50' },
-        ].map(({ label, status, Icon, color }) => (
-          <button key={status} type="button" onClick={() => setFilter(status)} className={`flex items-center gap-3 rounded-xl border bg-white p-4 text-left shadow-sm transition hover:border-slate-300 hover:shadow-md ${filter === status ? 'border-slate-400 ring-2 ring-slate-900/5' : 'border-slate-200/80'}`}>
-            <span className={`flex h-10 w-10 items-center justify-center rounded-xl ${color}`}><Icon className="h-[18px] w-[18px]" /></span>
-            <span className="min-w-0"><span className="block text-[11px] font-semibold text-slate-500">{label}</span><span className="mt-0.5 block text-xl font-bold leading-none text-[#303833]">{counts[status]}</span></span>
-          </button>
-        ))}
-      </section>
+      {/* ── STAT TABS (counts double as the queue filter) ── */}
+      <div role="group" aria-label="Filter the queue" className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        {tabs.map(tab => {
+          const isActive = filter === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setFilter(tab.id)}
+              aria-pressed={isActive}
+              className={`rounded-2xl border p-4 text-left transition-colors ${FOCUS_RING} ${
+                isActive
+                  ? 'border-yellow-500 bg-yellow-50 shadow-sm ring-1 ring-yellow-500'
+                  : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50'
+              }`}
+            >
+              <span className={`block text-[13px] font-medium ${isActive ? 'text-gray-900' : 'text-gray-600'}`}>{tab.label}</span>
+              <span className={`mt-2 block text-2xl font-semibold leading-none tabular-nums text-gray-900 transition-opacity ${loading ? 'opacity-30' : ''}`}>{tab.count}</span>
+              <span className={`mt-1.5 block text-xs ${isActive ? 'text-yellow-800' : 'text-gray-500'}`}>{tab.hint}</span>
+            </button>
+          );
+        })}
+      </div>
 
-      <section className="overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-sm">
-        <div className="flex flex-col gap-4 border-b border-slate-100 p-4 sm:p-5 xl:flex-row xl:items-center xl:justify-between">
-          <div className="relative w-full xl:max-w-[360px]">
-            <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-            <input type="text" role="searchbox" inputMode="search" placeholder="Search tickets, people, or IDs…" value={searchQuery} onChange={event => setSearchQuery(event.target.value)} className="h-11 w-full rounded-xl border border-slate-200 bg-slate-50/70 pl-10 pr-4 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-emerald-300 focus:bg-white focus:ring-4 focus:ring-emerald-50" />
-          </div>
-          <div role="group" aria-label="Filter tickets by status" className="flex max-w-full gap-1 overflow-x-auto rounded-xl bg-slate-100 p-1">
-            {FILTERS.map(status => (
-              <button key={status} type="button" aria-pressed={filter === status} onClick={() => setFilter(status)} className={`shrink-0 rounded-lg px-3 py-2 text-[11px] font-semibold capitalize transition ${filter === status ? 'bg-white text-[#303833] shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}>
-                {status === 'all' ? 'All' : STATUS_META[status]?.label} <span className={`ml-1 ${filter === status ? 'text-slate-500' : 'text-slate-400'}`}>{counts[status]}</span>
-              </button>
-            ))}
-          </div>
-        </div>
+      {/* ── SEARCH ── */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <label className="flex w-full items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 shadow-sm transition focus-within:border-yellow-500 focus-within:ring-2 focus-within:ring-yellow-200 sm:max-w-md">
+          <Search className="h-4 w-4 shrink-0 text-gray-400" aria-hidden="true" />
+          <input
+            type="text"
+            role="searchbox"
+            inputMode="search"
+            value={searchQuery}
+            onChange={event => setSearchQuery(event.target.value)}
+            placeholder="Search tickets, people, or IDs"
+            aria-label="Search tickets"
+            className="min-w-0 flex-1 bg-transparent text-sm font-medium text-gray-800 placeholder-gray-400 outline-none"
+          />
+          {searchQuery && (
+            <button onClick={() => setSearchQuery('')} aria-label="Clear search" className="rounded p-0.5 text-gray-300 hover:text-gray-600">
+              <X className="h-4 w-4" />
+            </button>
+          )}
+        </label>
+        {!loading && (
+          <p className="text-xs text-gray-500" role="status">
+            Showing <span className="font-semibold tabular-nums text-gray-900">{filteredTickets.length}</span> of <span className="tabular-nums">{tickets.length}</span> tickets
+          </p>
+        )}
+      </div>
 
+      {/* ── TICKETS ── */}
+      <section aria-label="Support tickets" className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
         {loading ? (
-          <div className="grid min-h-64 place-items-center"><div className="flex items-center gap-3 text-sm font-medium text-slate-500"><span className="h-6 w-6 animate-spin rounded-full border-[3px] border-emerald-500 border-t-transparent" />Loading tickets…</div></div>
+          <ul aria-busy="true" className="divide-y divide-gray-100" role="status">
+            {[0, 1, 2, 3].map(i => (
+              <li key={i} className="flex animate-pulse items-center gap-4 px-6 py-5">
+                <span className="h-12 w-12 rounded-xl bg-gray-100" />
+                <span className="flex-1 space-y-2">
+                  <span className="block h-3 w-1/3 rounded bg-gray-100" />
+                  <span className="block h-3 w-1/5 rounded bg-gray-100" />
+                </span>
+              </li>
+            ))}
+          </ul>
         ) : filteredTickets.length === 0 ? (
-          <div className="grid min-h-72 place-items-center px-5 py-12 text-center">
-            <div><span className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-400"><Search className="h-5 w-5" /></span><p className="mt-4 text-sm font-semibold text-slate-800">No tickets found</p><p className="mt-1 text-xs text-slate-400">Try changing your search or status filter.</p></div>
+          <div className="px-6 py-16 text-center">
+            <span className="mx-auto flex h-11 w-11 items-center justify-center rounded-xl border border-gray-100 bg-gray-50 text-gray-400">
+              <TicketIcon className="h-5 w-5" />
+            </span>
+            <p className="mt-3 text-sm font-semibold text-gray-900">No tickets found</p>
+            <p className="mt-1 text-xs text-gray-500">
+              {searchQuery
+                ? 'No tickets matched your search or filter.'
+                : 'There are no tickets in this queue.'}
+            </p>
+            {searchQuery && (
+              <button onClick={() => setSearchQuery('')} className={`mt-4 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50 ${FOCUS_RING}`}>
+                Clear search
+              </button>
+            )}
           </div>
         ) : (
           <>
-            <div className="hidden overflow-x-auto md:block">
-              <table className="w-full min-w-[780px] text-left text-sm">
-                <thead><tr className="border-b border-slate-100 bg-slate-50/70 text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400"><th className="px-5 py-3.5">Requester</th><th className="px-5 py-3.5">Ticket</th><th className="px-5 py-3.5">Status</th><th className="px-5 py-3.5">Assigned to</th><th className="px-5 py-3.5">Created</th><th className="px-5 py-3.5 text-right">Action</th></tr></thead>
-                <tbody className="divide-y divide-slate-100">
-                  {filteredTickets.map(ticket => {
-                    const ownTicket = ticket.user_id === currentUserId;
-                    const status = STATUS_META[ticket.status] || STATUS_META.open;
-                    return (
-                      <tr key={ticket.id} className="group transition hover:bg-slate-50/80">
-                        <td className="px-5 py-4"><div className="flex min-w-[150px] items-center gap-3">{ticket.user?.avatar_url ? <img src={ticket.user.avatar_url} alt="" className="h-9 w-9 rounded-xl object-cover" /> : <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 text-xs font-bold text-slate-600">{ticket.user?.full_name?.charAt(0) || 'U'}</span>}<div className="min-w-0"><p className="truncate text-[12px] font-semibold text-slate-800">{ticket.user?.full_name || 'Unknown user'}</p><p className="mt-0.5 text-[10px] font-mono text-slate-400">#{ticket.id.split('-')[0]}</p></div></div></td>
-                        <td className="max-w-[300px] px-5 py-4"><p className="truncate text-[13px] font-semibold text-slate-800">{ticket.subject || 'Untitled request'}</p><p className="mt-1 text-[11px] text-slate-400">Support request</p></td>
-                        <td className="px-5 py-4"><span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-[10px] font-semibold ring-1 ring-inset ${status.style}`}><span className={`h-1.5 w-1.5 rounded-full ${status.dot}`} />{status.label}</span></td>
-                        <td className="px-5 py-4">{ticket.agent ? <span className="inline-flex items-center gap-2 text-[12px] font-medium text-slate-700"><span className="flex h-7 w-7 items-center justify-center rounded-full bg-blue-50 text-[10px] font-bold text-blue-700">{ticket.agent.full_name?.charAt(0) || 'A'}</span>{ticket.agent.full_name || 'Agent'}</span> : <span className="text-[12px] font-medium text-slate-400">Unassigned</span>}</td>
-                        <td className="px-5 py-4 text-[11px] text-slate-500">{formatCreatedAt(ticket.created_at)}</td>
-                        <td className="px-5 py-4 text-right">{ownTicket ? <span className="inline-flex rounded-lg bg-slate-100 px-3 py-2 text-[10px] font-semibold text-slate-400">Your ticket</span> : <button type="button" onClick={() => navigate(`/support/tickets/${ticket.id}`)} className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-[11px] font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-emerald-700 hover:text-white">View ticket <ArrowRight className="h-3.5 w-3.5" /></button>}</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+            {/* Column headers (desktop) */}
+            <div aria-hidden="true" className={`hidden border-b border-gray-200 bg-gray-50 px-6 py-3 text-xs font-semibold text-gray-500 ${ROW_GRID}`}>
+              <span>Ticket</span>
+              <span>Requester</span>
+              <span>Assignment</span>
+              <span>Created</span>
+              <span>Status</span>
+              <span className="text-right">Action</span>
             </div>
 
-            <div className="divide-y divide-slate-100 md:hidden">
+            <ul className="divide-y divide-gray-100">
               {filteredTickets.map(ticket => {
                 const ownTicket = ticket.user_id === currentUserId;
                 const status = STATUS_META[ticket.status] || STATUS_META.open;
+                const isResolved = ticket.status === 'resolved';
+                const isMine = Boolean(ticket.assigned_to) && ticket.assigned_to === currentUserId;
+
                 return (
-                  <article key={ticket.id} className="space-y-3 p-4">
-                    <div className="flex items-start justify-between gap-3"><div className="min-w-0"><p className="text-[13px] font-semibold leading-5 text-slate-900">{ticket.subject || 'Untitled request'}</p><p className="mt-1 text-[10px] font-mono text-slate-400">#{ticket.id.split('-')[0]}</p></div><span className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1.5 text-[10px] font-semibold ring-1 ring-inset ${status.style}`}><span className={`h-1.5 w-1.5 rounded-full ${status.dot}`} />{status.label}</span></div>
-                    <div className="flex items-center justify-between gap-3"><div className="flex min-w-0 items-center gap-2.5">{ticket.user?.avatar_url ? <img src={ticket.user.avatar_url} alt="" className="h-8 w-8 rounded-lg object-cover" /> : <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-[11px] font-bold text-slate-600">{ticket.user?.full_name?.charAt(0) || 'U'}</span>}<div className="min-w-0"><p className="truncate text-[11px] font-semibold text-slate-700">{ticket.user?.full_name || 'Unknown user'}</p><p className="text-[10px] text-slate-400">{ticket.agent?.full_name || 'Unassigned'} · {formatCreatedAt(ticket.created_at)}</p></div></div>{ownTicket ? <span className="shrink-0 text-[10px] font-semibold text-slate-400">Your ticket</span> : <button type="button" onClick={() => navigate(`/support/tickets/${ticket.id}`)} className="inline-flex shrink-0 items-center gap-1 rounded-lg bg-emerald-700 px-3 py-2 text-[11px] font-semibold text-white">Open <ArrowRight className="h-3.5 w-3.5" /></button>}</div>
-                  </article>
+                  <li key={ticket.id} className={`relative flex flex-col gap-4 px-6 py-5 transition-colors hover:bg-gray-50/70 ${ownTicket ? 'bg-rose-50/30' : ''} ${ROW_GRID}`}>
+                    <span
+                      className={`absolute inset-y-0 left-0 w-[3px] ${ownTicket ? 'bg-rose-500' : status.dot}`}
+                      aria-hidden="true"
+                    />
+
+                    {/* Ticket & subject */}
+                    <div className="flex min-w-0 items-start gap-3.5">
+                      <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-yellow-50 text-yellow-700">
+                        <TicketIcon className="h-5 w-5" />
+                      </span>
+                      <div className="min-w-0">
+                        <p title={ticket.subject} className="truncate text-sm font-semibold text-gray-900">
+                          {ticket.subject || 'Untitled request'}
+                        </p>
+                        <div className="mt-1 flex flex-wrap items-center gap-2">
+                          <span className="inline-block rounded-md border border-gray-200 bg-gray-50 px-1.5 py-0.5 text-xs font-medium text-gray-600">
+                            Support request
+                          </span>
+                          <span className="text-xs tabular-nums text-gray-400">#{ticket.id.split('-')[0]}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Meta cells: labelled on mobile, columns on desktop */}
+                    <dl className="grid grid-cols-2 gap-x-4 gap-y-4 sm:grid-cols-4 lg:contents">
+                      <div className="min-w-0">
+                        <dt className="mb-1 text-[11px] font-medium text-gray-400 lg:sr-only">Requester</dt>
+                        <dd className="flex min-w-0 items-center gap-2.5">
+                          {ticket.user?.avatar_url
+                            ? <img src={ticket.user.avatar_url} alt="" className="h-8 w-8 shrink-0 rounded-full object-cover" />
+                            : <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-yellow-200 bg-yellow-100 text-xs font-semibold text-yellow-800">{ticket.user?.full_name?.charAt(0) || 'U'}</span>}
+                          <p className="truncate text-[13px] font-medium text-gray-900">{ticket.user?.full_name || 'Unknown user'}</p>
+                        </dd>
+                      </div>
+
+                      <div className="min-w-0">
+                        <dt className="mb-1 text-[11px] font-medium text-gray-400 lg:sr-only">Assignment</dt>
+                        <dd>
+                          {ownTicket ? (
+                            <span className="inline-flex items-center gap-1 rounded-md border border-rose-200 bg-rose-50 px-2 py-0.5 text-xs font-medium text-rose-800">
+                              <AlertTriangle className="h-3 w-3" aria-hidden="true" /> Your ticket
+                            </span>
+                          ) : ticket.agent ? (
+                            isMine ? (
+                              <span className="inline-flex items-center rounded-md border border-yellow-300 bg-yellow-50 px-2 py-0.5 text-xs font-medium text-yellow-900">
+                                Assigned to You
+                              </span>
+                            ) : (
+                              <span className="block truncate text-[13px] font-medium text-gray-700">
+                                {ticket.agent.full_name || 'Agent'}
+                              </span>
+                            )
+                          ) : (
+                            <span className="inline-flex items-center rounded-md border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-800">
+                              Unassigned
+                            </span>
+                          )}
+                        </dd>
+                      </div>
+
+                      <div>
+                        <dt className="mb-1 text-[11px] font-medium text-gray-400 lg:sr-only">Created</dt>
+                        <dd>
+                          <p className="text-xs tabular-nums text-gray-500">{formatCreatedAt(ticket.created_at)}</p>
+                        </dd>
+                      </div>
+
+                      <div>
+                        <dt className="mb-1 text-[11px] font-medium text-gray-400 lg:sr-only">Status</dt>
+                        <dd>
+                          <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${status.style}`}>
+                            <span className={`h-1.5 w-1.5 rounded-full ${status.dot}`} aria-hidden="true" />
+                            {status.label}
+                          </span>
+                        </dd>
+                      </div>
+                    </dl>
+
+                    {/* Action */}
+                    {ownTicket ? (
+                      <span className="inline-flex w-full items-center justify-center rounded-lg bg-gray-100 px-3.5 py-2 text-xs font-semibold text-gray-400">
+                        Your ticket
+                      </span>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => navigate(`/support/tickets/${ticket.id}`)}
+                        className={`inline-flex w-full items-center justify-center gap-1.5 rounded-lg px-3.5 py-2 text-xs font-semibold transition-colors ${FOCUS_RING} ${
+                          !isResolved
+                            ? 'bg-yellow-400 text-gray-900 shadow-sm hover:bg-yellow-500'
+                            : 'border border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
+                        }`}
+                      >
+                        {!isResolved ? 'View ticket' : 'View record'} <ArrowRight className="h-3.5 w-3.5" />
+                      </button>
+                    )}
+                  </li>
                 );
               })}
-            </div>
+            </ul>
           </>
         )}
-        {!loading && filteredTickets.length > 0 && <div className="border-t border-slate-100 px-5 py-3 text-[10px] font-medium text-slate-400">Showing {filteredTickets.length} of {tickets.length} tickets</div>}
       </section>
+
     </div>
   );
 }
-​

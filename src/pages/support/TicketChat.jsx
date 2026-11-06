@@ -3,6 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowDown, ArrowLeft, ArrowRight, CheckCircle2, ChevronDown, Clock3, FileText, Headset, Lock, RotateCcw, Send, ShieldCheck, Star, Ticket, UserRound, X } from 'lucide-react';
 import supabase from '../../supabaseClient';
 
+const FOCUS_RING = 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yellow-500 focus-visible:ring-offset-2';
+
 const CANNED_REPLIES = {
   "Greetings & Acknowledgments": [
     "Hello, thank you for contacting Support. I have taken ownership of your ticket.",
@@ -342,10 +344,10 @@ export default function TicketChat() {
 
   if (loading || !ticket) {
     return (
-      <div className="grid min-h-[55vh] place-items-center">
-        <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-5 py-4 shadow-sm">
-          <span className="h-7 w-7 animate-spin rounded-full border-[3px] border-emerald-50 border-t-transparent" />
-          <span><span className="block text-sm font-semibold text-slate-800">Opening conversation</span><span className="mt-0.5 block text-xs text-slate-400">Loading ticket details…</span></span>
+      <div className="grid min-h-[55vh] place-items-center font-sans" role="status">
+        <div className="flex items-center gap-3 rounded-2xl border border-gray-200 bg-white px-5 py-4 shadow-sm">
+          <span className="h-7 w-7 animate-spin rounded-full border-[3px] border-yellow-400 border-t-transparent" />
+          <span><span className="block text-sm font-semibold text-gray-900">Opening conversation</span><span className="mt-0.5 block text-xs text-gray-500">Loading ticket details…</span></span>
         </div>
       </div>
     );
@@ -362,44 +364,46 @@ export default function TicketChat() {
       : 'bg-amber-50 text-amber-800 ring-amber-200';
 
   return (
-    <div className="mx-auto grid min-h-0 max-w-7xl grid-cols-1 gap-4 animate-in fade-in duration-300 xl:grid-cols-[minmax(0,1fr)_320px]">
-      <section className="flex h-[calc(100dvh-160px)] min-h-[520px] min-w-0 flex-col overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-sm">
-        <header className="flex shrink-0 items-center justify-between gap-3 border-b border-slate-100 px-4 py-4 sm:px-6">
+    <div className="grid min-h-0 grid-cols-1 gap-6 font-sans text-gray-700 xl:grid-cols-[minmax(0,1fr)_320px]">
+
+      {/* ══ CONVERSATION ══ */}
+      <section className="flex h-[calc(100dvh-210px)] min-h-[520px] min-w-0 flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+        <header className="flex shrink-0 items-center justify-between gap-3 border-b border-gray-100 px-4 py-4 sm:px-6">
           <div className="flex min-w-0 items-center gap-3">
             <button
               type="button"
               onClick={() => navigate('/support/tickets')}
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-50 hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+              className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-600 shadow-sm transition-colors hover:bg-gray-50 hover:text-gray-900 ${FOCUS_RING}`}
               title="Back to ticket queue"
               aria-label="Back to ticket queue"
             ><ArrowLeft className="h-[17px] w-[17px]" /></button>
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-700 text-white"><Ticket className="h-[18px] w-[18px]" /></div>
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-yellow-400 text-gray-900"><Ticket className="h-[18px] w-[18px]" /></div>
             <div className="min-w-0">
-              <h2 className="truncate text-[14px] font-bold tracking-tight text-[#303833] sm:text-[15px]">{ticket.subject || 'Support request'}</h2>
-              <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[10px] text-slate-400">
-                <span className="font-mono">#{ticket.id.split('-')[0]}</span><span>·</span><span>{new Date(ticket.created_at).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</span>
+              <h1 className="truncate text-sm font-semibold tracking-tight text-gray-900 sm:text-[15px]">{ticket.subject || 'Support request'}</h1>
+              <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-gray-500">
+                <span className="font-mono">#{ticket.id.split('-')[0]}</span><span aria-hidden="true">·</span><span>{new Date(ticket.created_at).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</span>
               </div>
             </div>
           </div>
-          <span className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1.5 text-[10px] font-semibold ring-1 ring-inset sm:px-3 ${statusStyle}`}>
-            <span className={`h-1.5 w-1.5 rounded-full ${isResolved ? 'bg-emerald-500' : ticket.status === 'in_progress' ? 'bg-blue-500' : 'bg-amber-500'}`} />
+          <span className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium capitalize ring-1 ring-inset sm:px-3 ${statusStyle}`}>
+            <span className={`h-1.5 w-1.5 rounded-full ${isResolved ? 'bg-emerald-500' : ticket.status === 'in_progress' ? 'bg-blue-500' : 'bg-amber-500'}`} aria-hidden="true" />
             <span className="hidden sm:inline">{ticket.status.replace('_', ' ')}</span><span className="sm:hidden">{isResolved ? 'Done' : ticket.status === 'in_progress' ? 'Active' : 'Open'}</span>
           </span>
         </header>
 
         <div className="relative min-h-0 flex-1">
-          <div ref={conversationRef} onScroll={handleConversationScroll} className="absolute inset-0 flex flex-col overflow-y-auto bg-[#f4f7f4] px-4 py-5 sm:px-6">
+          <div ref={conversationRef} onScroll={handleConversationScroll} className="absolute inset-0 flex flex-col overflow-y-auto bg-gray-50 px-4 py-5 sm:px-6 [scrollbar-color:#d1d5db_transparent] [scrollbar-width:thin]">
           <div className="mb-5 flex justify-center">
-            <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[10px] font-semibold text-slate-400 shadow-sm">
+            <span className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs text-gray-500 shadow-sm">
               <Clock3 className="h-3 w-3" /> Conversation started {new Date(ticket.created_at).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })}
             </span>
           </div>
 
           {chatMessages.length === 0 ? (
             <div className="flex flex-1 flex-col items-center justify-center py-10 text-center">
-              <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-slate-400 shadow-sm ring-1 ring-slate-100"><Headset className="h-6 w-6" /></span>
-              <p className="mt-4 text-sm font-semibold text-slate-700">No messages yet</p>
-              <p className="mt-1 max-w-xs text-xs leading-5 text-slate-400">The conversation will appear here when the customer sends a message.</p>
+              <span className="flex h-11 w-11 items-center justify-center rounded-xl border border-gray-100 bg-white text-gray-400 shadow-sm"><Headset className="h-5 w-5" /></span>
+              <p className="mt-3 text-sm font-semibold text-gray-900">No messages yet</p>
+              <p className="mt-1 max-w-xs text-xs leading-5 text-gray-500">The conversation will appear here when the customer sends a message.</p>
             </div>
           ) : (
             <div className="flex flex-col gap-5">
@@ -413,29 +417,29 @@ export default function TicketChat() {
                 return (
                   <article key={msg.id} className={`flex max-w-[94%] items-end gap-2.5 sm:max-w-[86%] ${isAgentMessage ? 'ml-auto flex-row-reverse' : ''}`}>
                     {isAgentMessage ? (
-                      <span className="mb-5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-700 text-white"><ShieldCheck className="h-4 w-4" /></span>
+                      <span className="mb-5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-yellow-400 text-gray-900"><ShieldCheck className="h-4 w-4" /></span>
                     ) : (
-                      <span className="mb-5 flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-slate-200 text-[11px] font-bold text-slate-600">{ticket.user?.avatar_url ? <img src={ticket.user.avatar_url} alt="" className="h-full w-full object-cover" /> : (ticket.user?.full_name?.charAt(0) || 'U')}</span>
+                      <span className="mb-5 flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gray-200 text-[11px] font-semibold text-gray-600">{ticket.user?.avatar_url ? <img src={ticket.user.avatar_url} alt="" className="h-full w-full object-cover" /> : (ticket.user?.full_name?.charAt(0) || 'U')}</span>
                     )}
                     <div className={`flex min-w-0 flex-col gap-1.5 ${isAgentMessage ? 'items-end' : 'items-start'}`}>
-                      <div className="flex items-center gap-2 px-1"><span className="text-[11px] font-semibold text-slate-700">{senderName}</span><span className="text-[10px] text-slate-400">{isAgentMessage ? 'Support' : 'Requester'}</span></div>
-                      <div className={`max-w-full rounded-xl px-4 py-3.5 text-[13px] leading-6 shadow-sm ${isAgentMessage ? 'rounded-br-md bg-emerald-700 text-white' : 'rounded-bl-md border border-slate-200/80 bg-white text-slate-700'}`}>
+                      <div className="flex items-center gap-2 px-1"><span className="text-xs font-semibold text-gray-900">{senderName}</span><span className="text-xs text-gray-500">{isAgentMessage ? 'Support' : 'Requester'}</span></div>
+                      <div className={`max-w-full rounded-2xl px-4 py-3 text-[13px] leading-6 shadow-sm ${isAgentMessage ? 'rounded-br-md bg-yellow-400 text-gray-900' : 'rounded-bl-md border border-gray-200 bg-white text-gray-700'}`}>
                         {msg.content && <p className="whitespace-pre-wrap break-words">{msg.content}</p>}
                         {attachmentUrl && (
                           <div className={msg.content ? 'mt-3' : ''}>
                             {isImage ? (
-                              <button type="button" onClick={() => setPreviewImage(attachmentUrl)} aria-label="Preview image attachment" className="block overflow-hidden rounded-xl bg-black/5 focus:outline-none focus:ring-2 focus:ring-emerald-400">
+                              <button type="button" onClick={() => setPreviewImage(attachmentUrl)} aria-label="Preview image attachment" className={`block overflow-hidden rounded-xl bg-black/5 ${FOCUS_RING}`}>
                                 <img src={attachmentUrl} alt="Ticket attachment" onError={event => { event.currentTarget.style.display = 'none'; }} className="max-h-[280px] max-w-full object-contain transition hover:opacity-90" />
                               </button>
                             ) : (
-                              <a href={attachmentUrl} target="_blank" rel="noreferrer" className={`inline-flex items-center gap-2 rounded-xl px-3 py-2 text-[11px] font-semibold transition ${isAgentMessage ? 'bg-white/10 text-white hover:bg-white/15' : 'border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100'}`}>
+                              <a href={attachmentUrl} target="_blank" rel="noreferrer" className={`inline-flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium transition-colors ${isAgentMessage ? 'bg-black/10 text-gray-900 hover:bg-black/15' : 'border border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100'}`}>
                                 <FileText className="h-4 w-4" /> View attached document <ArrowRight className="h-3.5 w-3.5" />
                               </a>
                             )}
                           </div>
                         )}
                       </div>
-                      <span className="px-1 text-[10px] text-slate-400">{new Date(msg.created_at).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</span>
+                      <span className="px-1 text-xs tabular-nums text-gray-400">{new Date(msg.created_at).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</span>
                     </div>
                   </article>
                 );
@@ -445,41 +449,42 @@ export default function TicketChat() {
             <div className="h-2 shrink-0" />
           </div>
           {hasNewMessages && (
-            <button type="button" onClick={jumpToLatest} className="absolute bottom-4 left-1/2 z-10 inline-flex -translate-x-1/2 items-center gap-2 rounded-full border border-emerald-100 bg-white px-4 py-2.5 text-[11px] font-semibold text-emerald-800 shadow-[0_6px_20px_rgba(15,23,42,0.12)] transition hover:bg-emerald-50 focus:outline-none focus:ring-2 focus:ring-emerald-400">
+            <button type="button" onClick={jumpToLatest} className={`absolute bottom-4 left-1/2 z-10 inline-flex -translate-x-1/2 items-center gap-2 rounded-full border border-yellow-200 bg-white px-4 py-2.5 text-xs font-semibold text-gray-900 shadow-[0_6px_20px_rgba(15,23,42,0.12)] transition-colors hover:bg-yellow-50 ${FOCUS_RING}`}>
               <ArrowDown className="h-3.5 w-3.5" /> New message · Jump to latest
             </button>
           )}
         </div>
 
+        {/* ── COMPOSER / STATE BAR ── */}
         {isResolved ? (
           <div className="flex shrink-0 items-center gap-3 border-t border-emerald-100 bg-emerald-50/70 px-5 py-4 sm:px-6">
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-emerald-700 shadow-sm"><CheckCircle2 className="h-5 w-5" /></span>
-            <div><p className="text-[13px] font-semibold text-emerald-900">Ticket resolved</p><p className="mt-0.5 text-[11px] text-emerald-700/80">This conversation is closed and archived.</p></div>
+            <div><p className="text-[13px] font-semibold text-emerald-900">Ticket resolved</p><p className="mt-0.5 text-xs text-emerald-700">This conversation is closed and archived.</p></div>
           </div>
         ) : isUnassigned ? (
           <div className="shrink-0 border-t border-amber-100 bg-amber-50/60 px-5 py-4 sm:px-6">
-            <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center"><div><p className="text-[13px] font-semibold text-amber-950">This ticket is waiting for an agent</p><p className="mt-1 text-[11px] leading-5 text-amber-800/80">Claim it to take ownership and reply to the requester.</p></div><button type="button" onClick={handleClaimTicket} className="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 rounded-xl bg-amber-500 px-4 py-2 text-xs font-bold text-white transition hover:bg-amber-600"><Headset className="h-4 w-4" /> Claim ticket</button></div>
+            <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center"><div><p className="text-[13px] font-semibold text-amber-950">This ticket is waiting for an agent</p><p className="mt-0.5 text-xs text-amber-800">Claim it to take ownership and reply to the requester.</p></div><button type="button" onClick={handleClaimTicket} className={`inline-flex shrink-0 items-center justify-center gap-2 rounded-lg bg-yellow-400 px-4 py-2.5 text-[13px] font-semibold text-gray-900 shadow-sm transition-colors hover:bg-yellow-500 ${FOCUS_RING}`}><Headset className="h-4 w-4" /> Claim ticket</button></div>
           </div>
         ) : isAssignedToOther ? (
           <div className="flex shrink-0 items-center gap-3 border-t border-blue-100 bg-blue-50/60 px-5 py-4 sm:px-6">
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-blue-700 shadow-sm"><Lock className="h-4 w-4" /></span>
-            <div><p className="text-[13px] font-semibold text-blue-950">Handled by {ticket.agent?.full_name || 'another support agent'}</p><p className="mt-0.5 text-[11px] text-blue-800/75">You can review the conversation, but only the assigned agent can reply.</p></div>
+            <div><p className="text-[13px] font-semibold text-blue-950">Handled by {ticket.agent?.full_name || 'another support agent'}</p><p className="mt-0.5 text-xs text-blue-800">You can review the conversation, but only the assigned agent can reply.</p></div>
           </div>
         ) : (
-          <div className="shrink-0 border-t border-slate-100 bg-white p-3 sm:p-4">
-            <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm focus-within:border-emerald-300 focus-within:ring-4 focus-within:ring-emerald-50">
-              <div className="flex items-center gap-2 border-b border-slate-100 bg-slate-50/80 px-3 py-2">
-                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-50 text-amber-700"><span className="text-sm">✦</span></span>
-                <select value={selectedCanned} onChange={handleCannedReplySelect} aria-label="Insert a canned reply" className="min-w-0 flex-1 appearance-none bg-transparent py-1 text-[11px] font-semibold text-slate-600 outline-none">
+          <div className="shrink-0 border-t border-gray-100 bg-white p-3 sm:p-4">
+            <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm focus-within:border-yellow-400 focus-within:ring-2 focus-within:ring-yellow-200">
+              <div className="flex items-center gap-2 border-b border-gray-100 bg-gray-50/80 px-3 py-2">
+                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-yellow-50 text-yellow-700"><span className="text-sm" aria-hidden="true">✦</span></span>
+                <select value={selectedCanned} onChange={handleCannedReplySelect} aria-label="Insert a canned reply" className="min-w-0 flex-1 cursor-pointer appearance-none bg-transparent py-1 text-xs font-medium text-gray-600 outline-none">
                   <option value="" disabled>Choose a quick reply…</option>
                   {Object.entries(CANNED_REPLIES).map(([category, replies]) => <optgroup label={category} key={category}>{replies.map((reply, index) => <option value={reply} key={index}>{reply.length > 72 ? `${reply.slice(0, 72)}…` : reply}</option>)}</optgroup>)}
                 </select>
-                <ChevronDown className="h-4 w-4 text-slate-400" />
+                <ChevronDown className="h-4 w-4 text-gray-400" />
               </div>
               <div className="flex items-end gap-2 p-2 sm:p-2.5">
-                <textarea ref={textareaRef} rows={2} placeholder="Write a thoughtful reply… (Enter to send, Shift + Enter for a new line)" value={newMessage} onChange={event => setNewMessage(event.target.value)} onKeyDown={handleKeyDown} className="max-h-32 min-h-[54px] flex-1 resize-y bg-transparent px-2 py-2 text-[13px] leading-5 text-slate-800 outline-none placeholder:text-slate-400" />
-                <button type="button" onClick={handleSendReply} disabled={isSending || !newMessage.trim()} className="inline-flex h-10 shrink-0 items-center gap-2 rounded-xl bg-emerald-700 px-3.5 text-xs font-semibold text-white transition hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-40 sm:px-4">
-                  {isSending ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/50 border-t-white" /> : <Send className="h-4 w-4" />}<span className="hidden sm:inline">Send reply</span>
+                <textarea ref={textareaRef} rows={2} placeholder="Write a thoughtful reply… (Enter to send, Shift + Enter for a new line)" value={newMessage} onChange={event => setNewMessage(event.target.value)} onKeyDown={handleKeyDown} className="max-h-32 min-h-[54px] flex-1 resize-y bg-transparent px-2 py-2 text-[13px] leading-5 text-gray-900 outline-none placeholder:text-gray-400" />
+                <button type="button" onClick={handleSendReply} disabled={isSending || !newMessage.trim()} className={`inline-flex h-10 shrink-0 items-center gap-2 rounded-lg bg-yellow-400 px-3.5 text-[13px] font-semibold text-gray-900 shadow-sm transition-colors hover:bg-yellow-500 disabled:cursor-not-allowed disabled:opacity-40 sm:px-4 ${FOCUS_RING}`}>
+                  {isSending ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-gray-900/30 border-t-gray-900" /> : <Send className="h-4 w-4" />}<span className="hidden sm:inline">Send reply</span>
                 </button>
               </div>
             </div>
@@ -487,45 +492,46 @@ export default function TicketChat() {
         )}
       </section>
 
+      {/* ══ SIDE PANEL ══ */}
       <aside className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:flex xl:min-h-0 xl:flex-col">
-        <section className="rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm">
-          <div className="mb-4 flex items-center justify-between"><div><p className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-400">Requester</p><h3 className="mt-1 text-[14px] font-bold text-[#303833]">Customer profile</h3></div><span className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-blue-700"><UserRound className="h-4 w-4" /></span></div>
-          <div className="flex items-center gap-3 rounded-2xl bg-slate-50 p-3">
-            {ticket.user?.avatar_url ? <img src={ticket.user.avatar_url} alt="" className="h-11 w-11 rounded-xl object-cover" /> : <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-100 text-sm font-bold text-blue-800">{ticket.user?.full_name?.charAt(0) || 'U'}</span>}
-            <div className="min-w-0"><p className="truncate text-[13px] font-semibold text-slate-800">{ticket.user?.full_name || 'Unknown user'}</p><p className="mt-0.5 text-[10px] text-slate-400">Ticket requester</p></div>
+        <section className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+          <div className="mb-4 flex items-center justify-between"><div><p className="text-xs text-gray-500">Requester</p><h2 className="mt-0.5 text-sm font-semibold text-gray-900">Customer profile</h2></div><span className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-50 text-blue-700"><UserRound className="h-4 w-4" /></span></div>
+          <div className="flex items-center gap-3 rounded-xl bg-gray-50 p-3">
+            {ticket.user?.avatar_url ? <img src={ticket.user.avatar_url} alt="" className="h-11 w-11 rounded-xl object-cover" /> : <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-yellow-100 text-sm font-semibold text-yellow-800">{ticket.user?.full_name?.charAt(0) || 'U'}</span>}
+            <div className="min-w-0"><p className="truncate text-[13px] font-semibold text-gray-900">{ticket.user?.full_name || 'Unknown user'}</p><p className="mt-0.5 text-xs text-gray-500">Ticket requester</p></div>
           </div>
-          <div className="mt-4 grid grid-cols-3 divide-x divide-slate-100 rounded-xl border border-slate-100 py-3 text-center">
-            <div><p className="text-lg font-bold text-[#303833]">{userStats.total}</p><p className="mt-0.5 text-[9px] font-semibold uppercase tracking-wide text-slate-400">Tickets</p></div>
-            <div><p className="text-lg font-bold text-emerald-700">{userStats.resolved}</p><p className="mt-0.5 text-[9px] font-semibold uppercase tracking-wide text-slate-400">Resolved</p></div>
-            <div><p className="text-lg font-bold text-amber-700">{userStats.open}</p><p className="mt-0.5 text-[9px] font-semibold uppercase tracking-wide text-slate-400">Active</p></div>
-          </div>
+          <dl className="mt-4 grid grid-cols-3 divide-x divide-gray-100 rounded-xl border border-gray-100 py-3 text-center">
+            <div><dd className="text-lg font-semibold tabular-nums text-gray-900">{userStats.total}</dd><dt className="mt-0.5 text-xs text-gray-500">Tickets</dt></div>
+            <div><dd className="text-lg font-semibold tabular-nums text-emerald-700">{userStats.resolved}</dd><dt className="mt-0.5 text-xs text-gray-500">Resolved</dt></div>
+            <div><dd className="text-lg font-semibold tabular-nums text-amber-700">{userStats.open}</dd><dt className="mt-0.5 text-xs text-gray-500">Active</dt></div>
+          </dl>
         </section>
 
-        <section className="rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm">
-          <div className="mb-4 flex items-center justify-between"><div><p className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-400">Workflow</p><h3 className="mt-1 text-[14px] font-bold text-[#303833]">Ticket controls</h3></div><span className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700"><ShieldCheck className="h-4 w-4" /></span></div>
-          <label className="mb-2 block text-[10px] font-bold uppercase tracking-wider text-slate-500">Current status</label>
+        <section className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+          <div className="mb-4 flex items-center justify-between"><div><p className="text-xs text-gray-500">Workflow</p><h2 className="mt-0.5 text-sm font-semibold text-gray-900">Ticket controls</h2></div><span className="flex h-9 w-9 items-center justify-center rounded-lg bg-yellow-50 text-yellow-700"><ShieldCheck className="h-4 w-4" /></span></div>
+          <label htmlFor="ticket-status" className="mb-2 block text-xs font-medium text-gray-500">Current status</label>
           <div className="relative">
-            <select value={ticket.status} onChange={event => updateTicketStatus(event.target.value)} disabled={!isAssignedToMe || isResolved} className="h-11 w-full appearance-none rounded-xl border border-slate-200 bg-slate-50 px-3 pr-9 text-[12px] font-semibold text-slate-700 outline-none transition focus:border-emerald-300 focus:ring-4 focus:ring-emerald-50 disabled:cursor-not-allowed disabled:opacity-60">
+            <select id="ticket-status" value={ticket.status} onChange={event => updateTicketStatus(event.target.value)} disabled={!isAssignedToMe || isResolved} className="h-11 w-full cursor-pointer appearance-none rounded-lg border border-gray-200 bg-gray-50 px-3 pr-9 text-xs font-semibold text-gray-700 outline-none transition focus:border-yellow-400 focus:ring-2 focus:ring-yellow-200 disabled:cursor-not-allowed disabled:opacity-60">
               {ticket.status === 'open' && <option value="open">Open · Unassigned</option>}
               <option value="in_progress">Investigating · In progress</option>
               <option value="resolved">Resolved · Closed</option>
             </select>
-            <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
           </div>
-          <p className="mt-2 text-[10px] leading-4 text-slate-400">{isAssignedToMe ? 'Update status as you work through the request.' : isAssignedToOther ? `Assigned to ${ticket.agent?.full_name || 'another agent'}.` : 'Claim this ticket before changing its status.'}</p>
-          {isAssignedToMe && !isResolved && <button type="button" onClick={handleReleaseTicket} className="mt-4 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-[11px] font-semibold text-slate-600 transition hover:border-amber-200 hover:bg-amber-50 hover:text-amber-700"><RotateCcw className="h-3.5 w-3.5" /> Release to queue</button>}
+          <p className="mt-2 text-xs leading-4 text-gray-500">{isAssignedToMe ? 'Update status as you work through the request.' : isAssignedToOther ? `Assigned to ${ticket.agent?.full_name || 'another agent'}.` : 'Claim this ticket before changing its status.'}</p>
+          {isAssignedToMe && !isResolved && <button type="button" onClick={handleReleaseTicket} className={`mt-4 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-lg border border-gray-200 bg-white px-3 text-xs font-medium text-gray-600 shadow-sm transition-colors hover:border-amber-200 hover:bg-amber-50 hover:text-amber-700 ${FOCUS_RING}`}><RotateCcw className="h-3.5 w-3.5" /> Release to queue</button>}
         </section>
 
-        <section className="hidden rounded-[22px] border border-emerald-100 bg-emerald-50/70 p-5 text-[#303833] shadow-sm xl:block">
-          <div className="flex items-center gap-2 text-emerald-800"><Star className="h-4 w-4 fill-emerald-200" /><p className="text-[10px] font-bold uppercase tracking-[0.15em]">A little reminder</p></div>
+        <section className="hidden rounded-2xl border border-yellow-200 bg-yellow-50 p-5 text-gray-900 shadow-sm xl:block">
+          <div className="flex items-center gap-2 text-yellow-800"><Star className="h-4 w-4 fill-yellow-300" /><p className="text-xs font-medium">A little reminder</p></div>
           <p className="mt-3 text-[13px] font-semibold leading-5">Clear, kind replies make support feel human.</p>
-          <p className="mt-2 text-[11px] leading-5 text-[#68716a]">Use a quick reply as a starting point, then tailor it to this customer.</p>
+          <p className="mt-2 text-xs leading-5 text-gray-600">Use a quick reply as a starting point, then tailor it to this customer.</p>
         </section>
       </aside>
 
       {previewImage && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#07111f]/85 p-4 backdrop-blur-sm" onClick={() => setPreviewImage(null)} role="dialog" aria-modal="true" aria-label="Image attachment preview">
-          <button type="button" onClick={() => setPreviewImage(null)} aria-label="Close image preview" className="absolute right-5 top-5 flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20"><X className="h-5 w-5" /></button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/85 p-4 backdrop-blur-sm" onClick={() => setPreviewImage(null)} role="dialog" aria-modal="true" aria-label="Image attachment preview">
+          <button type="button" onClick={() => setPreviewImage(null)} aria-label="Close image preview" className="absolute right-5 top-5 flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20"><X className="h-5 w-5" /></button>
           <img src={previewImage} alt="Full-size ticket attachment" onClick={event => event.stopPropagation()} className="max-h-[88vh] max-w-[92vw] rounded-2xl object-contain shadow-2xl" />
         </div>
       )}

@@ -1,5 +1,8 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
+// 🚨 IMPORT CUSTOM ALERT
+import CustomAlert from './components/CustomAlert';
+
 // 1. Import Layouts
 import MainLayout from './layouts/MainLayout';
 import UserLayout from './layouts/UserLayout';
@@ -47,17 +50,20 @@ import ReportDetails from './pages/moderator/ReportDetails';
 import ModLogs from './pages/moderator/ModLogs';
 import RepeatOffenders from './pages/moderator/RepeatOffenders'; 
 import SkillApprovals from './pages/moderator/SkillApprovals'; 
-import SkillReview from './pages/moderator/SkillReview';       
+import SkillReview from './pages/moderator/SkillReview';     
 
 // SUPPORT PAGES
 import SupportDashboard from './pages/support/SupportDashboard';
-import Tickets from './pages/support/Tickets';         
+import Tickets from './pages/support/Tickets';             
 import TicketChat from './pages/support/TicketChat';   
 import SupportLogs from './pages/support/SupportLogs'; 
 
 export default function App() {
   return (
     <Router>
+      {/* 🚨 GLOBAL CUSTOM ALERT COMPONENT */}
+      <CustomAlert />
+
       <Routes>
         
         {/* PUBLIC ROUTES */}
@@ -106,9 +112,9 @@ export default function App() {
           <Route path="/moderator" element={<ModDashboard />} />
           <Route path="/moderator/approvals" element={<SkillApprovals />} />
           <Route path="/moderator/review/:id" element={<SkillReview />} />   
-          <Route path="/moderator/disputes" element={<Disputes />} />               
-          <Route path="/moderator/disputes/:id" element={<DisputeDetails />} />     
-          <Route path="/moderator/reports" element={<UserReports />} />  
+          <Route path="/moderator/disputes" element={<Disputes />} />              
+          <Route path="/moderator/disputes/:id" element={<DisputeDetails />} />    
+          <Route path="/moderator/reports" element={<UserReports />} />   
           <Route path="/moderator/reports/:id" element={<ReportDetails />} />
           <Route path="/moderator/logs" element={<ModLogs />} />  
           <Route path="/moderator/repeat-offenders" element={<RepeatOffenders />} />
@@ -117,7 +123,7 @@ export default function App() {
         {/* SUPPORT ROUTES */}
         <Route element={<SupportLayout />}>
           <Route path="/support" element={<SupportDashboard />} />
-          <Route path="/support/tickets" element={<Tickets />} />               
+          <Route path="/support/tickets" element={<Tickets />} />              
           <Route path="/support/tickets/:ticketId" element={<TicketChat />} />  
           <Route path="/support/logs" element={<SupportLogs />} /> 
         </Route>

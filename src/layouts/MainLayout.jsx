@@ -1,16 +1,16 @@
 import { useState, useEffect } from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
-​
+
 export default function MainLayout() {
   const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
-​
+
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
-​
+
   // ── ITO YUNG MAGIC PARA DUMULAS PABABA ANG SCROLL ──
   useEffect(() => {
     document.documentElement.style.scrollBehavior = 'smooth';
@@ -18,7 +18,7 @@ export default function MainLayout() {
       document.documentElement.style.scrollBehavior = 'auto';
     }
   }, []);
-​
+
   return (
     <div style={{ minHeight: "100vh", background: "#faf8f4", fontFamily: "'DM Sans', sans-serif", display: "flex", flexDirection: "column" }}>
       {/* GLOBAL STYLES & FONTS */}
@@ -46,7 +46,7 @@ export default function MainLayout() {
           .main-nav-auth a { padding:7px 8px!important; font-size:11px!important; }
         }
       `}</style>
-​
+
       {/* ── PREMIUM STICKY NAVBAR ── */}
       <nav className="main-nav" style={{ 
         position: "sticky", top: 0, zIndex: 200, 
@@ -63,13 +63,14 @@ export default function MainLayout() {
             <span style={{ fontFamily: "'Fraunces', serif", fontSize: 22, fontWeight: 900, color: "#111" }}>Credit</span>
           </a>
         </div>
-​
+
         {/* ── ONE-PAGE NAVIGATION LINKS ── */}
         <div className="hidden md:flex gap-2 items-center" style={{ transform: "translateX(35px)" }}>
           {[
             { label: "Home", path: "/#" },
             { label: "Explore Skills", path: "/#explore" },
-            { label: "About Us", path: "/#about" }
+            { label: "About Us", path: "/#about" },
+            { label: "Download App", path: "/#download-app" }
           ].map(link => {
             // Logic para mag-highlight kung nasaan kang section
             const isActive = location.hash === link.path.replace('/', '');
@@ -93,7 +94,7 @@ export default function MainLayout() {
             )
           })}
         </div>
-​
+
         {/* AUTH BUTTONS */}
         <div className="main-nav-auth" style={{ display: "flex", gap: 8, alignItems: "center" }}>
           <Link className="main-nav-login" to="/login" style={{ padding: "8px 16px", borderRadius: 10, border: "1.5px solid #ccc", color: "#444", fontWeight: 600, fontSize: 13, textDecoration: "none" }}>
@@ -104,7 +105,7 @@ export default function MainLayout() {
           </Link>
         </div>
       </nav>
-​
+
       {/* ── MAIN CONTENT OUTLET ── */}
       <main style={{ flexGrow: 1, display: "flex", flexDirection: "column" }}>
         <Outlet />

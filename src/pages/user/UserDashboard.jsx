@@ -1,3 +1,4 @@
+import useRealtimeRefresh from '../../hooks/useRealtimeRefresh';
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import supabase from '../../supabaseClient';
@@ -8,9 +9,10 @@ import {
   Video, MessageSquare, FileText, Star, TrendingUp, TrendingDown,
   Trophy, Flame, Sparkles, Clock, Users, Coins, Search, X,
   ArrowUpDown, CalendarDays, CheckCircle2, ChevronDown, ChevronLeft, ChevronRight,
-  Pin, SlidersHorizontal, Zap, LayoutGrid, Hand, Lightbulb
+  Pin, SlidersHorizontal, Zap, LayoutGrid, Hand, Lightbulb, PartyPopper, Plus // <-- Idagdag ang Plus dito
+  
 } from 'lucide-react';
-​
+
 const CATEGORIES = [
   { name: 'Cooking & Baking',      icon: ChefHat,    color: 'text-orange-500'  },
   { name: 'Gardening & Farming',   icon: Leaf,        color: 'text-green-500'   },
@@ -30,14 +32,14 @@ const CATEGORIES = [
   { name: 'UI/UX Design',          icon: Monitor,     color: 'text-sky-500'     },
   { name: 'Coding & Tech',         icon: Code2,       color: 'text-lime-600'    },
 ];
-​
+
 const FORMAT_MAP = {
   'Video Call':   { icon: Video,         color: 'text-sky-500'     },
   'Chat/Text':    { icon: MessageSquare, color: 'text-emerald-500' },
   'Docs':         { icon: FileText,      color: 'text-indigo-500'  },
   'All Formats':  { icon: Globe,         color: 'text-gray-500'    },
 };
-​
+
 const SORT_OPTIONS = [
   { value: 'default', label: 'Default', icon: SlidersHorizontal, color: 'text-slate-500' },
   { value: 'newest', label: 'Newest', icon: CalendarDays, color: 'text-sky-600' },
@@ -47,20 +49,20 @@ const SORT_OPTIONS = [
   { value: 'top', label: 'Top Rated', icon: Star, color: 'text-amber-500', internal: true },
   { value: 'trending', label: 'Trending', icon: Flame, color: 'text-orange-500', internal: true },
 ];
-​
+
 const CatIcon = ({ name, className = 'w-4 h-4' }) => {
   const cat = CATEGORIES.find(c => c.name === name);
   if (!cat) return <Pin className={`${className} text-gray-400`} />;
   const Icon = cat.icon;
   return <Icon className={`${className} ${cat.color}`} />;
 };
-​
+
 const FmtIcon = ({ format, className = 'w-4 h-4' }) => {
   const f = FORMAT_MAP[format] || FORMAT_MAP['All Formats'];
   const Icon = f.icon;
   return <Icon className={`${className} ${f.color}`} />;
 };
-​
+
 function SkeletonCard() {
   return (
     <div className="shrink-0 w-[260px] bg-white rounded-2xl border border-gray-100 overflow-hidden animate-pulse">
@@ -84,12 +86,12 @@ function SkeletonCard() {
     </div>
   );
 }
-​
+
 function SkillCard({ skill, isSaved, onSave, onView, width = 260 }) {
   const profile = Array.isArray(skill.user_profiles) ? skill.user_profiles[0] : skill.user_profiles;
   const name    = profile?.full_name || 'Instructor';
   const isNew   = skill.totalReviews === 0;
-​
+
   return (
     <article
       onClick={() => onView(skill.id)}
@@ -107,7 +109,7 @@ function SkillCard({ skill, isSaved, onSave, onView, width = 260 }) {
           </div>
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-black/10 pointer-events-none" />
-​
+
         <div className="absolute top-3 left-3">
           <span className="flex items-center gap-1.5 bg-black/50 backdrop-blur-md text-white text-[11px] font-semibold px-2.5 py-1 rounded-full border border-white/20">
             {isNew
@@ -115,7 +117,7 @@ function SkillCard({ skill, isSaved, onSave, onView, width = 260 }) {
               : <><FmtIcon format={skill.format} className="w-3 h-3 text-white" /> {skill.format}</>}
           </span>
         </div>
-​
+
         <button
           onClick={e => { e.stopPropagation(); onSave(skill.id); }}
           className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 flex items-center justify-center hover:bg-white hover:scale-110 transition-all"
@@ -126,7 +128,7 @@ function SkillCard({ skill, isSaved, onSave, onView, width = 260 }) {
             : <Bookmark className="w-4 h-4 text-white" />}
         </button>
       </div>
-​
+
       <div className="p-4 flex flex-col flex-1">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-1.5 min-w-0">
@@ -145,11 +147,11 @@ function SkillCard({ skill, isSaved, onSave, onView, width = 260 }) {
             </div>
           )}
         </div>
-​
+
         <h3 className="font-bold text-[15px] text-gray-900 leading-snug tracking-tight line-clamp-2 mb-3 group-hover:text-emerald-700 transition-colors">
           {skill.title}
         </h3>
-​
+
         <div className="flex flex-wrap gap-1.5 mt-auto mb-3">
           <span className="flex items-center gap-1 bg-gray-100 text-gray-600 text-[11px] font-medium px-2.5 py-1 rounded-lg">
             <CatIcon name={skill.category} className="w-3 h-3" /> {skill.category}
@@ -158,7 +160,7 @@ function SkillCard({ skill, isSaved, onSave, onView, width = 260 }) {
             <Coins className="w-3 h-3 text-amber-500" /> {skill.credit_cost} CR
           </span>
         </div>
-​
+
         <div className="flex items-center gap-3 pt-3 border-t border-gray-100 text-[11px] text-gray-400 font-medium">
           <span className="flex items-center gap-1"><FmtIcon format={skill.format} className="w-3 h-3" /> {skill.format}</span>
           <span className="flex items-center gap-1"><Users className="w-3 h-3" /> {skill.totalSessions}</span>
@@ -168,25 +170,25 @@ function SkillCard({ skill, isSaved, onSave, onView, width = 260 }) {
     </article>
   );
 }
-​
+
 function Swimlane({ icon: SectionIcon, iconColor, title, subtitle, skills, savedSkills, onSave, onView, onSeeAll, loading }) {
   const rowRef = useRef(null);
   const [canLeft,  setCanLeft]  = useState(false);
   const [canRight, setCanRight] = useState(true);
   const showSeeAll = skills.length > 5;
-​
+
   const checkScroll = () => {
     const el = rowRef.current;
     if (!el) return;
     setCanLeft(el.scrollLeft > 8);
     setCanRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 8);
   };
-​
+
   const scroll = dir => {
     rowRef.current?.scrollBy({ left: dir * 280, behavior: 'smooth' });
     setTimeout(checkScroll, 350);
   };
-​
+
   return (
     <section className="mb-10">
       <div className="flex items-center justify-between mb-4">
@@ -222,7 +224,7 @@ function Swimlane({ icon: SectionIcon, iconColor, title, subtitle, skills, saved
           )}
         </div>
       </div>
-​
+
       <div className="relative">
         <div ref={rowRef} onScroll={checkScroll}
           className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory">
@@ -236,12 +238,12 @@ function Swimlane({ icon: SectionIcon, iconColor, title, subtitle, skills, saved
     </section>
   );
 }
-​
+
 function HeroBanner({ skill, isSaved, onSave, onView }) {
   if (!skill) return null;
   const profile = Array.isArray(skill.user_profiles) ? skill.user_profiles[0] : skill.user_profiles;
   const name    = profile?.full_name || 'Instructor';
-​
+
   return (
     <div onClick={() => onView(skill.id)}
       className="relative w-full rounded-2xl overflow-hidden cursor-pointer group mb-10"
@@ -255,7 +257,7 @@ function HeroBanner({ skill, isSaved, onSave, onView }) {
         </div>
       )}
       <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/30 to-transparent" />
-​
+
       <div className="absolute top-5 left-6 flex gap-2">
         <span className="flex items-center gap-1.5 bg-emerald-500 text-white text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-full">
           <Flame className="w-3 h-3" /> Top Pick
@@ -264,14 +266,14 @@ function HeroBanner({ skill, isSaved, onSave, onView }) {
           <CatIcon name={skill.category} className="w-3 h-3 text-white" /> {skill.category}
         </span>
       </div>
-​
+
       <button onClick={e => { e.stopPropagation(); onSave(skill.id); }}
         className="absolute top-5 right-6 w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 flex items-center justify-center hover:bg-white/40 hover:scale-110 transition-all">
         {isSaved
           ? <BookmarkCheck className="w-5 h-5 text-emerald-400" />
           : <Bookmark className="w-5 h-5 text-white" />}
       </button>
-​
+
       <div className="absolute bottom-0 left-0 right-0 p-6">
         <h2 className="text-white font-bold text-[22px] leading-snug tracking-tight line-clamp-2 mb-3 max-w-[65%]">
           {skill.title}
@@ -301,7 +303,7 @@ function HeroBanner({ skill, isSaved, onSave, onView }) {
     </div>
   );
 }
-​
+
 function FilterGrid({ skills, savedSkills, onSave, onView, loading }) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
@@ -322,10 +324,10 @@ function FilterGrid({ skills, savedSkills, onSave, onView, loading }) {
     </div>
   );
 }
-​
+
 export default function UserDashboard() {
   const navigate = useNavigate();
-​
+
   const [skills,         setSkills]        = useState([]);
   const [savedSkills,    setSavedSkills]   = useState([]);
   const [loading,        setLoading]       = useState(true);
@@ -335,7 +337,10 @@ export default function UserDashboard() {
   const [activeCategory, setActiveCategory]= useState('All');
   const [showSaved,      setShowSaved]     = useState(false);
   const [sortBy,         setSortBy]        = useState('default');
-​
+  
+  // ✨ NEW: Welcome Modal State
+  const [showWelcomeModal, setShowWelcomeModal] = useState(false);
+
   useEffect(() => {
     const init = async () => {
       setLoading(true);
@@ -349,8 +354,27 @@ export default function UserDashboard() {
       setLoading(false);
     };
     init();
+
+    // ✨ NEW: Check for Welcome Bonus Flag
+    const isNewUser = localStorage.getItem('showWelcomeBonus');
+    if (isNewUser === 'true') {
+      setShowWelcomeModal(true);
+    }
   }, []);
-​
+
+  useRealtimeRefresh(() => {
+    fetchSkills();
+    if (currentUser?.id) {
+      fetchSaved(currentUser.id);
+      fetchProfile(currentUser.id);
+    }
+  }, ['skills', 'reviews', 'sessions', 'saved_skills'], 'web_refresh_user_dashboard');
+
+  const closeWelcomeModal = () => {
+    setShowWelcomeModal(false);
+    localStorage.removeItem('showWelcomeBonus'); // Remove so it only shows once
+  };
+
   const fetchSkills = async () => {
     const { data, error } = await supabase
       .from('skills')
@@ -375,18 +399,17 @@ export default function UserDashboard() {
       return { ...s, avgRating, totalReviews: rv.length, totalSessions: completedSessions };
     }));
   };
-​
+
   const fetchSaved = async uid => {
     const { data } = await supabase.from('saved_skills').select('skill_id').eq('user_id', uid);
     if (data) setSavedSkills(data.map(r => r.skill_id));
   };
-​
+
   const fetchProfile = async uid => {
-    // 🚨 UPDATED: Fetched "interests" from database
     const { data } = await supabase.from('user_profiles').select('full_name, avatar_url, interests').eq('id', uid).single();
     if (data) setProfile(data);
   };
-​
+
   const toggleSave = async skillId => {
     if (!currentUser) { alert('Please log in to save skills.'); return; }
     const already = savedSkills.includes(skillId);
@@ -397,11 +420,11 @@ export default function UserDashboard() {
       await supabase.from('saved_skills').insert({ user_id: currentUser.id, skill_id: skillId });
     }
   };
-​
+
   const handleView  = id  => navigate(`/skill/${id}`);
   const handleReset = () => { setSearchQuery(''); setActiveCategory('All'); setShowSaved(false); setSortBy('default'); };
   const jumpTo      = cat => { setActiveCategory(cat); setShowSaved(false); setSearchQuery(''); setSortBy('default'); };
-​
+
   const isFiltered    = activeCategory !== 'All' || showSaved || !!searchQuery.trim() || sortBy !== 'default';
   const firstName     = profile?.full_name?.split(' ')[0] || 'there';
   const catCount      = n => skills.filter(s => s.category === n).length;
@@ -410,12 +433,11 @@ export default function UserDashboard() {
   const trending = [...skills].sort((a, b) => b.totalSessions - a.totalSessions);
   const topRated = [...skills].sort((a, b) => b.avgRating - a.avgRating);
   const newest   = [...skills];
-​
-  // 🚨 RECOMMENDED SKILLS DERIVATION
+
   const recommendedSkills = profile?.interests?.length > 0 
     ? [...skills].filter(s => profile.interests.includes(s.category)).sort((a, b) => b.avgRating - a.avgRating)
     : [];
-​
+
   let filtered = showSaved ? [...savedList] : [...skills];
   
   if (searchQuery.trim()) {
@@ -432,7 +454,7 @@ export default function UserDashboard() {
   else if (sortBy === 'trending') filtered.sort((a, b) => (b.totalSessions || 0) - (a.totalSessions || 0));
   else if (sortBy === 'cheapest') filtered.sort((a, b) => (Number(a.credit_cost) || 0) - (Number(b.credit_cost) || 0));
   else if (sortBy === 'priciest') filtered.sort((a, b) => (Number(b.credit_cost) || 0) - (Number(a.credit_cost) || 0));
-​
+
   let gridTitle = 'Search Results';
   if (showSaved) gridTitle = 'Saved Skills';
   else if (activeCategory !== 'All') gridTitle = activeCategory;
@@ -446,19 +468,19 @@ export default function UserDashboard() {
     else if (sortBy === 'priciest') gridTitle = 'Priciest Skills';
     else gridTitle = 'All Skills';
   }
-​
+
   const sharedProps = { savedSkills, onSave: toggleSave, onView: handleView };
   const activeSortOption = SORT_OPTIONS.find(option => option.value === sortBy) || SORT_OPTIONS[0];
   const visibleSortOptions = SORT_OPTIONS.filter(option => !option.internal || option.value === sortBy);
   const ActiveSortIcon = activeSortOption.icon;
-​
+
   return (
     <div className="min-h-full" style={{ background: '#faf9f6' }}>
       <div className="max-w-[1440px] mx-auto flex gap-0">
-​
+
         <aside className="hidden lg:flex flex-col w-[240px] shrink-0 border-r border-gray-200/80 min-h-full bg-white">
           <div className="custom-sidebar-scroll sticky top-[64px] pt-6 pb-4 px-4 flex flex-col gap-1 overflow-y-auto" style={{ height: 'calc(100vh - 64px)' }}>
-​
+
             {profile && (
               <div className="mb-4 pb-4 border-b border-gray-100">
                 <p className="text-[10px] font-semibold uppercase tracking-widest text-emerald-600">Welcome back</p>
@@ -467,9 +489,9 @@ export default function UserDashboard() {
                 </p>
               </div>
             )}
-​
+
             <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 px-3 mt-1 mb-1">Browse</p>
-​
+
             <button onClick={handleReset}
               className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-left transition ${
                 activeCategory === 'All' && !showSaved ? 'bg-emerald-700 text-white' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
@@ -481,7 +503,7 @@ export default function UserDashboard() {
                 activeCategory === 'All' && !showSaved ? 'bg-white/25 text-white' : 'bg-gray-100 text-gray-500'
               }`}>{skills.length}</span>
             </button>
-​
+
             {currentUser && (
               <button onClick={() => { setShowSaved(v => !v); setActiveCategory('All'); setSearchQuery(''); setSortBy('default'); }}
                 className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-left transition ${
@@ -495,9 +517,9 @@ export default function UserDashboard() {
                 }`}>{savedList.length}</span>
               </button>
             )}
-​
+
             <div className="my-2 border-t border-gray-100" />
-​
+
             {CATEGORIES.map(cat => {
               const Icon = cat.icon;
               const isActive = activeCategory === cat.name && !showSaved;
@@ -518,9 +540,9 @@ export default function UserDashboard() {
             })}
           </div>
         </aside>
-​
+
         <main className="flex-1 min-w-0 px-6 md:px-8 py-6">
-​
+
           <div className="flex items-center gap-3 mb-6 flex-wrap">
             <label className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-2.5 flex-1 min-w-[200px] shadow-sm focus-within:border-emerald-400 focus-within:ring-2 focus-within:ring-emerald-100 transition cursor-text">
               <Search className="w-4 h-4 text-gray-400 shrink-0" />
@@ -534,15 +556,25 @@ export default function UserDashboard() {
                 </button>
               )}
             </label>
-​
-            <div className="relative w-[135px] shrink-0">
+              
+
+              {/* ✨ LARGER CREATE SKILL BUTTON ✨ */}
+              <button
+                onClick={() => navigate('/create-skill')}
+                className="flex min-h-[40px] min-w-[140px] shrink-0 items-center justify-center gap-2 rounded-xl bg-emerald-700 px-1 text-[13px] font-bold text-white shadow-sm transition hover:bg-emerald-800 cursor-pointer"
+              >
+                <Plus className="h-4 w-4" />
+                <span>Create Skill</span>
+              </button>
+
+            <div className="relative w-[110px] shrink-0">
               <details
                 className="group relative w-full"
                 onBlur={e => { if (!e.currentTarget.contains(e.relatedTarget)) e.currentTarget.open = false; }}
               >
                 <summary
                   aria-label="Sort listings"
-                  className="flex min-h-11 w-full cursor-pointer list-none items-center gap-2.5 rounded-xl border border-gray-200 bg-white px-3.5 text-[13px] font-medium text-gray-700 shadow-sm transition hover:border-emerald-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-100 [&::-webkit-details-marker]:hidden"
+                  className="flex min-h-11 w-full cursor-pointer list-none items-center gap-1 rounded-xl border border-gray-200 bg-white px-3.5 text-[12px] font-medium text-gray-700 shadow-sm transition hover:border-emerald-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-100 [&::-webkit-details-marker]:hidden"
                 >
                   <ActiveSortIcon className={`h-4 w-4 shrink-0 ${activeSortOption.color}`} aria-hidden="true" />
                   <span className="flex-1 text-left">{activeSortOption.label}</span>
@@ -574,7 +606,7 @@ export default function UserDashboard() {
               </details>
             </div>
           </div>
-​
+
           <div className="lg:hidden flex gap-2 overflow-x-auto scrollbar-hide pb-3 mb-4">
             <button onClick={handleReset}
               className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[12px] font-medium whitespace-nowrap border transition ${
@@ -604,14 +636,13 @@ export default function UserDashboard() {
               );
             })}
           </div>
-​
+
           {!isFiltered && (
             <>
               {!loading && featuredSkill && (
                 <HeroBanner skill={featuredSkill} isSaved={savedSkills.includes(featuredSkill.id)} onSave={toggleSave} onView={handleView} />
               )}
               
-              {/* 🚨 NEW: Recommended For You Section 🚨 */}
               {!loading && profile?.interests?.length > 0 && recommendedSkills.length > 0 && (
                 <Swimlane 
                   icon={Lightbulb} 
@@ -624,7 +655,7 @@ export default function UserDashboard() {
                   onSeeAll={() => { window.scrollTo({ top: 0, behavior: 'smooth' }); }} 
                 />
               )}
-​
+
               {!loading && savedList.length > 0 && (
                 <Swimlane icon={Bookmark} iconColor="text-emerald-600" title="Saved Skills" subtitle="Skills you bookmarked" skills={savedList} loading={false} {...sharedProps} onSeeAll={() => setShowSaved(true)} />
               )}
@@ -642,7 +673,7 @@ export default function UserDashboard() {
               })}
             </>
           )}
-​
+
           {isFiltered && (
             <>
               <div className="flex items-center justify-between mb-5">
@@ -660,7 +691,7 @@ export default function UserDashboard() {
                   <ChevronLeft className="w-4 h-4" /> Back to home
                 </button>
               </div>
-​
+
               {!loading && filtered.length === 0 && (
                 <div className="flex flex-col items-center py-24 text-center">
                   <div className="w-14 h-14 bg-white border border-gray-100 rounded-2xl shadow-sm flex items-center justify-center mb-4">
@@ -679,12 +710,67 @@ export default function UserDashboard() {
                   </button>
                 </div>
               )}
-​
+
               <FilterGrid skills={filtered} savedSkills={savedSkills} onSave={toggleSave} onView={handleView} loading={loading} />
             </>
           )}
         </main>
       </div>
+
+      {/* ✨ WELCOME BONUS MODAL ✨ */}
+      {showWelcomeModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={closeWelcomeModal} />
+          
+          <div className="relative w-full max-w-sm rounded-3xl bg-white shadow-2xl overflow-hidden animate-in zoom-in-95 fade-in duration-300">
+            <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-br from-amber-400 via-amber-500 to-orange-500" />
+            
+            <div className="pointer-events-none absolute -right-4 -top-4 h-24 w-24 rounded-full bg-white/20 blur-xl" />
+            <div className="pointer-events-none absolute -left-4 top-10 h-16 w-16 rounded-full bg-white/20 blur-lg" />
+            
+            <button 
+              onClick={closeWelcomeModal}
+              className="absolute right-4 top-4 z-10 rounded-full bg-black/10 p-1.5 text-white hover:bg-black/20 transition cursor-pointer"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            <div className="relative mt-16 flex flex-col items-center px-6 pb-6 text-center">
+              <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-2xl bg-white shadow-lg border-4 border-white rotate-3">
+                <PartyPopper className="h-10 w-10 text-amber-500" />
+              </div>
+
+              <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-amber-700">
+                Welcome to SkillCredit!
+              </span>
+
+              <h2 className="mt-4 text-2xl font-black tracking-tight text-gray-900">
+                You're all set up!
+              </h2>
+              
+              <p className="mt-2 text-[14px] leading-relaxed text-gray-500">
+                As a starting gift, you have received a bonus of
+              </p>
+              
+              <div className="my-4 flex items-baseline justify-center gap-1.5 rounded-2xl bg-amber-50 px-6 py-3 border border-amber-100">
+                <span className="text-4xl font-black text-amber-500">20</span>
+                <span className="text-lg font-bold text-amber-600">CR</span>
+              </div>
+
+              <p className="text-[12px] text-gray-400 mb-6 px-4">
+                Use your credits to book your first skill-sharing session and start learning today.
+              </p>
+
+              <button
+                onClick={closeWelcomeModal}
+                className="w-full rounded-xl bg-amber-500 py-3.5 text-[14px] font-bold text-white shadow-md hover:bg-amber-600 active:scale-[0.98] transition-all cursor-pointer"
+              >
+                Awesome, let's go!
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

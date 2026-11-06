@@ -1,3 +1,5 @@
+import { confirmDialog } from '../../components/confirmDialog';
+import useRealtimeRefresh from '../../hooks/useRealtimeRefresh';
 import { useState, useEffect } from 'react';
 import { ArrowLeft, Bell, BookOpen, Briefcase, ChefHat, ChevronDown, CircleHelp, ClipboardList, Code2, Coins, Dumbbell, ExternalLink, Film, Gamepad2, Hammer, Leaf, MessageCircle, Monitor, Music2, Palette, PenLine, Scissors, Star, Tag, Trash2, Wrench, Zap } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom'; // 🚨 ADDED useLocation
@@ -256,6 +258,8 @@ export default function MyListings() {
 
   useEffect(() => { fetchMyListings(); }, []);
 
+  useRealtimeRefresh(fetchMyListings, ['skills', 'sessions', 'reviews'], 'web_refresh_mylistings');
+
   // 🚨 ADDED HIGHLIGHT EFFECT
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -312,7 +316,7 @@ export default function MyListings() {
   };
 
   const handleDelete = async skillId => {
-    if (!window.confirm('Are you sure you want to remove this listing?')) return;
+    if (!await confirmDialog('Are you sure you want to remove this listing?')) return;
     
     try {
       const { data: active } = await supabase
