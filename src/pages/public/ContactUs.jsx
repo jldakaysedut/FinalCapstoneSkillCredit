@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, ArrowRight, Mail, MessageSquareText, ShieldCheck, HelpCircle, UserRound, ExternalLink, Info, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Mail, MessageSquareText, HelpCircle, UserRound, ExternalLink, Info, CheckCircle2 } from 'lucide-react';
 
 // VITE_PUBLIC_CONTACT_EMAIL is a PUBLIC inbox address, not an API key.
 // The form opens the user's email application. It does not send on its own.
@@ -37,7 +37,9 @@ export default function ContactUs() {
       <div className="flex flex-wrap items-center justify-between gap-4">
         <Link to="/" className="inline-flex min-h-11 items-center gap-2 rounded-full border border-[#dce7da] bg-white px-4 text-sm font-semibold text-[#275e43] transition hover:bg-[#eff7ef]"><ArrowLeft size={16}/> Back to Home</Link>
         <nav aria-label="Information pages" className="flex flex-wrap items-center gap-1 rounded-full border border-[#e0e9de] bg-white p-1 text-xs font-semibold sm:text-sm">
-          {[["/privacy","Privacy Policy"],["/terms","Terms & Conditions"],["/contact","Contact Us"]].map(([to,label]) => <Link key={to} to={to} aria-current={to === '/contact' ? 'page' : undefined} className={`rounded-full px-3 py-2 transition ${to === '/contact' ? 'bg-[#2d6a4f] text-white' : 'text-[#516b58] hover:bg-[#eff6ef]'}`}>{label}</Link>)}
+          {[["/privacy","Privacy Policy"],["/terms","Terms & Conditions"],["/contact","Contact Us"]].map(([to,label]) => to === '/contact'
+            ? <span key={to} aria-current="page" className="rounded-full bg-[#2d6a4f] px-3 py-2 text-white">{label}</span>
+            : <Link key={to} to={to} className="rounded-full px-3 py-2 text-[#516b58] transition hover:bg-[#eff6ef]">{label}</Link>)}
         </nav>
       </div>
       <header className="relative mt-7 overflow-hidden rounded-[26px] bg-[#173d2c] px-6 py-9 text-white sm:rounded-[32px] sm:px-12 sm:py-14">
@@ -63,7 +65,7 @@ export default function ContactUs() {
               <div className="flex flex-wrap items-center justify-between gap-3"><p className="max-w-xs text-xs leading-5 text-[#738575]">Never include your password, complete card details, or other sensitive credentials.</p><button type="submit" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#2d6a4f] px-6 text-sm font-bold text-white transition hover:bg-[#22533d] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2d6a4f]">Open email app <ExternalLink size={16}/></button></div>
               {emailOpened && <p role="status" className="flex items-start gap-2 rounded-xl border border-[#d4e8d7] bg-[#f0f8f0] px-4 py-3 text-xs leading-6 text-[#41674a]"><CheckCircle2 size={17} className="mt-0.5 shrink-0"/>Your email application should open. Please review the message and press Send there. Nothing has been submitted from this webpage.</p>}
             </form>
-            <div className="mt-6 border-t border-[#ecf1e9] pt-5 text-sm text-[#5f7464]">Official contact email: <a href={`mailto:${publicEmail}`} className="break-all font-bold text-[#2d6a4f] underline underline-offset-2">{publicEmail}</a></div>
+            <p className="mt-6 border-t border-[#ecf1e9] pt-5 text-sm text-[#5f7464]">Official contact email: <span className="break-all font-semibold text-[#2d6a4f]">{publicEmail}</span></p>
           </> : <div className="mt-6 rounded-2xl border border-[#d9e7d8] bg-[#f5faf4] px-5 py-5">
             <div className="flex items-start gap-3"><Info size={21} className="mt-0.5 shrink-0 text-[#2d6a4f]"/><div><h3 className="text-base font-extrabold text-[#234831]">Public email contact is being configured</h3><p className="mt-2 text-sm leading-7 text-[#58715e]">The team has not yet added a verified public email address. An email form cannot send messages until an official inbox is configured. Registered users can still contact Support from the User Dashboard.</p></div></div>
           </div>}
@@ -83,11 +85,11 @@ export default function ContactUs() {
               ['Credits & payments','Wallet, top-ups, and transaction concerns'],
               ['Privacy & safety','Data inquiries and reports'],
             ].map(([title,desc])=><div key={title} className="border-b border-[#d6e5d5] pb-3 last:border-b-0 last:pb-0"><p className="font-bold text-[#274c35]">{title}</p><p className="mt-1 text-xs leading-5">{desc}</p></div>)}</div>
-            <p className="mt-5 flex items-start gap-2 border-t border-[#d6e5d5] pt-4 text-xs leading-6 text-[#597261]"><ShieldCheck size={16} className="mt-1 shrink-0"/>For privacy details, read the <Link to="/privacy" className="font-bold underline underline-offset-2">Privacy Policy</Link>.</p>
+
           </section>
         </aside>
       </div>
-      <footer className="mt-9 flex flex-wrap items-center justify-between gap-4 border-t border-[#e2eade] pt-6 text-xs text-[#6e806f] sm:text-sm"><p>© 2026 SkillCredit · Team SkillCredit</p><nav className="flex flex-wrap gap-5"><Link to="/privacy" className="hover:text-[#2d6a4f]">Privacy</Link><Link to="/terms" className="hover:text-[#2d6a4f]">Terms</Link><Link to="/" className="hover:text-[#2d6a4f]">Home</Link></nav></footer>
+      <footer className="mt-9 border-t border-[#e2eade] pt-6 text-xs text-[#6e806f] sm:text-sm">© 2026 SkillCredit · Team SkillCredit</footer>
     </div>
   </div>;
 }

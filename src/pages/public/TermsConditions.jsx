@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { ArrowLeft, ArrowRight, FileText, ChevronRight, BookOpenCheck, Wallet, UsersRound, ShieldCheck, Sparkles } from 'lucide-react';
+import { ArrowLeft, FileText, ChevronRight, BookOpenCheck, Wallet, UsersRound } from 'lucide-react';
 
 // Draft reflects verified platform features, not a substitute for final legal review.
 const sections = [
@@ -46,7 +46,9 @@ export default function TermsConditions() {
       <div className="flex flex-wrap items-center justify-between gap-4">
         <Link to="/" className="inline-flex min-h-11 items-center gap-2 rounded-full border border-[#dce7da] bg-white px-4 text-sm font-semibold text-[#275e43] transition hover:bg-[#eff7ef]"><ArrowLeft size={16}/> Back to Home</Link>
         <nav aria-label="Information pages" className="flex flex-wrap items-center gap-1 rounded-full border border-[#e0e9de] bg-white p-1 text-xs font-semibold sm:text-sm">
-          {navItems.map(item => <Link key={item.to} to={item.to} aria-current={item.to === '/terms' ? 'page' : undefined} className={`rounded-full px-3 py-2 transition ${item.to === '/terms' ? 'bg-[#2d6a4f] text-white' : 'text-[#516b58] hover:bg-[#eff6ef]'}`}>{item.label}</Link>)}
+          {navItems.map(item => item.to === '/terms'
+            ? <span key={item.to} aria-current="page" className="rounded-full bg-[#2d6a4f] px-3 py-2 text-white">{item.label}</span>
+            : <Link key={item.to} to={item.to} className="rounded-full px-3 py-2 text-[#516b58] transition hover:bg-[#eff6ef]">{item.label}</Link>)}
         </nav>
       </div>
       <header className="relative mt-7 overflow-hidden rounded-[26px] bg-[#173d2c] px-6 py-9 text-white sm:rounded-[32px] sm:px-12 sm:py-14">
@@ -62,7 +64,7 @@ export default function TermsConditions() {
         <aside className="rounded-2xl border border-[#e1e9dd] bg-white p-5 shadow-sm lg:sticky lg:top-20">
           <p className="text-xs font-extrabold uppercase tracking-[.12em] text-[#729079]">On this page</p>
           <nav aria-label="Terms sections" className="mt-3 space-y-1">{sections.map((section, i)=><a key={section.id} href={`#${section.id}`} className="flex min-h-10 items-center gap-3 rounded-lg px-2 py-2 text-sm font-semibold text-[#4d6855] transition hover:bg-[#f0f7ef] hover:text-[#275e43]"><span className="w-6 text-xs text-[#80988a]">{String(i+1).padStart(2,'0')}</span><span className="flex-1">{section.title}</span><ChevronRight size={14}/></a>)}</nav>
-          <div className="mt-6 border-t border-[#e7eee5] pt-5"><div className="flex items-center gap-2 text-[#2d6a4f]"><ShieldCheck size={17}/><span className="text-sm font-bold">Need clarification?</span></div><p className="mt-2 text-xs leading-6 text-[#657a6a]">Questions about a booking or platform rule?</p><Link to="/contact" className="mt-3 inline-flex items-center gap-2 text-sm font-bold text-[#2d6a4f] hover:underline">Contact Us <ArrowRight size={14}/></Link></div>
+
         </aside>
         <article className="min-w-0 rounded-[24px] border border-[#e1e9dd] bg-white px-5 py-6 shadow-sm sm:px-9 sm:py-10">
           <div className="border-b border-[#ebf0e9] pb-7">
@@ -75,10 +77,10 @@ export default function TermsConditions() {
             ].map(({Icon,title,text})=><div key={title} className="rounded-xl border border-[#e2eadf] bg-[#f8fbf7] p-3"><Icon size={18} className="text-[#2d6a4f]"/><h3 className="mt-2 text-sm font-bold text-[#274433]">{title}</h3><p className="mt-1 text-xs leading-5 text-[#718073]">{text}</p></div>)}</div>
           </div>
           {sections.map((section,i)=><section key={section.id} id={section.id} className={`scroll-mt-24 py-7 ${i < sections.length - 1 ? 'border-b border-[#ebf0e9]' : ''}`}><div className="flex items-start gap-3"><span className="mt-1 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#edf6ee] text-xs font-extrabold text-[#2d6a4f]">{String(i+1).padStart(2,'0')}</span><h2 className="font-['Fraunces'] text-xl font-bold leading-snug text-[#1c432e] sm:text-2xl">{section.title}</h2></div>{section.paragraphs.map(p=><p key={p} className="mt-4 text-sm leading-8 text-[#536b5d] sm:text-[15px]">{p}</p>)}</section>)}
-          <div className="mt-3 rounded-xl border border-[#dbeade] bg-[#f4faf4] px-5 py-4 text-sm text-[#43614b]"><Sparkles size={16} className="mr-2 inline text-[#2d6a4f]"/>Review the <Link to="/privacy" className="font-bold text-[#2d6a4f] underline underline-offset-2">Privacy Policy</Link> for information practices, or <Link to="/contact" className="font-bold text-[#2d6a4f] underline underline-offset-2">contact the team</Link> for assistance.</div>
+
         </article>
       </div>
-      <footer className="mt-9 flex flex-wrap items-center justify-between gap-4 border-t border-[#e2eade] pt-6 text-xs text-[#6e806f] sm:text-sm"><p>© 2026 SkillCredit · Team SkillCredit</p><nav className="flex flex-wrap gap-5"><Link to="/privacy" className="hover:text-[#2d6a4f]">Privacy</Link><Link to="/contact" className="hover:text-[#2d6a4f]">Contact</Link><Link to="/" className="hover:text-[#2d6a4f]">Home</Link></nav></footer>
+      <footer className="mt-9 border-t border-[#e2eade] pt-6 text-xs text-[#6e806f] sm:text-sm">© 2026 SkillCredit · Team SkillCredit</footer>
     </div>
   </div>;
 }

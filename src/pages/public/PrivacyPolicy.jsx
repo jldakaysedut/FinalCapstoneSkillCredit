@@ -1,7 +1,6 @@
 import { Link } from 'react-router-dom';
 import {
-  ArrowLeft, ArrowRight, ShieldCheck, Database, LockKeyhole, Eye,
-  Mail, RefreshCcw, ChevronRight
+  ArrowLeft, ShieldCheck, Database, LockKeyhole, Eye, ChevronRight
 } from 'lucide-react';
 
 // Public information only. Confirm the final legal text with Team SkillCredit before publication.
@@ -71,7 +70,9 @@ export default function PrivacyPolicy() {
             <ArrowLeft size={16} aria-hidden="true" /> Back to Home
           </Link>
           <nav aria-label="Information pages" className="flex flex-wrap items-center gap-1 rounded-full border border-[#e0e9de] bg-white p-1 text-xs font-semibold sm:text-sm">
-            {navItems.map(item => <Link key={item.to} to={item.to} aria-current={item.to === '/privacy' ? 'page' : undefined} className={`rounded-full px-3 py-2 transition ${item.to === '/privacy' ? 'bg-[#2d6a4f] text-white' : 'text-[#516b58] hover:bg-[#eff6ef]'}`}>{item.label}</Link>)}
+            {navItems.map(item => item.to === '/privacy'
+              ? <span key={item.to} aria-current="page" className="rounded-full bg-[#2d6a4f] px-3 py-2 text-white">{item.label}</span>
+              : <Link key={item.to} to={item.to} className="rounded-full px-3 py-2 text-[#516b58] transition hover:bg-[#eff6ef]">{item.label}</Link>)}
           </nav>
         </div>
 
@@ -91,11 +92,7 @@ export default function PrivacyPolicy() {
             <nav aria-label="Privacy Policy sections" className="mt-3 space-y-1">
               {sections.map((section, i) => <a key={section.id} href={`#${section.id}`} className="flex min-h-10 items-center gap-3 rounded-lg px-2 py-2 text-sm font-semibold text-[#4d6855] transition hover:bg-[#f0f7ef] hover:text-[#275e43]"><span className="w-6 text-xs text-[#80988a]">{String(i + 1).padStart(2,'0')}</span><span className="flex-1">{section.title}</span><ChevronRight size={14}/></a>)}
             </nav>
-            <div className="mt-6 border-t border-[#e7eee5] pt-5">
-              <div className="flex items-center gap-2 text-[#2d6a4f]"><Mail size={17}/><span className="text-sm font-bold">Need assistance?</span></div>
-              <p className="mt-2 text-xs leading-6 text-[#657a6a]">Contact our team with a privacy-related question.</p>
-              <Link to="/contact" className="mt-3 inline-flex items-center gap-2 text-sm font-bold text-[#2d6a4f] hover:underline">Contact Us <ArrowRight size={14}/></Link>
-            </div>
+
           </aside>
 
           <article className="min-w-0 rounded-[24px] border border-[#e1e9dd] bg-white px-5 py-6 shadow-sm sm:px-9 sm:py-10">
@@ -116,10 +113,10 @@ export default function PrivacyPolicy() {
               {section.paragraphs.map(p => <p key={p} className="mt-4 text-sm leading-8 text-[#536b5d] sm:text-[15px]">{p}</p>)}
               {section.bullets && <ul className="mt-4 list-disc space-y-3 pl-5 text-sm leading-7 text-[#536b5d] sm:text-[15px]">{section.bullets.map(item => <li key={item}>{item}</li>)}</ul>}
             </section>)}
-            <div className="mt-3 flex flex-wrap gap-3 rounded-xl bg-[#eff7ef] p-4 text-sm text-[#42634b]"><RefreshCcw size={18} className="mt-0.5 shrink-0 text-[#2d6a4f]"/><p className="flex-1 leading-6">Questions or correction requests? Visit our <Link to="/contact" className="font-bold text-[#286648] underline underline-offset-2">Contact page</Link>.</p></div>
+
           </article>
         </div>
-        <footer className="mt-9 flex flex-wrap items-center justify-between gap-4 border-t border-[#e2eade] pt-6 text-xs text-[#6e806f] sm:text-sm"><p>© 2026 SkillCredit · Team SkillCredit</p><nav className="flex flex-wrap gap-5"><Link to="/terms" className="hover:text-[#2d6a4f]">Terms</Link><Link to="/contact" className="hover:text-[#2d6a4f]">Contact</Link><Link to="/" className="hover:text-[#2d6a4f]">Home</Link></nav></footer>
+        <footer className="mt-9 border-t border-[#e2eade] pt-6 text-xs text-[#6e806f] sm:text-sm">© 2026 SkillCredit · Team SkillCredit</footer>
       </div>
     </div>
   );
