@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import supabase from '../supabaseClient';
+import '../userDarkMode.css';
 import {
-  Bell, ChevronDown, Menu, X, Shield,
+  Bell, ChevronDown, Menu, X, Moon, Sun, Shield,
   AlertTriangle, ShieldAlert, Scale, ShieldCheck, MessageSquare,
   BellRing, Coins, LayoutList, CreditCard,
   Settings, LogOut, MessageCircle, Paperclip, CheckCheck,
@@ -545,6 +546,19 @@ export default function UserLayout() {
   const [isNotifOpen,   setIsNotifOpen]   = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isMobileOpen,  setIsMobileOpen]  = useState(false);
+  // Appearance preference belongs only to the signed-in User layout.
+  const [darkMode, setDarkMode] = useState(() => {
+    try { return window.localStorage.getItem('skillcredit:user:dark-mode') === 'true'; }
+    catch { return false; }
+  });
+
+  useEffect(() => {
+    try { window.localStorage.setItem('skillcredit:user:dark-mode', String(darkMode)); }
+    catch { /* Private browsing may block storage; the toggle still works. */ }
+    // The global alert dialog mounts outside UserLayout. Scope its theme to User routes only.
+    document.body.dataset.skillcreditUserDark = darkMode ? 'true' : 'false';
+    return () => { delete document.body.dataset.skillcreditUserDark; };
+  }, [darkMode]);
   const toastTimerRef = useRef(null);
   const notificationIdsRef = useRef(new Set());
   const unreadCount = notifications.filter(item => !item.is_read).length;
@@ -770,7 +784,7 @@ export default function UserLayout() {
   const ToastIcon = toastMeta?.Icon;
 
   return (
-    <div className="min-h-screen bg-[#faf9f6] font-sans text-gray-900 relative">
+    <div data-sc-user-theme={darkMode ? 'dark' : 'light'} className="min-h-screen bg-[#faf9f6] font-sans text-gray-900 relative">
 
       {/* ══ NAVBAR */}
       <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-gray-200/60">
@@ -955,6 +969,21 @@ export default function UserLayout() {
 
                   <div className="border-t border-gray-100 py-2 px-2">
                     <button
+                      type="button"
+                      role="switch"
+                      aria-checked={darkMode}
+                      onClick={() => setDarkMode(value => !value)}
+                      className="flex w-full items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-xl transition cursor-pointer"
+                    >
+                      {darkMode ? <Moon className="h-4 w-4 text-emerald-400" /> : <Sun className="h-4 w-4 text-gray-500" />}
+                      <span className="flex-1 text-left">Dark Mode</span>
+                      <span aria-hidden="true" className={`relative h-5 w-9 rounded-full transition-colors ${darkMode ? 'bg-emerald-600' : 'bg-gray-300'}`}>
+                        <span className={`sc-toggle-knob absolute top-0.5 left-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-transform ${darkMode ? 'translate-x-4' : ''}`} />
+                      </span>
+                    </button>
+                  </div>
+                  <div className="border-t border-gray-100 py-2 px-2">
+                    <button
                       onClick={handleLogout}
                       className="flex w-full items-center gap-3 px-4 py-2.5 text-sm font-medium text-rose-600 hover:bg-rose-50 rounded-xl transition cursor-pointer"
                     >
@@ -1008,6 +1037,19 @@ export default function UserLayout() {
                   <span className="flex-1">{label}</span>
                 </Link>
               ))}
+              <button
+                type="button"
+                role="switch"
+                aria-checked={darkMode}
+                onClick={() => setDarkMode(value => !value)}
+                className="flex w-full items-center gap-3 px-4 py-3 rounded-2xl font-medium text-sm text-gray-600 hover:bg-gray-50 transition cursor-pointer"
+              >
+                {darkMode ? <Moon className="w-4 h-4 text-emerald-400" /> : <Sun className="w-4 h-4 text-gray-500" />}
+                <span className="flex-1 text-left">Dark Mode</span>
+                <span aria-hidden="true" className={`relative h-5 w-9 rounded-full transition-colors ${darkMode ? 'bg-emerald-600' : 'bg-gray-300'}`}>
+                  <span className={`sc-toggle-knob absolute top-0.5 left-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-transform ${darkMode ? 'translate-x-4' : ''}`} />
+                </span>
+              </button>
               <button
                 onClick={handleLogout}
                 className="flex w-full items-center gap-3 px-4 py-3 rounded-2xl font-medium text-sm text-rose-600 hover:bg-rose-50 transition mt-1 cursor-pointer"
