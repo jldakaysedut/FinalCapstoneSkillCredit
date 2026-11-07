@@ -177,7 +177,7 @@ export default function CreateSkill() {
   };
 
   if (pageLoading) return (
-    <div role="status" aria-live="polite" aria-label="Loading create skill form" className="min-h-screen bg-[#faf9f6]">
+    <div role="status" aria-live="polite" aria-label="Loading create skill form" className="min-h-screen bg-[#faf9f6] sc-create-skill">
       <div className="mx-auto max-w-[1000px] animate-pulse px-6 py-6 md:px-8">
         <div className="mb-5 flex flex-col justify-between gap-4 rounded-2xl bg-emerald-900 px-6 py-5 shadow-md sm:flex-row sm:items-center"><div className="space-y-2"><div className="h-3 w-28 rounded bg-emerald-700" /><div className="h-6 w-48 rounded bg-emerald-700" /><div className="h-3 w-56 rounded bg-emerald-800" /></div><div className="flex items-center gap-2">{[0,1,2,3].map(item => <div key={item} className="h-12 w-12 rounded-xl border border-white/10 bg-white/10" />)}</div></div>
         <div className="flex flex-col items-start gap-5 lg:flex-row">
@@ -189,7 +189,7 @@ export default function CreateSkill() {
   );
 
   return (
-    <div className="min-h-screen bg-[#faf9f6]">
+    <div className="min-h-screen bg-[#faf9f6] sc-create-skill">
       <div className="max-w-[1000px] mx-auto px-6 md:px-8 py-6">
         <div className="rounded-2xl mb-5 overflow-hidden shadow-md"
           style={{ background: 'linear-gradient(135deg,#064e3b 0%,#065f46 45%,#047857 100%)' }}>
@@ -336,7 +336,8 @@ export default function CreateSkill() {
                       return (
                         <button key={c.name} type="button"
                           onClick={() => handleCategorySelect(c.name)}
-                          className="group relative p-3 rounded-2xl border-2 text-left transition-all overflow-hidden"
+                          className="sc-category-choice group relative p-3 rounded-2xl border-2 text-left transition-all overflow-hidden"
+                          data-sc-selected={isSel ? 'true' : 'false'}
                           style={{
                             borderColor: isSel ? c.color         : 'transparent',
                             background:  isSel ? c.color+'14'    : '#fff',
@@ -442,7 +443,8 @@ export default function CreateSkill() {
                       ['All Formats', Sparkles, 'Mixed combination'],
                     ].map(([f, FormatIcon, desc]) => (
                       <div key={f} onClick={() => setFormData(p => ({ ...p, format: f }))}
-                        className="p-4 rounded-xl border-2 cursor-pointer transition-all"
+                        className="sc-format-choice p-4 rounded-xl border-2 cursor-pointer transition-all"
+                        data-sc-selected={formData.format === f ? 'true' : 'false'}
                         style={{
                           borderColor: formData.format === f ? cat.color : '#f3f4f6',
                           background:  formData.format === f ? cat.color+'0d' : '#fff',
@@ -466,7 +468,8 @@ export default function CreateSkill() {
                           const v = Math.min(hi, Math.max(lo, parseInt(p.creditCost, 10) || lo));
                           return { ...p, duration: d, creditCost: String(v) };
                         })}
-                          className="w-full py-2.5 rounded-xl border-2 text-[12px] font-bold transition-all"
+                          className="sc-duration-choice w-full py-2.5 rounded-xl border-2 text-[12px] font-bold transition-all"
+                          data-sc-selected={formData.duration === d ? 'true' : 'false'}
                           style={{
                             borderColor: formData.duration === d ? cat.color : '#f3f4f6',
                             color:       formData.duration === d ? cat.color : '#9ca3af',

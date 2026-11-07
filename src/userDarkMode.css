@@ -1,13 +1,13 @@
 /* SkillCredit User-only dark appearance. No DB, page logic, or staff styling changes. */
 [data-sc-user-theme="dark"] {
-  --sc-page-bg: #111a1f;
-  --sc-panel: #1b2930;
-  --sc-panel-raised: #22343a;
-  --sc-panel-subtle: #18262c;
-  --sc-border: #33474d;
-  --sc-ink: #ebf4f3;
-  --sc-muted: #b0c2c5;
-  --sc-accent: #71dbaa;
+  --sc-page-bg: #1b2b33;
+  --sc-panel: #263b45;
+  --sc-panel-raised: #304853;
+  --sc-panel-subtle: #223640;
+  --sc-border: #4a646d;
+  --sc-ink: #f4f8fa;
+  --sc-muted: #c6d5dc;
+  --sc-accent: #80e5b6;
   color: var(--sc-ink);
   background-color: var(--sc-page-bg);
   color-scheme: dark;
@@ -236,4 +236,58 @@ body[data-skillcredit-user-dark="true"] [role="alertdialog"] .bg-slate-100 { bac
 [data-sc-user-theme="dark"] [style*="background: rgb(248, 250, 252)"],
 [data-sc-user-theme="dark"] [style*="background: #f8fafc"] {
   background-color: var(--sc-page-bg) !important;
+}
+
+
+/* Create Skill wizard: category, format and duration options use INLINE white
+   backgrounds in the original JSX. Theme-only hooks below allow us to fix
+   contrast without changing any selection, pricing, validation or save logic. */
+[data-sc-user-theme="dark"] .sc-create-skill .sc-category-choice,
+[data-sc-user-theme="dark"] .sc-create-skill .sc-format-choice,
+[data-sc-user-theme="dark"] .sc-create-skill .sc-duration-choice {
+  background: var(--sc-panel-raised) !important;
+  color: var(--sc-ink) !important;
+  transition: background-color 150ms ease, border-color 150ms ease;
+}
+[data-sc-user-theme="dark"] .sc-create-skill .sc-category-choice:hover,
+[data-sc-user-theme="dark"] .sc-create-skill .sc-format-choice:hover,
+[data-sc-user-theme="dark"] .sc-create-skill .sc-duration-choice:hover {
+  background: #3a5560 !important;
+}
+[data-sc-user-theme="dark"] .sc-create-skill .sc-category-choice[data-sc-selected="true"],
+[data-sc-user-theme="dark"] .sc-create-skill .sc-format-choice[data-sc-selected="true"],
+[data-sc-user-theme="dark"] .sc-create-skill .sc-duration-choice[data-sc-selected="true"] {
+  background: #234e44 !important;
+  box-shadow: 0 0 0 1px rgb(107 225 175 / 15%) !important;
+}
+/* Preserve the category color border on selected options. Add a visible border
+   only to unselected options, whose original inline border is transparent. */
+[data-sc-user-theme="dark"] .sc-create-skill :is(.sc-category-choice,.sc-format-choice,.sc-duration-choice)[data-sc-selected="false"] {
+  border-color: var(--sc-border) !important;
+}
+[data-sc-user-theme="dark"] .sc-create-skill :is(.sc-category-choice,.sc-format-choice,.sc-duration-choice) :is(.text-gray-800,.text-gray-900) {
+  color: var(--sc-ink) !important;
+  opacity: 1 !important;
+}
+[data-sc-user-theme="dark"] .sc-create-skill .sc-category-choice > p[style] {
+  color: var(--sc-muted) !important;
+}
+[data-sc-user-theme="dark"] .sc-create-skill .sc-category-choice[data-sc-selected="true"] > p[style] {
+  color: #aaf0c9 !important;
+}
+[data-sc-user-theme="dark"] .sc-create-skill .sc-format-choice p.text-gray-400 {
+  color: var(--sc-muted) !important;
+}
+[data-sc-user-theme="dark"] .sc-create-skill .sc-duration-choice {
+  color: var(--sc-ink) !important;
+}
+[data-sc-user-theme="dark"] .sc-create-skill .sc-duration-choice[data-sc-selected="true"] {
+  color: #aaf0c9 !important;
+}
+/* Improve default input hints and price-range labels on the same dark page. */
+[data-sc-user-theme="dark"] .sc-create-skill :is(input,textarea)::placeholder {
+  color: #b0c4cd;
+}
+[data-sc-user-theme="dark"] .sc-create-skill [class~="text-gray-300"] {
+  color: #c0d0d7;
 }
