@@ -66,7 +66,7 @@ const FmtIcon = ({ format, className = 'w-4 h-4' }) => {
 
 function SkeletonCard() {
   return (
-    <div className="shrink-0 w-[min(260px,calc(100vw-24px))] sm:w-[260px] bg-white rounded-2xl border border-gray-100 overflow-hidden animate-pulse">
+    <div className="shrink-0 w-[min(222px,calc(100vw-64px))] sm:w-[260px] bg-white rounded-2xl border border-gray-100 overflow-hidden animate-pulse">
       <div className="h-40 bg-gray-100" />
       <div className="p-4 space-y-3">
         <div className="flex justify-between">
@@ -97,10 +97,10 @@ function SkillCard({ skill, isSaved, onSave, onView, width = 260 }) {
     <article
       onClick={() => onView(skill.id)}
       style={width === 260 ? undefined : { width }}
-      className="group shrink-0 min-w-0 w-[min(260px,calc(100vw-24px))] sm:w-[260px] bg-white rounded-2xl overflow-hidden flex flex-col border border-gray-200/70
+      className="group shrink-0 min-w-0 w-[min(222px,calc(100vw-64px))] sm:w-[260px] bg-white rounded-2xl overflow-hidden flex flex-col border border-gray-200/70
         hover:shadow-[0_10px_32px_rgba(16,185,129,0.10)] hover:border-emerald-200 transition-all duration-300 cursor-pointer snap-start"
     >
-      <div className="relative h-[140px] sm:h-[158px] overflow-hidden bg-emerald-900">
+      <div className="relative h-[122px] sm:h-[158px] overflow-hidden bg-emerald-900">
         {skill.cover_image_url ? (
           <img src={skill.cover_image_url} alt={skill.title}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
@@ -130,7 +130,7 @@ function SkillCard({ skill, isSaved, onSave, onView, width = 260 }) {
         </button>
       </div>
 
-      <div className="p-3 sm:p-4 flex flex-col flex-1">
+      <div className="p-2.5 sm:p-4 flex flex-col flex-1">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-1.5 min-w-0">
             <span className="text-[12px] text-gray-500 font-medium truncate">{name}</span>
@@ -149,11 +149,11 @@ function SkillCard({ skill, isSaved, onSave, onView, width = 260 }) {
           )}
         </div>
 
-        <h3 className="font-bold text-[15px] text-gray-900 leading-snug tracking-tight line-clamp-2 mb-3 group-hover:text-emerald-700 transition-colors">
+        <h3 className="font-bold text-[13px] sm:text-[15px] text-gray-900 leading-snug tracking-tight line-clamp-2 mb-2 sm:mb-3 group-hover:text-emerald-700 transition-colors">
           {skill.title}
         </h3>
 
-        <div className="flex flex-wrap gap-1.5 mt-auto mb-3">
+        <div className="flex flex-wrap gap-1 mt-auto mb-2 sm:gap-1.5 sm:mb-3">
           <span className="flex min-w-0 max-w-full items-center gap-1 bg-gray-100 text-gray-600 text-[11px] font-medium px-2.5 py-1 rounded-lg">
             <CatIcon name={skill.category} className="w-3 h-3 shrink-0" /> <span className="min-w-0 truncate">{skill.category}</span>
           </span>
@@ -162,7 +162,7 @@ function SkillCard({ skill, isSaved, onSave, onView, width = 260 }) {
           </span>
         </div>
 
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 pt-3 border-t border-gray-100 text-[11px] text-gray-400 font-medium">
+        <div className="flex flex-wrap items-center gap-x-2 sm:gap-x-3 gap-y-1 pt-2 sm:pt-3 border-t border-gray-100 text-[10px] sm:text-[11px] text-gray-400 font-medium">
           <span className="flex items-center gap-1"><FmtIcon format={skill.format} className="w-3 h-3" /> {skill.format}</span>
           <span className="flex items-center gap-1"><Users className="w-3 h-3" /> {skill.totalSessions}</span>
           <span className="ml-auto flex items-center gap-1"><Clock className="w-3 h-3" /> {skill.duration}</span>
@@ -191,8 +191,8 @@ function Swimlane({ icon: SectionIcon, iconColor, title, subtitle, skills, saved
   };
 
   return (
-    <section className="mb-6 sm:mb-10">
-      <div className="flex min-w-0 flex-wrap items-center justify-between gap-2 mb-3 sm:mb-4">
+    <section className="mb-4 sm:mb-10">
+      <div className="flex min-w-0 flex-wrap items-center justify-between gap-2 mb-2.5 sm:mb-4">
         <div>
           <h2 className="text-[16px] sm:text-[18px] font-bold text-gray-900 tracking-tight flex items-center gap-2">
             {SectionIcon && <SectionIcon className={`w-5 h-5 ${iconColor || 'text-emerald-600'}`} />}
@@ -202,7 +202,7 @@ function Swimlane({ icon: SectionIcon, iconColor, title, subtitle, skills, saved
         </div>
         <div className="flex items-center gap-2">
           {showSeeAll && (
-            <div className="flex gap-1.5">
+            <div className="hidden sm:flex gap-1.5">
               <button onClick={() => scroll(-1)} disabled={!canLeft}
                 className={`w-8 h-8 rounded-full border flex items-center justify-center transition-all ${
                   canLeft ? 'bg-white border-gray-200 text-gray-600 hover:border-emerald-400 hover:text-emerald-700' : 'bg-gray-50 border-gray-100 text-gray-200 cursor-default'
@@ -228,7 +228,7 @@ function Swimlane({ icon: SectionIcon, iconColor, title, subtitle, skills, saved
 
       <div className="relative">
         <div ref={rowRef} onScroll={checkScroll}
-          className="flex gap-3 sm:gap-4 min-w-0 overflow-x-auto overscroll-x-contain pb-3 sm:pb-4 scrollbar-hide snap-x snap-mandatory">
+          className="flex gap-2.5 sm:gap-4 min-w-0 overflow-x-auto overscroll-x-contain pb-2 sm:pb-4 scrollbar-hide snap-x snap-mandatory">
           {loading
             ? Array.from({ length: 5 }).map((_, i) => <SkeletonCard key={i} />)
             : skills.slice(0, 10).map(skill => (
@@ -247,7 +247,7 @@ function HeroBanner({ skill, isSaved, onSave, onView }) {
 
   return (
     <div onClick={() => onView(skill.id)}
-      className="relative w-full h-[260px] sm:h-[280px] rounded-2xl overflow-hidden cursor-pointer group mb-6 sm:mb-10">
+      className="relative w-full h-[210px] min-[390px]:h-[225px] sm:h-[280px] rounded-2xl overflow-hidden cursor-pointer group mb-6 sm:mb-10">
       {skill.cover_image_url ? (
         <img src={skill.cover_image_url} alt={skill.title}
           className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.04] transition-transform duration-700" />
@@ -275,11 +275,11 @@ function HeroBanner({ skill, isSaved, onSave, onView }) {
       </button>
 
       <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-6">
-        <h2 className="text-white font-bold text-[17px] sm:text-[22px] leading-snug tracking-tight line-clamp-2 mb-2 sm:mb-3 max-w-full sm:max-w-[65%]">
+        <h2 className="text-white font-bold text-[15px] sm:text-[22px] leading-snug tracking-tight line-clamp-2 mb-2 sm:mb-3 max-w-full sm:max-w-[65%]">
           {skill.title}
         </h2>
         <div className="flex items-center flex-wrap gap-2 sm:gap-3">
-          <span className="text-white/70 text-[13px] font-medium">by {name}</span>
+          <span className="text-white/70 text-[11px] sm:text-[13px] font-medium">by {name}</span>
           {skill.totalReviews > 0 && (
             <div className="flex items-center gap-1">
               <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
@@ -287,14 +287,14 @@ function HeroBanner({ skill, isSaved, onSave, onView }) {
               <span className="text-white/60 text-[12px]">({skill.totalReviews})</span>
             </div>
           )}
-          <div className="ml-auto flex items-center gap-2">
-            <span className="flex items-center gap-1.5 bg-white/20 backdrop-blur-sm text-white text-[12px] font-medium px-3 py-1.5 rounded-full border border-white/20">
+          <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
+            <span className="hidden min-[390px]:flex items-center gap-1.5 bg-white/20 backdrop-blur-sm text-white text-[11px] sm:text-[12px] font-medium px-2 sm:px-3 py-1.5 rounded-full border border-white/20">
               <Clock className="w-3 h-3" /> {skill.duration}
             </span>
-            <span className="flex items-center gap-1.5 bg-amber-400 text-amber-900 text-[13px] font-bold px-4 py-1.5 rounded-full shadow">
+            <span className="flex items-center gap-1 bg-amber-400 text-amber-900 text-[11px] sm:text-[13px] font-bold px-2 sm:px-4 py-1.5 rounded-full shadow">
               <Coins className="w-3.5 h-3.5" /> {skill.credit_cost} CR
             </span>
-            <span className="bg-white text-emerald-800 text-[12px] font-bold px-4 py-1.5 rounded-full shadow group-hover:bg-emerald-50 transition">
+            <span className="bg-white text-emerald-800 text-[11px] sm:text-[12px] font-bold px-2 sm:px-4 py-1.5 rounded-full shadow group-hover:bg-emerald-50 transition">
               Book Now
             </span>
           </div>
@@ -306,7 +306,7 @@ function HeroBanner({ skill, isSaved, onSave, onView }) {
 
 function FilterGrid({ skills, savedSkills, onSave, onView, loading }) {
   return (
-    <div className="grid min-w-0 grid-cols-1 min-[390px]:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3 sm:gap-4">
+    <div className="grid min-w-0 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3 sm:gap-4">
       {loading
         ? Array.from({ length: 8 }).map((_, i) => (
             <div key={i} className="bg-white rounded-2xl border border-gray-100 overflow-hidden animate-pulse">
@@ -543,13 +543,13 @@ export default function UserDashboard() {
 
         <main className="flex-1 min-w-0 px-3 py-4 sm:px-6 sm:py-6 md:px-8">
 
-          <div className="flex min-w-0 items-center gap-2 sm:gap-3 mb-4 sm:mb-6 flex-wrap">
-            <label className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-3 sm:px-4 py-2.5 flex-1 min-w-0 w-full sm:w-auto sm:min-w-[200px] shadow-sm focus-within:border-emerald-400 focus-within:ring-2 focus-within:ring-emerald-100 transition cursor-text">
+          <div className="grid grid-cols-[minmax(0,1fr)_112px] sm:flex sm:flex-wrap sm:items-center gap-2 sm:gap-3 mb-3 sm:mb-6">
+            <label className="col-span-2 sm:col-auto flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-3 sm:px-4 py-2 sm:py-2.5 flex-1 min-w-0 w-full sm:w-auto sm:min-w-[200px] shadow-sm focus-within:border-emerald-400 focus-within:ring-2 focus-within:ring-emerald-100 transition cursor-text">
               <Search className="w-4 h-4 text-gray-400 shrink-0" />
               <input type="text" value={searchQuery}
                 onChange={e => { setSearchQuery(e.target.value); if (e.target.value) setShowSaved(false); setSortBy('default'); }}
                 placeholder="Search skills or categories…"
-                className="flex-1 bg-transparent outline-none text-sm text-gray-700 placeholder-gray-400 font-medium" />
+                className="flex-1 min-w-0 bg-transparent outline-none text-base sm:text-sm text-gray-700 placeholder-gray-400 font-medium" />
               {searchQuery && (
                 <button onClick={() => setSearchQuery('')}>
                   <X className="w-3.5 h-3.5 text-gray-300 hover:text-gray-500" />
@@ -561,20 +561,20 @@ export default function UserDashboard() {
               {/* ✨ LARGER CREATE SKILL BUTTON ✨ */}
               <button
                 onClick={() => navigate('/create-skill')}
-                className="flex min-h-[40px] w-full sm:w-auto min-w-[140px] shrink-0 items-center justify-center gap-2 rounded-xl bg-emerald-700 px-4 text-[13px] font-bold text-white shadow-sm transition hover:bg-emerald-800 cursor-pointer"
+                className="flex min-h-[40px] w-full sm:w-auto min-w-0 sm:min-w-[140px] shrink-0 items-center justify-center gap-2 rounded-xl bg-emerald-700 px-3 sm:px-4 text-[12px] sm:text-[13px] font-bold text-white shadow-sm transition hover:bg-emerald-800 cursor-pointer"
               >
                 <Plus className="h-4 w-4" />
                 <span>Create Skill</span>
               </button>
 
-            <div className="relative w-[110px] shrink-0">
+            <div className="relative w-[112px] sm:w-[110px] shrink-0">
               <details
                 className="group relative w-full"
                 onBlur={e => { if (!e.currentTarget.contains(e.relatedTarget)) e.currentTarget.open = false; }}
               >
                 <summary
                   aria-label="Sort listings"
-                  className="flex min-h-11 w-full cursor-pointer list-none items-center gap-1 rounded-xl border border-gray-200 bg-white px-3.5 text-[12px] font-medium text-gray-700 shadow-sm transition hover:border-emerald-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-100 [&::-webkit-details-marker]:hidden"
+                  className="flex min-h-[40px] sm:min-h-11 w-full cursor-pointer list-none items-center gap-1 rounded-xl border border-gray-200 bg-white px-2.5 sm:px-3.5 text-[11px] sm:text-[12px] font-medium text-gray-700 shadow-sm transition hover:border-emerald-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-100 [&::-webkit-details-marker]:hidden"
                 >
                   <ActiveSortIcon className={`h-4 w-4 shrink-0 ${activeSortOption.color}`} aria-hidden="true" />
                   <span className="flex-1 text-left">{activeSortOption.label}</span>
@@ -607,16 +607,16 @@ export default function UserDashboard() {
             </div>
           </div>
 
-          <div className="lg:hidden flex gap-2 overflow-x-auto scrollbar-hide pb-3 mb-4">
+          <div className="lg:hidden flex gap-1.5 sm:gap-2 overflow-x-auto overscroll-x-contain scrollbar-hide pb-2 mb-3 sm:pb-3 sm:mb-4">
             <button onClick={handleReset}
-              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[12px] font-medium whitespace-nowrap border transition ${
+              className={`flex items-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 rounded-full text-[11px] sm:text-[12px] font-medium whitespace-nowrap border transition ${
                 activeCategory === 'All' && !showSaved ? 'bg-emerald-700 text-white border-emerald-700' : 'bg-white text-gray-600 border-gray-200'
               }`}>
               <Globe className="w-3 h-3" /> All
             </button>
             {currentUser && (
               <button onClick={() => { setShowSaved(v => !v); setActiveCategory('All'); setSortBy('default'); }}
-                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[12px] font-medium whitespace-nowrap border transition ${
+                className={`flex items-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 rounded-full text-[11px] sm:text-[12px] font-medium whitespace-nowrap border transition ${
                   showSaved ? 'bg-emerald-700 text-white border-emerald-700' : 'bg-white text-gray-600 border-gray-200'
                 }`}>
                 <Bookmark className="w-3 h-3" /> Saved ({savedList.length})
@@ -627,7 +627,7 @@ export default function UserDashboard() {
               const isActive = activeCategory === cat.name && !showSaved;
               return (
                 <button key={cat.name} onClick={() => jumpTo(cat.name)}
-                  className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[12px] font-medium whitespace-nowrap border transition ${
+                  className={`flex items-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 rounded-full text-[11px] sm:text-[12px] font-medium whitespace-nowrap border transition ${
                     isActive ? 'bg-emerald-700 text-white border-emerald-700' : 'bg-white text-gray-600 border-gray-200'
                   }`}>
                   <Icon className={`w-3 h-3 ${isActive ? 'text-white' : cat.color}`} />

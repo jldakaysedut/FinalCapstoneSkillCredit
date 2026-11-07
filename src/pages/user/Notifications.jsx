@@ -173,10 +173,10 @@ function extractModeratorDetails(rawContent) {
 // ─── SKELETON LOADER ───────────────────────────────────────────────────────
 const NotificationsSkeleton = () => (
   <div className="min-h-screen bg-[#faf9f6] animate-pulse">
-    <div className="max-w-[1000px] mx-auto px-6 md:px-8 py-5">
+    <div className="max-w-[1000px] mx-auto px-3 sm:px-6 md:px-8 py-4 sm:py-5">
       <div className="mb-4">
         <div className="w-28 h-3.5 bg-gray-200 rounded-md mb-2" />
-        <div className="flex items-end justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="w-52 h-8 bg-gray-200 rounded-xl" />
           <div className="flex items-center gap-2">
             <div className="w-20 h-8 bg-gray-200 rounded-xl" />
@@ -189,16 +189,16 @@ const NotificationsSkeleton = () => (
           <div key={idx} className="h-9 bg-gray-200 rounded-xl shrink-0" style={{ width: `${w}px` }} />
         ))}
       </div>
-      <div className="space-y-10">
+      <div className="space-y-5 sm:space-y-10">
         {[1, 2].map((g) => (
           <div key={g}>
             <div className="w-20 h-3 bg-gray-200 rounded mb-4 pl-8" />
-            <div className="relative pl-8">
-              <div className="absolute left-[7px] top-2 bottom-2 w-px bg-gray-200" />
+            <div className="relative pl-4 sm:pl-8">
+              <div className="absolute left-[3px] sm:left-[7px] top-2 bottom-2 w-px bg-gray-200" />
               <div className="space-y-3">
                 {[1, 2, 3].map((card) => (
                   <div key={card} className="relative">
-                    <div className="absolute -left-8 top-4 w-[14px] h-[14px] rounded-full bg-gray-300 border-2 border-white z-10" />
+                    <div className="absolute -left-4 sm:-left-8 top-4 w-[12px] h-[12px] sm:w-[14px] sm:h-[14px] rounded-full bg-gray-300 border-2 border-white z-10" />
                     <div className="bg-white border border-gray-200/80 rounded-2xl p-4 flex items-start gap-3.5 shadow-xs">
                       <div className="w-10 h-10 rounded-xl bg-gray-200 shrink-0" />
                       <div className="flex-1 space-y-2 py-0.5">
@@ -481,15 +481,15 @@ export default function Notifications() {
 
   return (
     <div className="min-h-screen" style={{ background: '#faf9f6' }}>
-      <div className="max-w-[1000px] mx-auto px-6 md:px-8 py-5">
+      <div className="max-w-[1000px] mx-auto px-3 sm:px-6 md:px-8 py-4 sm:py-5">
 
         {/* ══ PAGE HEADER ══ */}
         <div className="mb-4">
           <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-700 mb-1">
             Activity Center
           </p>
-          <div className="flex items-end justify-between">
-            <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Notifications</h1>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight">Notifications</h1>
             
             <div className="flex items-center gap-2">
               {unreadCount > 0 && (
@@ -512,7 +512,7 @@ export default function Notifications() {
         </div>
 
         {/* ══ KANBAN TYPE TABS ══ */}
-        <div className="flex gap-1.5 overflow-x-auto scrollbar-hide pb-2 mb-8">
+        <div className="flex gap-1.5 overflow-x-auto overscroll-x-contain scrollbar-hide pb-2 mb-4 sm:mb-8">
           {TYPE_TABS.map(tab => {
             const isActive = typeTab === tab;
             return (
@@ -544,15 +544,15 @@ export default function Notifications() {
             <p className="text-[11px] text-gray-400 mt-1">No notifications under this category.</p>
           </div>
         ) : (
-          <div className="space-y-10">
+          <div className="space-y-5 sm:space-y-10">
             {GROUP_ORDER.filter(g => grouped[g]?.length > 0).map(group => (
               <div key={group}>
                 <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-4 pl-8">
                   {group}
                 </p>
 
-                <div className="relative pl-8">
-                  <div className="absolute left-[7px] top-2 bottom-2 w-px bg-gray-200" />
+                <div className="relative pl-4 sm:pl-8">
+                  <div className="absolute left-[3px] sm:left-[7px] top-2 bottom-2 w-px bg-gray-200" />
                   
                   <div className="space-y-3">
                     {grouped[group].map(notif => {
@@ -563,11 +563,11 @@ export default function Notifications() {
 
                       return (
                         <div key={notif.id} className="relative">
-                          <div className={`absolute -left-8 top-4 w-[14px] h-[14px] rounded-full border-2 border-white z-10 ring-2 ${meta.dot} ${meta.ring}`} />
+                          <div className={`absolute -left-4 sm:-left-8 top-4 w-[12px] h-[12px] sm:w-[14px] sm:h-[14px] rounded-full border-2 border-white z-10 ring-2 ${meta.dot} ${meta.ring}`} />
 
                           <div
                             onClick={() => handleClick(notif)}
-                            className={`relative flex items-start gap-3.5 bg-white border rounded-2xl px-5 py-4 cursor-pointer overflow-hidden transition-all duration-200 ${
+                            className={`relative flex items-start gap-2.5 sm:gap-3.5 bg-white border rounded-2xl px-3 py-3 sm:px-5 sm:py-4 cursor-pointer overflow-hidden transition-all duration-200 ${
                               isUnread
                                 ? isHighPriority
                                   ? 'border-rose-200 shadow-[0_2px_12px_rgba(244,63,94,0.08)] hover:shadow-[0_4px_16px_rgba(244,63,94,0.14)] bg-rose-50/10'
@@ -581,7 +581,7 @@ export default function Notifications() {
                               }`} />
                             )}
 
-                            <div className={`shrink-0 w-10 h-10 rounded-xl flex items-center justify-center border ${meta.chip}`}><NotificationIcon className="h-5 w-5" strokeWidth={1.8} /></div>
+                            <div className={`shrink-0 w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl flex items-center justify-center border ${meta.chip}`}><NotificationIcon className="h-4 w-4 sm:h-5 sm:w-5" strokeWidth={1.8} /></div>
 
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 mb-1 flex-wrap">
@@ -593,7 +593,7 @@ export default function Notifications() {
                                 )}
                               </div>
 
-                              <p className={`text-[13px] leading-snug ${isUnread ? 'font-bold text-gray-900' : 'font-medium text-gray-600'}`}>
+                              <p className={`text-xs sm:text-[13px] leading-snug ${isUnread ? 'font-bold text-gray-900' : 'font-medium text-gray-600'}`}>
                                 {notif.content}
                               </p>
 
@@ -604,7 +604,7 @@ export default function Notifications() {
                               )}
                             </div>
 
-                            <span className="shrink-0 text-[10px] font-bold text-gray-400 whitespace-nowrap pt-0.5">
+                            <span className="shrink-0 text-[9px] sm:text-[10px] font-bold text-gray-400 whitespace-nowrap pt-0.5">
                               {timeAgo(notif.created_at)}
                             </span>
                           </div>
@@ -623,11 +623,11 @@ export default function Notifications() {
       {/* ══ MODERATOR / ADMIN ACTION & NOTES MODAL ══ */}
       {activeNotice && parsedNotice && (
         <div 
-          className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm animate-in fade-in duration-200 cursor-pointer"
+          className="fixed inset-0 z-[120] flex items-center justify-center p-2 sm:p-4 bg-gray-900/60 backdrop-blur-sm animate-in fade-in duration-200 cursor-pointer"
           onClick={() => setActiveNotice(null)}
         >
           <div 
-            className="bg-white rounded-3xl max-w-lg w-full p-6 md:p-8 shadow-2xl border border-gray-100 relative animate-in zoom-in-95 duration-200 cursor-default"
+            className="bg-white rounded-2xl sm:rounded-3xl max-w-lg w-full max-h-[90dvh] overflow-y-auto overscroll-contain p-4 sm:p-6 md:p-8 shadow-2xl border border-gray-100 relative animate-in zoom-in-95 duration-200 cursor-default"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-start justify-between gap-4 mb-5 border-b border-gray-100 pb-4">

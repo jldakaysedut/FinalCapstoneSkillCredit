@@ -396,15 +396,15 @@ const FloatingHelpButton = () => {
             : {}),
           touchAction: 'none',
         }}
-        className="fixed bottom-6 right-6 z-40 inline-flex items-center gap-2 rounded-full border border-emerald-100 bg-white/95 py-2 pl-2 pr-3 text-emerald-900 shadow-[0_8px_24px_rgba(15,23,42,0.12)] backdrop-blur-sm transition-[transform,box-shadow,border-color] duration-150 hover:border-emerald-200 hover:shadow-[0_12px_30px_rgba(15,23,42,0.16)] active:scale-[0.98] cursor-grab active:cursor-grabbing"
+        className="fixed bottom-3 right-3 sm:bottom-6 sm:right-6 z-40 inline-flex items-center gap-0 sm:gap-2 rounded-full border border-emerald-100 bg-white/95 p-1.5 sm:py-2 sm:pl-2 sm:pr-3 text-emerald-900 shadow-[0_8px_24px_rgba(15,23,42,0.12)] backdrop-blur-sm transition-[transform,box-shadow,border-color] duration-150 hover:border-emerald-200 hover:shadow-[0_12px_30px_rgba(15,23,42,0.16)] active:scale-[0.98] cursor-grab active:cursor-grabbing"
         title="Drag to move · Click to get help"
         aria-label="Drag support button to move, or click to contact support"
       >
         <span className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-50 text-emerald-700">
           <MessageCircle className="h-5 w-5" strokeWidth={1.6} />
         </span>
-        <span className="text-sm font-semibold tracking-tight">Support</span>
-        <GripVertical className="h-4 w-4 text-gray-300" strokeWidth={1.5} />
+        <span className="hidden sm:inline text-sm font-semibold tracking-tight">Support</span>
+        <GripVertical className="hidden sm:block h-4 w-4 text-gray-300" strokeWidth={1.5} />
       </button>
 
       {isOpen && (
@@ -898,10 +898,10 @@ export default function UserLayout() {
 
 
               {isNotifOpen && (
-                <div className="fixed inset-x-2 top-[4.25rem] sm:absolute sm:inset-x-auto sm:top-auto sm:right-0 mt-0 sm:mt-3 w-auto sm:w-[360px] max-h-[calc(100dvh-5rem)] overflow-y-auto rounded-2xl sm:rounded-3xl bg-white shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray-100 z-50">
+                <div className="fixed inset-x-2 top-[4.25rem] sm:absolute sm:inset-x-auto sm:top-auto sm:right-0 mt-0 sm:mt-3 w-auto sm:w-[360px] max-h-[min(65dvh,480px)] sm:max-h-[min(75dvh,540px)] flex flex-col overflow-hidden rounded-2xl sm:rounded-3xl bg-white shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray-100 z-50">
 
                   {/* Notif header */}
-                  <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+                  <div className="flex items-center justify-between px-3 py-2.5 sm:px-5 sm:py-4 border-b border-gray-100">
                     <div className="flex items-center gap-2">
                       <span className="font-bold text-sm text-gray-900 tracking-tight">Notifications</span>
                       {unreadCount > 0 && (
@@ -919,7 +919,7 @@ export default function UserLayout() {
                   </div>
 
                   {/* Notif list */}
-                  <div className="max-h-[340px] overflow-y-auto divide-y divide-gray-50">
+                  <div className="min-h-0 flex-1 max-h-[min(45dvh,300px)] sm:max-h-[340px] overflow-y-auto overscroll-contain divide-y divide-gray-50">
                     {notifications.length === 0 ? (
                       <div className="py-12 flex flex-col items-center gap-2">
                         <div className="w-12 h-12 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center">
@@ -935,24 +935,24 @@ export default function UserLayout() {
                           <div
                             key={n.id}
                             onClick={() => handleNotificationClick(n)}
-                            className={`flex items-start gap-3 px-5 py-3.5 cursor-pointer transition ${
+                            className={`flex items-start gap-2.5 sm:gap-3 px-3 sm:px-5 py-2.5 sm:py-3.5 cursor-pointer transition ${
                               !n.is_read ? meta.bgBox : 'hover:bg-gray-50'
                             }`}
                           >
-                            <div className={`shrink-0 w-9 h-9 rounded-xl flex items-center justify-center border ${meta.iconBg}`}>
+                            <div className={`shrink-0 w-8 h-8 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl flex items-center justify-center border ${meta.iconBg}`}>
                               <Icon className={`w-4 h-4 ${meta.iconColor}`} />
                             </div>
 
                             <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-1.5 mb-1 flex-wrap">
-                                <span className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded-md border ${meta.badgeClass}`}>
+                              <div className="flex items-center gap-1 sm:gap-1.5 mb-0.5 sm:mb-1 flex-wrap">
+                                <span className={`text-[8px] sm:text-[9px] font-bold uppercase px-1.5 sm:px-2 py-0.5 rounded-md border ${meta.badgeClass}`}>
                                   {meta.badge}
                                 </span>
                                 <span className="text-[10px] text-gray-400 font-medium">
                                   {new Date(n.created_at).toLocaleDateString([], { month: 'short', day: 'numeric' })}
                                 </span>
                               </div>
-                              <p className="text-xs text-gray-700 font-medium line-clamp-2 leading-relaxed">
+                              <p className="text-[11px] sm:text-xs text-gray-700 font-medium line-clamp-2 leading-snug sm:leading-relaxed">
                                 {n.content}
                               </p>
                             </div>
@@ -967,10 +967,10 @@ export default function UserLayout() {
                   </div>
 
                   {/* Footer */}
-                  <div className="px-5 py-3 border-t border-gray-100 bg-gray-50/50">
+                  <div className="px-3 sm:px-5 py-1.5 sm:py-3 border-t border-gray-100 bg-gray-50/50">
                     <button
                       onClick={() => { setIsNotifOpen(false); navigate('/notifications'); }}
-                      className="w-full py-2 text-xs font-semibold text-emerald-700 hover:text-emerald-900 transition flex items-center justify-center gap-1 cursor-pointer"
+                      className="w-full py-1.5 sm:py-2 text-[11px] sm:text-xs font-semibold text-emerald-700 hover:text-emerald-900 transition flex items-center justify-center gap-1 cursor-pointer"
                     >
                       View all activity <ChevronRight className="w-3.5 h-3.5" />
                     </button>
