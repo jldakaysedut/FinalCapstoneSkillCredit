@@ -165,31 +165,16 @@ export default function Sessions() {
       if (action === 'cancel' || action === 'decline' || action === 'cancel_no_show') {
         const { data: sd } = await supabase.from('user_profiles').select('credits_balance').eq('id', session.student_id).single();
         await supabase.from('user_profiles').update({ credits_balance: Number(sd?.credits_balance || 0) + Number(session.credit_amount || 0) }).eq('id', session.student_id);
-        const { error: cancelError } = await supabase.from('sessions').update({ status: 'cancelled' }).eq('id', session.id);
-        if (cancelError) throw cancelError;
+        await supabase.from('sessions').update({ status: 'cancelled' }).eq('id', session.id);
         window.dispatchEvent(new Event('credit_updated'));
 
-        // Tell the OTHER participant. The person who cancelled already sees the confirmation dialog.
-        // The UserLayout Realtime listener shows these notifications as toast popups.
-        const isLearnerActing = currentUserId === session.student_id;
-        const recipientId = isLearnerActing ? session.instructor_id : session.student_id;
-        const actorName = isLearnerActing
-          ? (session.student?.full_name || 'The learner')
-          : (session.instructor?.full_name || 'The instructor');
-        const skillTitle = session.skill?.title || 'your scheduled skill';
-        const reason = action === 'cancel_no_show'
-          ? 'The learner claimed a no-show refund.'
-          : action === 'decline'
-            ? `${actorName} declined the booking.`
-            : `${actorName} cancelled the booking.`;
-        if (recipientId) {
-          const { error: noticeError } = await supabase.from('notifications').insert([{
-            user_id: recipientId,
+        if (action === 'cancel_no_show') {
+          await supabase.from('notifications').insert([{
+            user_id: session.instructor_id,
             type: 'session_cancelled',
-            content: `${reason} Session: ${skillTitle}. The learner's credits have been refunded.`,
+            content: `Your session was cancelled and the credits were refunded to the learner due to inactivity (Missed Schedule).`,
             link_url: `/sessions?session=${session.id}`
           }]);
-          if (noticeError) console.error('Cancellation notification failed:', noticeError);
         }
       } 
       else if (action === 'accept_schedule') {
@@ -226,18 +211,19 @@ export default function Sessions() {
       } 
       else if (action === 'mark_done') {
         if (!await confirmDialog('Mark session as done?')) { setProcessingId(null); return; }
-        // The database RPC locks the session, verifies the signed-in participant,
-        // and awards credits + timestamp atomically ONCE when both confirm.
-        const { data: outcome, error: finishError } = await supabase.rpc('confirm_session_completion', {
-          p_session_id: session.id
-        });
-        if (finishError) throw finishError;
         const isInstructor = session.instructor_id === currentUserId;
+        const payload = isInstructor ? { instructor_completed: true } : { student_completed: true };
+        const otherDone = isInstructor ? session.student_completed : session.instructor_completed;
         const targetUserId = isInstructor ? session.student_id : session.instructor_id;
         const actorName = isInstructor ? session.instructor?.full_name || 'The teacher' : session.student?.full_name || 'The learner';
-        if (outcome?.state === 'completed' && outcome?.awarded === true) {
+
+        if (otherDone) {
+          payload.status = 'completed';
+          const { data: id } = await supabase.from('user_profiles').select('credits_balance').eq('id', session.instructor_id).single();
+          await supabase.from('user_profiles').update({ credits_balance: Number(id?.credits_balance || 0) + Number(session.credit_amount || 0) }).eq('id', session.instructor_id);
           window.dispatchEvent(new Event('credit_updated'));
-          const { error: noticeError } = await supabase.from('notifications').insert([
+
+          await supabase.from('notifications').insert([
             {
               user_id: session.student_id,
               type: 'session_completed',
@@ -251,16 +237,15 @@ export default function Sessions() {
               link_url: `/sessions?session=${session.id}`
             }
           ]);
-          if (noticeError) console.error('Session completion notification failed:', noticeError);
-        } else if (outcome?.state === 'waiting' && outcome?.new_confirmation === true) {
-          const { error: noticeError } = await supabase.from('notifications').insert([{
+        } else {
+          await supabase.from('notifications').insert([{
             user_id: targetUserId,
             type: 'session_update',
             content: `${actorName} has marked the session as done. Please confirm to finalize the completion.`,
             link_url: `/sessions?session=${session.id}`
           }]);
-          if (noticeError) console.error('Session completion notification failed:', noticeError);
         }
+        await supabase.from('sessions').update(payload).eq('id', session.id);
       } else if (action === 'undo_done') {
         if (!await confirmDialog("Undo 'Mark as Done'?")) { setProcessingId(null); return; }
         const isInstructor = session.instructor_id === currentUserId;
