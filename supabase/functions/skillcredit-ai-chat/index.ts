@@ -27,8 +27,8 @@ const CREATOR_DURATIONS = new Set(['1 hr','2 hrs','3 hrs']);
 // Lightweight protection: reuse existing ai_chat_messages records, without new
 // tables, SQL RPCs, or service-role access. This is NOT an atomic/global limit:
 // deleting conversations resets counts and concurrent requests can race.
-const AI_MESSAGE_LIMIT = 15;
-const AI_WINDOW_MS = 5 * 60 * 60 * 1000;
+const AI_MESSAGE_LIMIT = 20;
+const AI_WINDOW_MS = 1 * 60 * 60 * 1000;
 const AI_GAP_MS = 5000;
 
 type SavedPrompt = { id: string; chat_id: string; created_at: string; content: string };
@@ -59,7 +59,7 @@ async function readChatUsage(supabaseUrl: string, anon: string, jwt: string, use
   api.searchParams.set('role', 'eq.user');
   api.searchParams.set('created_at', `gte.${since}`);
   api.searchParams.set('order', 'created_at.desc');
-  api.searchParams.set('limit', '16');
+  api.searchParams.set('limit', '21');
   const response = await fetch(api, { headers: {
     authorization: `Bearer ${jwt}`, apikey: anon, accept: 'application/json', prefer: 'count=exact',
   } });
