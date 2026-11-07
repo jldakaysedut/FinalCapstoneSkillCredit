@@ -124,14 +124,14 @@ export default function AdminLayout() {
   if (isAuthorized === false) return <Navigate to="/" replace />;
 
   return (
-    <div className="min-h-screen bg-[#faf9f6] font-sans text-gray-900">
+    <div className="min-h-screen min-w-0 bg-[#faf9f6] font-sans text-gray-900">
       <a href="#admin-main" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-3 focus:z-[60] focus:rounded-lg focus:bg-white focus:px-3 focus:py-2 focus:text-sm focus:font-semibold focus:text-emerald-800 focus:shadow-lg">Skip to content</a>
 
       {/* ══ HEADER: brand row + tab row */}
       <header className="sticky top-0 z-40 border-b border-gray-200 bg-white/90 backdrop-blur-xl">
 
         {/* Row 1 — brand, workspace, account */}
-        <div className="mx-auto flex h-16 max-w-[1440px] items-center justify-between gap-4 px-4 md:px-6">
+        <div className="mx-auto flex h-16 max-w-[1440px] min-w-0 items-center justify-between gap-2 px-2 min-[360px]:px-3 sm:gap-4 sm:px-4 md:px-6">
           <div className="flex min-w-0 items-center gap-3">
             <Link to="/admin" className={`flex shrink-0 items-center gap-2.5 rounded-lg ${FOCUS_RING}`}>
               <img src="/logo.png" alt="SkillCredit" className="h-8 w-8 object-contain" />
@@ -169,7 +169,7 @@ export default function AdminLayout() {
               </button>
 
               {isMenuOpen && (
-                <div role="menu" className="absolute right-0 z-50 mt-2.5 w-64 overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
+                <div role="menu" className="absolute right-0 z-50 mt-2.5 w-[min(16rem,calc(100vw-1rem))] overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
                   <div className="flex items-center gap-3 border-b border-gray-100 px-4 py-3.5">
                     <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-700 text-white">
                       <ShieldAlert className="h-5 w-5" />
@@ -207,9 +207,9 @@ export default function AdminLayout() {
 
         {/* Row 2 — section tabs */}
         <nav aria-label="Admin navigation" className="border-t border-gray-100">
-          <div className="mx-auto max-w-[1440px] px-4 md:px-6">
+          <div className="mx-auto max-w-[1440px] px-2 min-[360px]:px-3 sm:px-4 md:px-6">
             {/* auto margins centre the tabs when they fit and fall back to scrolling when they don't */}
-            <div className="-mx-3 min-w-0 overflow-x-auto md:mx-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <div className="-mx-2 min-w-0 overflow-x-auto overscroll-x-contain touch-pan-x md:mx-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               <div className="mx-auto flex w-max gap-1">
                 {NAV_LINKS.map(({ to, icon: Icon, label, exact }) => (
                   <NavLink
@@ -233,7 +233,7 @@ export default function AdminLayout() {
       </header>
 
       {/* ══ PAGE CONTENT */}
-      <main id="admin-main" tabIndex={-1} className="mx-auto w-full max-w-[1440px] min-w-0 px-4 py-6 outline-none md:px-6 md:py-8">
+      <main id="admin-main" tabIndex={-1} className="mx-auto w-full max-w-[1440px] min-w-0 px-3 py-4 outline-none sm:px-4 sm:py-6 md:px-6 md:py-8">
         <Outlet />
       </main>
     </div>

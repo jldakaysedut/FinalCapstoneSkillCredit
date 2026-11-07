@@ -840,14 +840,14 @@ export default function UserLayout() {
   const initial   = profile.full_name?.charAt(0)?.toUpperCase() || '?';
 
   return (
-    <div data-sc-user-theme={darkMode ? 'dark' : 'light'} className="min-h-screen bg-[#faf9f6] font-sans text-gray-900 relative">
+    <div data-sc-user-theme={darkMode ? 'dark' : 'light'} className="min-h-screen min-w-0 bg-[#faf9f6] font-sans text-gray-900 relative">
 
       {/* ══ NAVBAR */}
       <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-gray-200/60">
-        <div className="max-w-[1600px] mx-auto px-4 md:px-6 h-16 grid grid-cols-[1fr_auto_1fr] items-center gap-4">
+        <div className="max-w-[1600px] mx-auto px-2 min-[360px]:px-3 sm:px-4 md:px-6 h-16 grid grid-cols-[minmax(0,1fr)_auto] sm:grid-cols-[1fr_auto_1fr] items-center gap-1.5 sm:gap-4">
 
           {/* Logo */}
-          <Link to="/dashboard" className="flex items-center gap-2.5 shrink-0">
+          <Link to="/dashboard" className="flex min-w-0 items-center gap-2.5 shrink-0">
             <img src="/logo.png" alt="SkillCredit" className="w-8 h-8 object-contain" />
             <span className="font-bold text-xl text-emerald-900 tracking-tight hidden sm:block">SkillCredit</span>
           </Link>
@@ -871,18 +871,17 @@ export default function UserLayout() {
           </div>
 
           {/* Right controls */}
-          <div className="flex items-center justify-end gap-2 shrink-0">
+          <div className="flex items-center justify-end gap-1 sm:gap-2 shrink-0">
 
             
-
-            {/* ── NOTIFICATIONS BELL */}
-            <div className="relative" ref={notifRef}></div>
 
             {/* ── NOTIFICATIONS BELL */}
             <div className="relative" ref={notifRef}>
               <button
                 onClick={() => { setIsNotifOpen(v => !v); setIsProfileOpen(false); }}
-                className={`relative p-2.5 rounded-full transition cursor-pointer ${
+                aria-label="Notifications"
+                aria-expanded={isNotifOpen}
+                className={`relative p-2 sm:p-2.5 rounded-full transition cursor-pointer ${
                   isNotifOpen ? 'bg-emerald-50 text-emerald-800' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100'
                 }`}
 
@@ -899,7 +898,7 @@ export default function UserLayout() {
 
 
               {isNotifOpen && (
-                <div className="absolute right-0 mt-3 w-[360px] bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray-100 overflow-hidden z-50">
+                <div className="fixed inset-x-2 top-[4.25rem] sm:absolute sm:inset-x-auto sm:top-auto sm:right-0 mt-0 sm:mt-3 w-auto sm:w-[360px] max-h-[calc(100dvh-5rem)] overflow-y-auto rounded-2xl sm:rounded-3xl bg-white shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray-100 z-50">
 
                   {/* Notif header */}
                   <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
@@ -995,7 +994,9 @@ export default function UserLayout() {
             <div className="relative" ref={profileRef}>
               <button
                 onClick={() => { setIsProfileOpen(v => !v); setIsNotifOpen(false); }}
-                className={`flex items-center gap-2 border rounded-full pl-1.5 pr-3 py-1.5 transition cursor-pointer ${
+                aria-label="Account menu"
+                aria-expanded={isProfileOpen}
+                className={`flex items-center gap-1 sm:gap-2 border rounded-full pl-1 pr-1 py-1 sm:pl-1.5 sm:pr-3 sm:py-1.5 transition cursor-pointer ${
                   isProfileOpen ? 'border-emerald-200 bg-emerald-50/80' : 'border-gray-200 hover:border-gray-300 bg-white shadow-sm'
                 }`}
               >
@@ -1004,8 +1005,8 @@ export default function UserLayout() {
                     ? <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" />
                     : initial}
                 </div>
-                <span className="max-w-[64px] truncate text-xs font-semibold text-gray-800 sm:max-w-[80px] sm:text-sm">{firstName}</span>
-                <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform duration-300 ${isProfileOpen ? 'rotate-180' : ''}`} />
+                <span className="hidden sm:inline max-w-[80px] truncate text-sm font-semibold text-gray-800">{firstName}</span>
+                <ChevronDown className={`hidden sm:block w-3.5 h-3.5 text-gray-400 transition-transform duration-300 ${isProfileOpen ? 'rotate-180' : ''}`} />
               </button>
 
               {isProfileOpen && (
@@ -1053,6 +1054,8 @@ export default function UserLayout() {
             {/* Mobile menu toggle */}
             <button
               onClick={() => setIsMobileOpen(v => !v)}
+              aria-label={isMobileOpen ? "Close navigation" : "Open navigation"}
+              aria-expanded={isMobileOpen}
               className="lg:hidden p-2 text-gray-600 hover:bg-gray-100 rounded-xl transition"
             >
               {isMobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -1068,7 +1071,7 @@ export default function UserLayout() {
           onClick={() => setIsMobileOpen(false)}
         >
           <div
-            className="absolute top-16 left-0 w-full bg-white border-b border-gray-200 shadow-xl rounded-b-3xl overflow-hidden"
+            className="absolute top-16 left-0 w-full max-h-[calc(100dvh-4rem)] overflow-y-auto overscroll-contain bg-white border-b border-gray-200 shadow-xl rounded-b-2xl sm:rounded-b-3xl"
             onClick={e => e.stopPropagation()}
           >
             <div className="px-4 py-4 space-y-1">
@@ -1118,7 +1121,7 @@ export default function UserLayout() {
       )}
 
       {/* ══ PAGE CONTENT */}
-      <main className="max-w-[1600px] mx-auto w-full">
+      <main className="max-w-[1600px] mx-auto w-full min-w-0">
         <Outlet />
       </main>
 

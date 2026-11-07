@@ -66,7 +66,7 @@ const FmtIcon = ({ format, className = 'w-4 h-4' }) => {
 
 function SkeletonCard() {
   return (
-    <div className="shrink-0 w-[260px] bg-white rounded-2xl border border-gray-100 overflow-hidden animate-pulse">
+    <div className="shrink-0 w-[min(260px,calc(100vw-24px))] sm:w-[260px] bg-white rounded-2xl border border-gray-100 overflow-hidden animate-pulse">
       <div className="h-40 bg-gray-100" />
       <div className="p-4 space-y-3">
         <div className="flex justify-between">
@@ -96,11 +96,11 @@ function SkillCard({ skill, isSaved, onSave, onView, width = 260 }) {
   return (
     <article
       onClick={() => onView(skill.id)}
-      style={{ width }}
-      className="group shrink-0 bg-white rounded-2xl overflow-hidden flex flex-col border border-gray-200/70
+      style={width === 260 ? undefined : { width }}
+      className="group shrink-0 min-w-0 w-[min(260px,calc(100vw-24px))] sm:w-[260px] bg-white rounded-2xl overflow-hidden flex flex-col border border-gray-200/70
         hover:shadow-[0_10px_32px_rgba(16,185,129,0.10)] hover:border-emerald-200 transition-all duration-300 cursor-pointer snap-start"
     >
-      <div className="relative overflow-hidden bg-emerald-900" style={{ height: 158 }}>
+      <div className="relative h-[140px] sm:h-[158px] overflow-hidden bg-emerald-900">
         {skill.cover_image_url ? (
           <img src={skill.cover_image_url} alt={skill.title}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
@@ -130,7 +130,7 @@ function SkillCard({ skill, isSaved, onSave, onView, width = 260 }) {
         </button>
       </div>
 
-      <div className="p-4 flex flex-col flex-1">
+      <div className="p-3 sm:p-4 flex flex-col flex-1">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-1.5 min-w-0">
             <span className="text-[12px] text-gray-500 font-medium truncate">{name}</span>
@@ -154,15 +154,15 @@ function SkillCard({ skill, isSaved, onSave, onView, width = 260 }) {
         </h3>
 
         <div className="flex flex-wrap gap-1.5 mt-auto mb-3">
-          <span className="flex items-center gap-1 bg-gray-100 text-gray-600 text-[11px] font-medium px-2.5 py-1 rounded-lg">
-            <CatIcon name={skill.category} className="w-3 h-3" /> {skill.category}
+          <span className="flex min-w-0 max-w-full items-center gap-1 bg-gray-100 text-gray-600 text-[11px] font-medium px-2.5 py-1 rounded-lg">
+            <CatIcon name={skill.category} className="w-3 h-3 shrink-0" /> <span className="min-w-0 truncate">{skill.category}</span>
           </span>
           <span className="flex items-center gap-1 bg-amber-50 text-amber-700 border border-amber-100 text-[11px] font-semibold px-2.5 py-1 rounded-lg">
             <Coins className="w-3 h-3 text-amber-500" /> {skill.credit_cost} CR
           </span>
         </div>
 
-        <div className="flex items-center gap-3 pt-3 border-t border-gray-100 text-[11px] text-gray-400 font-medium">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 pt-3 border-t border-gray-100 text-[11px] text-gray-400 font-medium">
           <span className="flex items-center gap-1"><FmtIcon format={skill.format} className="w-3 h-3" /> {skill.format}</span>
           <span className="flex items-center gap-1"><Users className="w-3 h-3" /> {skill.totalSessions}</span>
           <span className="ml-auto flex items-center gap-1"><Clock className="w-3 h-3" /> {skill.duration}</span>
@@ -191,10 +191,10 @@ function Swimlane({ icon: SectionIcon, iconColor, title, subtitle, skills, saved
   };
 
   return (
-    <section className="mb-10">
-      <div className="flex items-center justify-between mb-4">
+    <section className="mb-6 sm:mb-10">
+      <div className="flex min-w-0 flex-wrap items-center justify-between gap-2 mb-3 sm:mb-4">
         <div>
-          <h2 className="text-[18px] font-bold text-gray-900 tracking-tight flex items-center gap-2">
+          <h2 className="text-[16px] sm:text-[18px] font-bold text-gray-900 tracking-tight flex items-center gap-2">
             {SectionIcon && <SectionIcon className={`w-5 h-5 ${iconColor || 'text-emerald-600'}`} />}
             {title}
           </h2>
@@ -219,7 +219,7 @@ function Swimlane({ icon: SectionIcon, iconColor, title, subtitle, skills, saved
           )}
           {showSeeAll && (
             <button onClick={() => { onSeeAll(); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-              className="flex items-center gap-1 px-4 py-1.5 text-[12px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-full hover:bg-emerald-600 hover:text-white hover:border-emerald-600 transition-all cursor-pointer">
+              className="flex items-center gap-1 px-3 sm:px-4 py-1.5 text-[12px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-full hover:bg-emerald-600 hover:text-white hover:border-emerald-600 transition-all cursor-pointer">
               View all <ChevronRight className="w-3.5 h-3.5" />
             </button>
           )}
@@ -228,7 +228,7 @@ function Swimlane({ icon: SectionIcon, iconColor, title, subtitle, skills, saved
 
       <div className="relative">
         <div ref={rowRef} onScroll={checkScroll}
-          className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory">
+          className="flex gap-3 sm:gap-4 min-w-0 overflow-x-auto overscroll-x-contain pb-3 sm:pb-4 scrollbar-hide snap-x snap-mandatory">
           {loading
             ? Array.from({ length: 5 }).map((_, i) => <SkeletonCard key={i} />)
             : skills.slice(0, 10).map(skill => (
@@ -247,8 +247,7 @@ function HeroBanner({ skill, isSaved, onSave, onView }) {
 
   return (
     <div onClick={() => onView(skill.id)}
-      className="relative w-full rounded-2xl overflow-hidden cursor-pointer group mb-10"
-      style={{ height: 280 }}>
+      className="relative w-full h-[260px] sm:h-[280px] rounded-2xl overflow-hidden cursor-pointer group mb-6 sm:mb-10">
       {skill.cover_image_url ? (
         <img src={skill.cover_image_url} alt={skill.title}
           className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.04] transition-transform duration-700" />
@@ -259,27 +258,27 @@ function HeroBanner({ skill, isSaved, onSave, onView }) {
       )}
       <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/30 to-transparent" />
 
-      <div className="absolute top-5 left-6 flex gap-2">
+      <div className="absolute top-3 left-3 sm:top-5 sm:left-6 flex min-w-0 gap-2">
         <span className="flex items-center gap-1.5 bg-emerald-500 text-white text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-full">
           <Flame className="w-3 h-3" /> Top Pick
         </span>
-        <span className="flex items-center gap-1.5 bg-white/20 backdrop-blur-sm text-white text-[10px] font-medium px-3 py-1.5 rounded-full border border-white/25">
+        <span className="hidden sm:flex items-center gap-1.5 bg-white/20 backdrop-blur-sm text-white text-[10px] font-medium px-3 py-1.5 rounded-full border border-white/25">
           <CatIcon name={skill.category} className="w-3 h-3 text-white" /> {skill.category}
         </span>
       </div>
 
       <button onClick={e => { e.stopPropagation(); onSave(skill.id); }}
-        className="absolute top-5 right-6 w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 flex items-center justify-center hover:bg-white/40 hover:scale-110 transition-all">
+        className="absolute top-3 right-3 sm:top-5 sm:right-6 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 flex items-center justify-center hover:bg-white/40 hover:scale-110 transition-all">
         {isSaved
           ? <BookmarkCheck className="w-5 h-5 text-emerald-400" />
           : <Bookmark className="w-5 h-5 text-white" />}
       </button>
 
-      <div className="absolute bottom-0 left-0 right-0 p-6">
-        <h2 className="text-white font-bold text-[22px] leading-snug tracking-tight line-clamp-2 mb-3 max-w-[65%]">
+      <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-6">
+        <h2 className="text-white font-bold text-[17px] sm:text-[22px] leading-snug tracking-tight line-clamp-2 mb-2 sm:mb-3 max-w-full sm:max-w-[65%]">
           {skill.title}
         </h2>
-        <div className="flex items-center flex-wrap gap-3">
+        <div className="flex items-center flex-wrap gap-2 sm:gap-3">
           <span className="text-white/70 text-[13px] font-medium">by {name}</span>
           {skill.totalReviews > 0 && (
             <div className="flex items-center gap-1">
@@ -307,7 +306,7 @@ function HeroBanner({ skill, isSaved, onSave, onView }) {
 
 function FilterGrid({ skills, savedSkills, onSave, onView, loading }) {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
+    <div className="grid min-w-0 grid-cols-1 min-[390px]:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3 sm:gap-4">
       {loading
         ? Array.from({ length: 8 }).map((_, i) => (
             <div key={i} className="bg-white rounded-2xl border border-gray-100 overflow-hidden animate-pulse">
@@ -477,7 +476,7 @@ export default function UserDashboard() {
 
   return (
     <div className="min-h-full" style={{ background: '#faf9f6' }}>
-      <div className="max-w-[1440px] mx-auto flex gap-0">
+      <div className="max-w-[1440px] mx-auto flex min-w-0 gap-0">
 
         <aside className="hidden lg:flex flex-col w-[240px] shrink-0 border-r border-gray-200/80 min-h-full bg-white">
           <div className="custom-sidebar-scroll sticky top-[64px] pt-6 pb-4 px-4 flex flex-col gap-1 overflow-y-auto" style={{ height: 'calc(100vh - 64px)' }}>
@@ -542,10 +541,10 @@ export default function UserDashboard() {
           </div>
         </aside>
 
-        <main className="flex-1 min-w-0 px-6 md:px-8 py-6">
+        <main className="flex-1 min-w-0 px-3 py-4 sm:px-6 sm:py-6 md:px-8">
 
-          <div className="flex items-center gap-3 mb-6 flex-wrap">
-            <label className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-2.5 flex-1 min-w-[200px] shadow-sm focus-within:border-emerald-400 focus-within:ring-2 focus-within:ring-emerald-100 transition cursor-text">
+          <div className="flex min-w-0 items-center gap-2 sm:gap-3 mb-4 sm:mb-6 flex-wrap">
+            <label className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-3 sm:px-4 py-2.5 flex-1 min-w-0 w-full sm:w-auto sm:min-w-[200px] shadow-sm focus-within:border-emerald-400 focus-within:ring-2 focus-within:ring-emerald-100 transition cursor-text">
               <Search className="w-4 h-4 text-gray-400 shrink-0" />
               <input type="text" value={searchQuery}
                 onChange={e => { setSearchQuery(e.target.value); if (e.target.value) setShowSaved(false); setSortBy('default'); }}
@@ -562,7 +561,7 @@ export default function UserDashboard() {
               {/* ✨ LARGER CREATE SKILL BUTTON ✨ */}
               <button
                 onClick={() => navigate('/create-skill')}
-                className="flex min-h-[40px] min-w-[140px] shrink-0 items-center justify-center gap-2 rounded-xl bg-emerald-700 px-1 text-[13px] font-bold text-white shadow-sm transition hover:bg-emerald-800 cursor-pointer"
+                className="flex min-h-[40px] w-full sm:w-auto min-w-[140px] shrink-0 items-center justify-center gap-2 rounded-xl bg-emerald-700 px-4 text-[13px] font-bold text-white shadow-sm transition hover:bg-emerald-800 cursor-pointer"
               >
                 <Plus className="h-4 w-4" />
                 <span>Create Skill</span>
@@ -677,7 +676,7 @@ export default function UserDashboard() {
 
           {isFiltered && (
             <>
-              <div className="flex items-center justify-between mb-5">
+              <div className="flex min-w-0 flex-wrap items-start justify-between gap-2 mb-5">
                 <div>
                   <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400">
                     {activeCategory !== 'All' && sortBy !== 'default' ? `Sorted by ${sortBy}` : (showSaved ? 'Saved' : activeCategory !== 'All' ? activeCategory : 'Search Results')}
