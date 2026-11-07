@@ -547,7 +547,6 @@ export default function UserLayout() {
 
   const [profile,       setProfile]       = useState({ id: '', full_name: '', credits_balance: 0, avatar_url: '', is_banned: false });
   const [notifications, setNotifications] = useState([]);
-  const [toastNotification, setToastNotification] = useState(null);
   const [isNotifOpen,   setIsNotifOpen]   = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isMobileOpen,  setIsMobileOpen]  = useState(false);
@@ -564,8 +563,6 @@ export default function UserLayout() {
     document.body.dataset.skillcreditUserDark = darkMode ? 'true' : 'false';
     return () => { delete document.body.dataset.skillcreditUserDark; };
   }, [darkMode]);
-  const toastTimerRef = useRef(null);
-  const notificationIdsRef = useRef(new Set());
   const unreadCount = notifications.filter(item => !item.is_read).length;
 
   useEffect(() => { setIsMobileOpen(false); }, [location.pathname]);
@@ -586,17 +583,10 @@ export default function UserLayout() {
     let currentUserId  = null;
     const channelSuffix = `${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
 
-    const publishNotification = (notification, showToast = true) => {
+    // Keep the bell and Notifications page in sync; no floating toast popup.
+    const publishNotification = (notification) => {
       if (!notification?.id) return;
-      const isNewToThisLayout = !notificationIdsRef.current.has(notification.id);
-      notificationIdsRef.current.add(notification.id);
       setNotifications(prev => [notification, ...prev.filter(item => item.id !== notification.id)].slice(0, 8));
-
-      if (showToast && isNewToThisLayout) {
-        setToastNotification(notification);
-        if (toastTimerRef.current) window.clearTimeout(toastTimerRef.current);
-        toastTimerRef.current = window.setTimeout(() => setToastNotification(null), 7000);
-      }
     };
 
     const fetchProfile = async (uid) => {
@@ -628,7 +618,6 @@ export default function UserLayout() {
         return;
       }
       if (n && !disposed) {
-        notificationIdsRef.current = new Set(n.map(item => item.id));
         setNotifications(n);
       }
     };
@@ -730,7 +719,7 @@ export default function UserLayout() {
         .on('postgres_changes',
           { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` },
           (payload) => {
-            if (payload.new) publishNotification(payload.new, ['daily_reward', 'session_cancelled', 'session_reminder_1h'].includes(payload.new.type));
+            if (payload.new) publishNotification(payload.new);
           })
         .on('postgres_changes',
           { event: 'UPDATE', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` },
@@ -753,7 +742,6 @@ export default function UserLayout() {
       window.removeEventListener('credit_updated', handleLocalUpdate);
       if (profileChannel) supabase.removeChannel(profileChannel);
       if (notifsChannel)  supabase.removeChannel(notifsChannel);
-      if (toastTimerRef.current) window.clearTimeout(toastTimerRef.current);
     };
   }, [navigate]);
 
@@ -850,8 +838,6 @@ export default function UserLayout() {
   const isActive  = path => location.pathname === path;
   const firstName = profile.full_name?.split(' ')[0] || 'You';
   const initial   = profile.full_name?.charAt(0)?.toUpperCase() || '?';
-  const toastMeta = toastNotification ? getNotificationMeta(toastNotification.type) : null;
-  const ToastIcon = toastMeta?.Icon;
 
   return (
     <div data-sc-user-theme={darkMode ? 'dark' : 'light'} className="min-h-screen bg-[#faf9f6] font-sans text-gray-900 relative">
@@ -1137,39 +1123,8 @@ export default function UserLayout() {
       </main>
 
       {/* ══ FLOATING HELP */}
-      <FloatingHelpButton />
+      {location.pathname.replace(/\/$/, '') === '/dashboard' && <FloatingHelpButton />}
 
-      {/* Live alert for new messages and community activity. Clicking it uses
-          the same exact message/post/comment deep link as the bell item. */}
-      {toastNotification && toastMeta && ToastIcon && (
-        <div className="fixed bottom-5 right-5 z-[100] w-[calc(100vw-2.5rem)] max-w-[390px]" role="status" aria-live="polite">
-          <div className="flex items-start gap-3 rounded-2xl border border-gray-200 bg-white p-4 shadow-[0_12px_40px_rgba(0,0,0,0.18)]">
-            <div className={`shrink-0 w-10 h-10 rounded-xl flex items-center justify-center border ${toastMeta.iconBg}`}>
-              <ToastIcon className={`h-5 w-5 ${toastMeta.iconColor}`} />
-            </div>
-            <button
-              type="button"
-              onClick={() => handleNotificationClick(toastNotification)}
-              className="min-w-0 flex-1 text-left"
-            >
-              <span className="block text-[10px] font-bold uppercase tracking-widest text-gray-400">New notification</span>
-              <span className="mt-1 block text-sm font-semibold text-gray-900">{toastNotification.content}</span>
-              <span className="mt-2 block text-xs font-semibold text-emerald-700">Open notification →</span>
-            </button>
-            <button
-              type="button"
-              aria-label="Dismiss notification"
-              onClick={() => {
-                if (toastTimerRef.current) window.clearTimeout(toastTimerRef.current);
-                setToastNotification(null);
-              }}
-              className="shrink-0 rounded-lg p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-700"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
