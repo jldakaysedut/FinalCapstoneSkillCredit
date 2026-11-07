@@ -2,9 +2,11 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, Mail, MessageSquareText, HelpCircle, UserRound, ExternalLink, Info, CheckCircle2 } from 'lucide-react';
 
-// VITE_PUBLIC_CONTACT_EMAIL is a PUBLIC inbox address, not an API key.
-// The form opens the user's email application. It does not send on its own.
-const publicEmail = (import.meta.env.VITE_PUBLIC_CONTACT_EMAIL || '').trim();
+// Public inbox address; never use this variable for API keys or secrets.
+// VITE_PUBLIC_CONTACT_EMAI is supported temporarily for old/typo configurations.
+const publicEmail = String(
+  import.meta.env.VITE_PUBLIC_CONTACT_EMAIL || import.meta.env.VITE_PUBLIC_CONTACT_EMAI || ''
+).trim();
 const hasPublicEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(publicEmail);
 const topicChoices = ['General inquiry', 'Account & registration', 'Privacy or data concern', 'Bookings & credits', 'Other'];
 
@@ -26,10 +28,10 @@ export default function ContactUs() {
       '', form.message.trim(), '',
       '— Prepared using the SkillCredit Contact page',
     ].join('\n');
-    // Explicit user action only. The visitor must send the email from their own client.
-    const mailto = `mailto:${publicEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    // Opens Gmail's real compose interface. This page does NOT send an email.
+    const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(publicEmail)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
     setEmailOpened(true);
-    window.location.href = mailto;
+    window.open(gmailUrl, '_blank', 'noopener,noreferrer');
   }
 
   return <div className="min-h-screen bg-[#faf8f4] text-[#1a3325]">
@@ -54,7 +56,7 @@ export default function ContactUs() {
         <section className="min-w-0 rounded-[24px] border border-[#e1e9dd] bg-white px-5 py-7 shadow-sm sm:px-9 sm:py-9" aria-labelledby="public-inquiry-title">
           <div className="flex items-start gap-3"><span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#eff7ef] text-[#2d6a4f]"><Mail size={21}/></span><div><h2 id="public-inquiry-title" className="font-['Fraunces'] text-2xl font-bold text-[#1c432e]">Send an inquiry</h2><p className="mt-1 text-sm leading-6 text-[#6b8071]">For visitors and registered members</p></div></div>
           {hasPublicEmail ? <>
-            <p className="mt-5 text-sm leading-7 text-[#5c705f]">Fill in the details below. Selecting <strong>Open email app</strong> prepares your message for review and sending in your own email application.</p>
+            <p className="mt-5 text-sm leading-7 text-[#5c705f]">Fill in the details below, then select <strong>Continue in Gmail</strong>. Gmail opens with your message prepared; you review it and press Send there.</p>
             <form onSubmit={handleCompose} className="mt-6 space-y-5">
               <div className="grid gap-5 sm:grid-cols-2">
                 <label className="block text-sm font-bold text-[#2e503b]">Full name <span className="text-[#b43f3f]">*</span><input className={inputClass} type="text" required maxLength={100} autoComplete="name" value={form.name} onChange={e=>update('name', e.target.value)} placeholder="Your name" /></label>
@@ -62,10 +64,10 @@ export default function ContactUs() {
               </div>
               <label className="block text-sm font-bold text-[#2e503b]">What is this about? <span className="text-[#b43f3f]">*</span><select className={inputClass} value={form.topic} onChange={e=>update('topic',e.target.value)}>{topicChoices.map(item=><option key={item} value={item}>{item}</option>)}</select></label>
               <label className="block text-sm font-bold text-[#2e503b]">Your message <span className="text-[#b43f3f]">*</span><textarea className={`${inputClass} min-h-40 resize-y`} required maxLength={3000} value={form.message} onChange={e=>update('message',e.target.value)} placeholder="Tell us how we can assist you..." /></label>
-              <div className="flex flex-wrap items-center justify-between gap-3"><p className="max-w-xs text-xs leading-5 text-[#738575]">Never include your password, complete card details, or other sensitive credentials.</p><button type="submit" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#2d6a4f] px-6 text-sm font-bold text-white transition hover:bg-[#22533d] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2d6a4f]">Open email app <ExternalLink size={16}/></button></div>
-              {emailOpened && <p role="status" className="flex items-start gap-2 rounded-xl border border-[#d4e8d7] bg-[#f0f8f0] px-4 py-3 text-xs leading-6 text-[#41674a]"><CheckCircle2 size={17} className="mt-0.5 shrink-0"/>Your email application should open. Please review the message and press Send there. Nothing has been submitted from this webpage.</p>}
+              <div className="flex flex-wrap items-center justify-between gap-3"><p className="max-w-xs text-xs leading-5 text-[#738575]">Never include your password, complete card details, or other sensitive credentials.</p><button type="submit" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#2d6a4f] px-6 text-sm font-bold text-white transition hover:bg-[#22533d] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2d6a4f]">Continue in Gmail <ExternalLink size={16}/></button></div>
+              {emailOpened && <p role="status" className="flex items-start gap-2 rounded-xl border border-[#d4e8d7] bg-[#f0f8f0] px-4 py-3 text-xs leading-6 text-[#41674a]"><CheckCircle2 size={17} className="mt-0.5 shrink-0"/>Gmail should open in a new tab. Sign in to Gmail if asked, then review your email and press Send. The SkillCredit website has not submitted anything.</p>}
             </form>
-            <p className="mt-6 border-t border-[#ecf1e9] pt-5 text-sm text-[#5f7464]">Official contact email: <span className="break-all font-semibold text-[#2d6a4f]">{publicEmail}</span></p>
+            <p className="mt-6 border-t border-[#ecf1e9] pt-5 text-sm leading-7 text-[#5f7464]">Prefer another email app? Email us directly at <a href={`mailto:${publicEmail}`} className="break-all font-semibold text-[#2d6a4f] underline decoration-[#9bcdb0] underline-offset-4 hover:text-[#17462b]">{publicEmail}</a>.</p>
           </> : <div className="mt-6 rounded-2xl border border-[#d9e7d8] bg-[#f5faf4] px-5 py-5">
             <div className="flex items-start gap-3"><Info size={21} className="mt-0.5 shrink-0 text-[#2d6a4f]"/><div><h3 className="text-base font-extrabold text-[#234831]">Public email contact is being configured</h3><p className="mt-2 text-sm leading-7 text-[#58715e]">The team has not yet added a verified public email address. An email form cannot send messages until an official inbox is configured. Registered users can still contact Support from the User Dashboard.</p></div></div>
           </div>}
