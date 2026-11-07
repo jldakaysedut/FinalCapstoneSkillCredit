@@ -1,56 +1,93 @@
-import { Link } from "react-router-dom";
-import { ArrowLeft, ArrowRight, Headset, MessageSquareText, HelpCircle, ShieldCheck, Wallet, BookOpen, Clock3, UserRound } from "lucide-react";
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { ArrowLeft, ArrowRight, Mail, MessageSquareText, ShieldCheck, HelpCircle, UserRound, ExternalLink, Info, CheckCircle2 } from 'lucide-react';
 
-const topics = [
-  {Icon: Wallet, title:"Credits & payments", desc:"Questions about credit balances, top-ups, or transaction statuses."},
-  {Icon: BookOpen, title:"Bookings & learning", desc:"Session scheduling, learning listings, or teaching concerns."},
-  {Icon: ShieldCheck, title:"Safety & reports", desc:"Report inappropriate behavior or other platform concerns."},
-  {Icon: UserRound, title:"Account assistance", desc:"Help with account access, profile settings, or your information."},
-];
+// VITE_PUBLIC_CONTACT_EMAIL is a PUBLIC inbox address, not an API key.
+// The form opens the user's email application. It does not send on its own.
+const publicEmail = (import.meta.env.VITE_PUBLIC_CONTACT_EMAIL || '').trim();
+const hasPublicEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(publicEmail);
+const topicChoices = ['General inquiry', 'Account & registration', 'Privacy or data concern', 'Bookings & credits', 'Other'];
 
-export default function ContactUs(){
-  return (
-    <div className="min-h-screen w-full bg-[#faf8f4] text-[#173326]">
-      <div className="mx-auto max-w-5xl px-5 pb-20 pt-8 sm:px-8 sm:pt-12">
-        <Link to="/" className="inline-flex min-h-11 items-center gap-2 rounded-full border border-[#d8e6da] bg-white px-4 text-sm font-bold text-[#2d6a4f] hover:bg-[#edf6ef] focus-visible:outline-2 focus-visible:outline-[#2d6a4f]"><ArrowLeft size={16}/> Back to Home</Link>
-        <header className="mt-8 rounded-[28px] bg-gradient-to-br from-[#163c2e] to-[#367b59] px-6 py-9 text-white shadow-xl shadow-[#204c34]/10 sm:px-12 sm:py-12">
-          <span className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-bold text-[#d7f2df]"><Headset size={16}/> HERE TO HELP</span>
-          <h1 className="font-['Fraunces'] text-4xl font-black tracking-tight sm:text-5xl">Contact Us</h1>
-          <p className="mt-4 max-w-2xl text-sm leading-7 text-[#e3f1e8] sm:text-base">Need help with your SkillCredit account, sessions, or credits? Here's how to reach our existing Support team.</p>
-        </header>
-        <div className="mt-8 grid gap-7 lg:grid-cols-[minmax(0,1fr)_310px]">
-          <div className="min-w-0 rounded-3xl border border-[#e1e9dd] bg-white px-5 py-7 shadow-sm sm:px-8 sm:py-8">
-            <div className="inline-flex items-center gap-3"><span className="rounded-xl bg-[#eaf6ec] p-3 text-[#2d6a4f]"><MessageSquareText size={23}/></span><div><h2 className="text-xl font-extrabold">Use SkillCredit Support</h2><p className="mt-1 text-sm text-[#64806c]">Support requests are handled inside your account</p></div></div>
-            <ol className="mt-7 space-y-4">
-              {[
-                ["Sign in to your account", "Use your SkillCredit login. If you're new, create a free account first."],
-                ["Open your User Dashboard", "Look for the floating Support button available in the signed-in User interface."],
-                ["Submit a Support ticket", "Describe your concern and attach supporting information if needed. You can follow up in the app."],
-              ].map(([title,desc],index)=>(
-                <li key={title} className="flex gap-4 rounded-2xl border border-[#e4ebe0] bg-[#fbfcfa] p-4">
-                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#e3f1e7] text-sm font-extrabold text-[#2d6a4f]">{index+1}</span>
-                  <div><h3 className="font-bold text-[#1c3e2e]">{title}</h3><p className="mt-1 text-sm leading-6 text-[#607467]">{desc}</p></div>
-                </li>
-              ))}
-            </ol>
-            <div className="mt-7 flex flex-wrap gap-3">
-              <Link to="/login" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#2d6a4f] px-6 text-sm font-bold text-white shadow-md shadow-green-900/10 hover:bg-[#21543d]">Sign In <ArrowRight size={16}/></Link>
-              <Link to="/dashboard" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-[#cfe1d2] bg-[#f0f7ef] px-6 text-sm font-bold text-[#2d6a4f] hover:bg-[#e1f0e3]">Go to User Dashboard <ArrowRight size={16}/></Link>
-            </div>
-            <p className="mt-5 text-xs leading-6 text-[#61766a]">Currently, public visitors cannot submit a Support ticket without an account. No public contact email has been configured in the source code, so this page does not claim one.</p>
-          </div>
-          <aside className="h-fit rounded-3xl border border-[#dfebdf] bg-[#eff6ed] p-6">
-            <div className="flex items-center gap-2 text-[#2d6a4f]"><HelpCircle size={20}/><h2 className="text-lg font-extrabold text-[#173326]">What can we help with?</h2></div>
-            <div className="mt-5 space-y-5">
-              {topics.map(({Icon,title,desc})=>(
-                <div key={title} className="flex gap-3"><span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white text-[#2d6a4f]"><Icon size={18}/></span><div><h3 className="text-sm font-bold">{title}</h3><p className="mt-1 text-xs leading-5 text-[#597261]">{desc}</p></div></div>
-              ))}
-            </div>
-            <div className="mt-6 flex items-start gap-2 border-t border-[#d4e3d4] pt-5 text-xs leading-6 text-[#587160]"><Clock3 className="mt-1 shrink-0" size={16}/> Support replies are handled in the app; no response time is guaranteed.</div>
-          </aside>
-        </div>
-        <footer className="mt-9 flex flex-wrap items-center justify-between gap-4 border-t border-[#e1e9dd] pt-6 text-sm text-[#597362]"><span>© 2026 SkillCredit · Team SkillCredit</span><nav className="flex flex-wrap gap-5"><Link to="/privacy" className="font-semibold hover:text-[#2d6a4f]">Privacy</Link><Link to="/terms" className="font-semibold hover:text-[#2d6a4f]">Terms</Link><Link to="/" className="font-semibold hover:text-[#2d6a4f]">Home</Link></nav></footer>
+const inputClass = 'mt-2 w-full min-h-12 rounded-xl border border-[#dce6db] bg-[#fbfdfb] px-4 py-3 text-sm text-[#213d2b] outline-none transition placeholder:text-[#91a394] focus:border-[#2d6a4f] focus:bg-white focus:ring-2 focus:ring-[#2d6a4f]/15';
+
+export default function ContactUs() {
+  const [form, setForm] = useState({ name:'', email:'', topic:'General inquiry', message:'' });
+  const [emailOpened, setEmailOpened] = useState(false);
+  const update = (key, value) => setForm(prev => ({ ...prev, [key]: value }));
+
+  function handleCompose(event) {
+    event.preventDefault();
+    if (!hasPublicEmail) return;
+    const subject = `[SkillCredit Contact] ${form.topic}`;
+    const body = [
+      `Name: ${form.name.trim()}`,
+      `Reply-to email: ${form.email.trim()}`,
+      `Topic: ${form.topic}`,
+      '', form.message.trim(), '',
+      '— Prepared using the SkillCredit Contact page',
+    ].join('\n');
+    // Explicit user action only. The visitor must send the email from their own client.
+    const mailto = `mailto:${publicEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    setEmailOpened(true);
+    window.location.href = mailto;
+  }
+
+  return <div className="min-h-screen bg-[#faf8f4] text-[#1a3325]">
+    <div className="mx-auto w-full max-w-6xl px-4 pb-16 pt-7 sm:px-7 sm:pb-24 sm:pt-10">
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <Link to="/" className="inline-flex min-h-11 items-center gap-2 rounded-full border border-[#dce7da] bg-white px-4 text-sm font-semibold text-[#275e43] transition hover:bg-[#eff7ef]"><ArrowLeft size={16}/> Back to Home</Link>
+        <nav aria-label="Information pages" className="flex flex-wrap items-center gap-1 rounded-full border border-[#e0e9de] bg-white p-1 text-xs font-semibold sm:text-sm">
+          {[["/privacy","Privacy Policy"],["/terms","Terms & Conditions"],["/contact","Contact Us"]].map(([to,label]) => <Link key={to} to={to} aria-current={to === '/contact' ? 'page' : undefined} className={`rounded-full px-3 py-2 transition ${to === '/contact' ? 'bg-[#2d6a4f] text-white' : 'text-[#516b58] hover:bg-[#eff6ef]'}`}>{label}</Link>)}
+        </nav>
       </div>
+      <header className="relative mt-7 overflow-hidden rounded-[26px] bg-[#173d2c] px-6 py-9 text-white sm:rounded-[32px] sm:px-12 sm:py-14">
+        <div className="pointer-events-none absolute -right-16 -top-24 h-72 w-72 rounded-full border-[48px] border-white/5" aria-hidden="true" />
+        <div className="relative max-w-3xl">
+          <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[.13em] text-[#d7eddf]"><MessageSquareText size={15}/> Contact our team</span>
+          <h1 className="mt-5 font-['Fraunces'] text-4xl font-black tracking-tight sm:text-5xl">How can we help?</h1>
+          <p className="mt-4 max-w-2xl text-sm leading-7 text-[#dcece2] sm:text-base">Questions before signing up, issues accessing your account, or feedback about SkillCredit? Here are your contact options.</p>
+        </div>
+      </header>
+      <div className="mt-8 grid items-start gap-6 lg:grid-cols-[minmax(0,1.45fr)_minmax(275px,0.85fr)] lg:gap-8">
+        <section className="min-w-0 rounded-[24px] border border-[#e1e9dd] bg-white px-5 py-7 shadow-sm sm:px-9 sm:py-9" aria-labelledby="public-inquiry-title">
+          <div className="flex items-start gap-3"><span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#eff7ef] text-[#2d6a4f]"><Mail size={21}/></span><div><h2 id="public-inquiry-title" className="font-['Fraunces'] text-2xl font-bold text-[#1c432e]">Send an inquiry</h2><p className="mt-1 text-sm leading-6 text-[#6b8071]">For visitors and registered members</p></div></div>
+          {hasPublicEmail ? <>
+            <p className="mt-5 text-sm leading-7 text-[#5c705f]">Fill in the details below. Selecting <strong>Open email app</strong> prepares your message for review and sending in your own email application.</p>
+            <form onSubmit={handleCompose} className="mt-6 space-y-5">
+              <div className="grid gap-5 sm:grid-cols-2">
+                <label className="block text-sm font-bold text-[#2e503b]">Full name <span className="text-[#b43f3f]">*</span><input className={inputClass} type="text" required maxLength={100} autoComplete="name" value={form.name} onChange={e=>update('name', e.target.value)} placeholder="Your name" /></label>
+                <label className="block text-sm font-bold text-[#2e503b]">Email address <span className="text-[#b43f3f]">*</span><input className={inputClass} type="email" required maxLength={200} autoComplete="email" value={form.email} onChange={e=>update('email', e.target.value)} placeholder="you@example.com" /></label>
+              </div>
+              <label className="block text-sm font-bold text-[#2e503b]">What is this about? <span className="text-[#b43f3f]">*</span><select className={inputClass} value={form.topic} onChange={e=>update('topic',e.target.value)}>{topicChoices.map(item=><option key={item} value={item}>{item}</option>)}</select></label>
+              <label className="block text-sm font-bold text-[#2e503b]">Your message <span className="text-[#b43f3f]">*</span><textarea className={`${inputClass} min-h-40 resize-y`} required maxLength={3000} value={form.message} onChange={e=>update('message',e.target.value)} placeholder="Tell us how we can assist you..." /></label>
+              <div className="flex flex-wrap items-center justify-between gap-3"><p className="max-w-xs text-xs leading-5 text-[#738575]">Never include your password, complete card details, or other sensitive credentials.</p><button type="submit" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#2d6a4f] px-6 text-sm font-bold text-white transition hover:bg-[#22533d] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2d6a4f]">Open email app <ExternalLink size={16}/></button></div>
+              {emailOpened && <p role="status" className="flex items-start gap-2 rounded-xl border border-[#d4e8d7] bg-[#f0f8f0] px-4 py-3 text-xs leading-6 text-[#41674a]"><CheckCircle2 size={17} className="mt-0.5 shrink-0"/>Your email application should open. Please review the message and press Send there. Nothing has been submitted from this webpage.</p>}
+            </form>
+            <div className="mt-6 border-t border-[#ecf1e9] pt-5 text-sm text-[#5f7464]">Official contact email: <a href={`mailto:${publicEmail}`} className="break-all font-bold text-[#2d6a4f] underline underline-offset-2">{publicEmail}</a></div>
+          </> : <div className="mt-6 rounded-2xl border border-[#d9e7d8] bg-[#f5faf4] px-5 py-5">
+            <div className="flex items-start gap-3"><Info size={21} className="mt-0.5 shrink-0 text-[#2d6a4f]"/><div><h3 className="text-base font-extrabold text-[#234831]">Public email contact is being configured</h3><p className="mt-2 text-sm leading-7 text-[#58715e]">The team has not yet added a verified public email address. An email form cannot send messages until an official inbox is configured. Registered users can still contact Support from the User Dashboard.</p></div></div>
+          </div>}
+        </section>
+        <aside className="space-y-5">
+          <section className="rounded-[24px] border border-[#e1e9dd] bg-white p-6 shadow-sm">
+            <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-[#eff7ef] text-[#2d6a4f]"><UserRound size={21}/></span>
+            <h2 className="mt-4 font-['Fraunces'] text-xl font-bold text-[#1d432e]">Already a member?</h2>
+            <p className="mt-3 text-sm leading-7 text-[#667b6c]">Sign in and use the floating Support button on your User Dashboard for booking, wallet, and account concerns.</p>
+            <Link to="/login" className="mt-5 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#2d6a4f] px-4 text-sm font-bold text-white hover:bg-[#24543e]">Sign in to SkillCredit <ArrowRight size={16}/></Link>
+          </section>
+          <section className="rounded-[24px] border border-[#dce9db] bg-[#edf6ec] p-6">
+            <div className="flex items-center gap-2 text-[#2d6a4f]"><HelpCircle size={20}/><h2 className="text-base font-extrabold text-[#234732]">Common inquiries</h2></div>
+            <div className="mt-4 space-y-4 text-sm text-[#597261]">{[
+              ['Account access','Registration, login, and profile questions'],
+              ['Learning & bookings','Sessions, teacher listings, and scheduling'],
+              ['Credits & payments','Wallet, top-ups, and transaction concerns'],
+              ['Privacy & safety','Data inquiries and reports'],
+            ].map(([title,desc])=><div key={title} className="border-b border-[#d6e5d5] pb-3 last:border-b-0 last:pb-0"><p className="font-bold text-[#274c35]">{title}</p><p className="mt-1 text-xs leading-5">{desc}</p></div>)}</div>
+            <p className="mt-5 flex items-start gap-2 border-t border-[#d6e5d5] pt-4 text-xs leading-6 text-[#597261]"><ShieldCheck size={16} className="mt-1 shrink-0"/>For privacy details, read the <Link to="/privacy" className="font-bold underline underline-offset-2">Privacy Policy</Link>.</p>
+          </section>
+        </aside>
+      </div>
+      <footer className="mt-9 flex flex-wrap items-center justify-between gap-4 border-t border-[#e2eade] pt-6 text-xs text-[#6e806f] sm:text-sm"><p>© 2026 SkillCredit · Team SkillCredit</p><nav className="flex flex-wrap gap-5"><Link to="/privacy" className="hover:text-[#2d6a4f]">Privacy</Link><Link to="/terms" className="hover:text-[#2d6a4f]">Terms</Link><Link to="/" className="hover:text-[#2d6a4f]">Home</Link></nav></footer>
     </div>
-  );
+  </div>;
 }

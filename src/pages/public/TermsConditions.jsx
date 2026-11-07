@@ -1,47 +1,84 @@
-import { Link } from "react-router-dom";
-import { ArrowLeft, ArrowRight, FileText, BookOpenCheck, ShieldCheck, Wallet, MessageCircle } from "lucide-react";
+import { Link } from 'react-router-dom';
+import { ArrowLeft, ArrowRight, FileText, ChevronRight, BookOpenCheck, Wallet, UsersRound, ShieldCheck, Sparkles } from 'lucide-react';
 
+// Draft reflects verified platform features, not a substitute for final legal review.
 const sections = [
-  { title:"Using SkillCredit", text:"SkillCredit is a skill-sharing platform where users can publish teaching listings, explore available skills, request sessions, and participate in learning activities. By using the platform, users agree to follow its account, booking, and community rules as displayed in the application." },
-  { title:"Accounts and responsibilities", text:"Keep your account information accurate and protect your sign-in credentials. Use the service respectfully, and do not impersonate others, manipulate credits, misuse another user's information, or interfere with platform operations." },
-  { title:"Skills and teaching", text:"Skill creators are responsible for accurately describing what they teach, including the format, duration, outcomes, and credit cost. Listings may require review and approval before they become available. SkillCredit does not independently guarantee a particular learning outcome or instructor qualification." },
-  { title:"Sessions and credit balances", text:"Sessions and credit amounts are governed by the booking, completion, cancellation, and eligibility rules enforced in the app. Review the current listing and booking information before confirming. Credit balances are in-platform units for SkillCredit features and are not represented as cash or a bank balance." },
-  { title:"Payments and top-ups", text:"Where top-ups are available, payments are processed through the configured third-party checkout provider. The applicable amount and transaction status are shown in the payment flow and wallet records. For a payment concern or a disputed credit movement, use Support rather than assuming a refund or reversal is guaranteed." },
-  { title:"Community conduct and safety", text:"Users should avoid harassment, fraud, spam, prohibited content, and misuse of community, messaging, and review features. The platform includes reporting, restriction, and moderation processes. Decisions depend on the case and the platform's current rules." },
-  { title:"AI-assisted content", text:"SkillCredit AI can help explain features, find listings, and draft text. AI-generated responses can be incomplete or inaccurate. Users must review AI-generated skill descriptions, prices, and other form details before submission; an AI draft does not itself publish a listing." },
-  { title:"Changes and assistance", text:"Platform features and these terms may change as the capstone project develops. For booking, wallet, account, or safety concerns, registered users can sign in and open the existing Support feature. See the Privacy Policy for the application's data-use overview." },
+  { id:'platform', title:'About SkillCredit', paragraphs:[
+    'SkillCredit is a platform where members can share skills, browse teaching listings, and participate in learning sessions using in-platform credits. These terms describe expected use of the application and its existing features.',
+    'By using the platform, you are expected to follow the rules, controls, and notices presented in the application.'
+  ]},
+  { id:'accounts', title:'Your account and responsibilities', paragraphs:[
+    'Provide accurate information where required, keep your sign-in credentials private, and do not misuse another person’s account. You are responsible for the content you choose to submit.',
+    'Impersonation, fraudulent activity, intentional credit manipulation, harassment, spam, and interference with the service are not permitted.'
+  ]},
+  { id:'skills', title:'Skill listings and teaching', paragraphs:[
+    'Skill creators should accurately describe the subject, format, duration, learning outcomes, and credit cost of a listing. Listings may be reviewed before they become available to learners.',
+    'A listing, review, or profile is not an independent guarantee that an instructor holds a specific qualification or that a particular learning outcome will be achieved.'
+  ]},
+  { id:'sessions', title:'Sessions and bookings', paragraphs:[
+    'Before requesting a session, review the listing information, schedule, and required credits. Booking, completion, cancellation, and other status changes are governed by the current application flow.',
+    'If a booking or cancellation is disputed, contact Support with the relevant details. Do not assume that a credit adjustment is automatic unless the system confirms it.'
+  ]},
+  { id:'credits', title:'Credits, top-ups, and payments', paragraphs:[
+    'SkillCredit credits are units used by the platform for eligible features. A displayed credit balance is not a cash account or bank balance.',
+    'Where credit top-ups are offered, checkout is handled through the configured payment provider. The price, credit amount, and transaction status should be reviewed in the checkout and wallet experience.',
+    'Refunds, reversals, and disputed transactions depend on the actual payment and platform procedures. This draft does not promise refunds or transfers that have not been implemented.'
+  ]},
+  { id:'community', title:'Community, reviews, and safety', paragraphs:[
+    'Users are expected to engage respectfully through messages, community content, ratings, and reviews. Misleading content, harassment, prohibited content, and attempts to evade moderation may result in review or account restrictions.',
+    'The platform provides reporting and moderation features. Any resulting action depends on the context of the report and available evidence.'
+  ]},
+  { id:'ai', title:'AI-assisted features', paragraphs:[
+    'SkillCredit AI can help users understand platform features, discover skills, and prepare editable drafts. AI-generated content may be incomplete or inaccurate and should be reviewed before use.',
+    'Generated skill descriptions and suggested details do not publish a listing automatically. Users are responsible for checking and manually confirming any final submission.'
+  ]},
+  { id:'updates', title:'Updates and getting assistance', paragraphs:[
+    'SkillCredit may revise these terms as features and procedures change. Team SkillCredit should review this text, including any final dispute, payment, eligibility, and legal provisions, before treating it as definitive production terms.',
+    'For help with accounts, bookings, credits, or reporting concerns, use the public Contact page. Signed-in users can also access the in-app Support workflow.'
+  ]},
 ];
 
-export default function TermsConditions(){
-  return (
-    <div className="min-h-screen w-full bg-[#faf8f4] text-[#173326]">
-      <div className="mx-auto max-w-5xl px-5 pb-20 pt-8 sm:px-8 sm:pt-12">
-        <Link to="/" className="inline-flex min-h-11 items-center gap-2 rounded-full border border-[#d8e6da] bg-white px-4 text-sm font-bold text-[#2d6a4f] hover:bg-[#edf6ef] focus-visible:outline-2 focus-visible:outline-[#2d6a4f]"><ArrowLeft size={16}/> Back to Home</Link>
-        <header className="mt-8 rounded-[28px] bg-gradient-to-br from-[#163c2e] to-[#367b59] px-6 py-9 text-white shadow-xl shadow-[#204c34]/10 sm:px-12 sm:py-12">
-          <span className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-bold text-[#d7f2df]"><FileText size={16}/> PLATFORM GUIDELINES</span>
-          <h1 className="font-['Fraunces'] text-4xl font-black tracking-tight sm:text-5xl">Terms & Conditions</h1>
-          <p className="mt-4 max-w-2xl text-sm leading-7 text-[#e3f1e8] sm:text-base">The basics of learning, teaching, earning credits, and participating responsibly in SkillCredit.</p>
-          <p className="mt-5 text-xs font-semibold text-[#d4eadc]">Last updated: November 7, 2026</p>
-        </header>
-        <div className="mt-8 grid gap-7 lg:grid-cols-[minmax(0,1fr)_245px]">
-          <article className="min-w-0 rounded-3xl border border-[#e1e9dd] bg-white px-5 py-7 shadow-sm sm:px-9 sm:py-9">
-            <p className="mb-7 rounded-2xl bg-[#f0f7ef] px-5 py-4 text-sm leading-7 text-[#3e634c]">These are draft platform terms reflecting the current SkillCredit capstone workflows. Team SkillCredit should review the wording, dispute rules, and relevant legal requirements before treating them as final production terms.</p>
-            {sections.map(({title,text}, i) => (
-              <section key={title} className={`py-5 ${i!==sections.length-1?'border-b border-[#e9f0e8]':''}`}>
-                <h2 className="text-lg font-extrabold text-[#1e4732] sm:text-xl"><span className="mr-2 text-[#2d6a4f]">{String(i+1).padStart(2,'0')}</span>{title}</h2>
-                <p className="mt-3 text-sm leading-8 text-[#52665a] sm:text-[15px]">{text}</p>
-              </section>
-            ))}
-          </article>
-          <aside className="h-fit rounded-3xl border border-[#dce9db] bg-[#eff6ed] p-6 lg:sticky lg:top-24">
-            <div className="flex items-center gap-3"><span className="rounded-xl bg-white p-2 text-[#2d6a4f]"><BookOpenCheck size={19}/></span><h2 className="font-extrabold">Before you book</h2></div>
-            <p className="mt-3 text-sm leading-7 text-[#536c59]">Review the details of the teaching listing and your available credits. If you need help, the Support feature is available after sign-in.</p>
-            <Link to="/contact" className="mt-5 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#2d6a4f] px-4 text-sm font-bold text-white hover:bg-[#21543d]">Contact Us <ArrowRight size={16}/></Link>
-            <div className="mt-6 space-y-3 border-t border-[#d4e3d4] pt-5 text-sm text-[#506a58]"><p className="flex items-center gap-2"><Wallet size={16}/> Credits & payments</p><p className="flex items-center gap-2"><ShieldCheck size={16}/> Safe participation</p><p className="flex items-center gap-2"><MessageCircle size={16}/> Support when needed</p></div>
-          </aside>
-        </div>
-        <footer className="mt-9 flex flex-wrap items-center justify-between gap-4 border-t border-[#e1e9dd] pt-6 text-sm text-[#597362]"><span>© 2026 SkillCredit · Team SkillCredit</span><nav className="flex flex-wrap gap-5"><Link to="/privacy" className="font-semibold hover:text-[#2d6a4f]">Privacy</Link><Link to="/contact" className="font-semibold hover:text-[#2d6a4f]">Contact</Link><Link to="/" className="font-semibold hover:text-[#2d6a4f]">Home</Link></nav></footer>
+const navItems = [{to:'/privacy', label:'Privacy Policy'}, {to:'/terms', label:'Terms & Conditions'}, {to:'/contact', label:'Contact Us'}];
+
+export default function TermsConditions() {
+  return <div className="min-h-screen bg-[#faf8f4] text-[#1a3325]">
+    <div className="mx-auto w-full max-w-6xl px-4 pb-16 pt-7 sm:px-7 sm:pb-24 sm:pt-10">
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <Link to="/" className="inline-flex min-h-11 items-center gap-2 rounded-full border border-[#dce7da] bg-white px-4 text-sm font-semibold text-[#275e43] transition hover:bg-[#eff7ef]"><ArrowLeft size={16}/> Back to Home</Link>
+        <nav aria-label="Information pages" className="flex flex-wrap items-center gap-1 rounded-full border border-[#e0e9de] bg-white p-1 text-xs font-semibold sm:text-sm">
+          {navItems.map(item => <Link key={item.to} to={item.to} aria-current={item.to === '/terms' ? 'page' : undefined} className={`rounded-full px-3 py-2 transition ${item.to === '/terms' ? 'bg-[#2d6a4f] text-white' : 'text-[#516b58] hover:bg-[#eff6ef]'}`}>{item.label}</Link>)}
+        </nav>
       </div>
+      <header className="relative mt-7 overflow-hidden rounded-[26px] bg-[#173d2c] px-6 py-9 text-white sm:rounded-[32px] sm:px-12 sm:py-14">
+        <div className="pointer-events-none absolute -right-16 -top-24 h-72 w-72 rounded-full border-[48px] border-white/5" aria-hidden="true"/>
+        <div className="relative max-w-3xl">
+          <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[.13em] text-[#d7eddf]"><FileText size={15}/> Platform guidelines</span>
+          <h1 className="mt-5 font-['Fraunces'] text-4xl font-black tracking-tight sm:text-5xl">Terms & Conditions</h1>
+          <p className="mt-4 max-w-2xl text-sm leading-7 text-[#dcece2] sm:text-base">Clear expectations for learning, teaching, using credits, and taking part in the SkillCredit community.</p>
+          <p className="mt-6 text-xs font-medium text-[#cce4d4]">Draft updated November 7, 2026</p>
+        </div>
+      </header>
+      <div className="mt-8 grid items-start gap-6 lg:grid-cols-[245px_minmax(0,1fr)] lg:gap-8">
+        <aside className="rounded-2xl border border-[#e1e9dd] bg-white p-5 shadow-sm lg:sticky lg:top-20">
+          <p className="text-xs font-extrabold uppercase tracking-[.12em] text-[#729079]">On this page</p>
+          <nav aria-label="Terms sections" className="mt-3 space-y-1">{sections.map((section, i)=><a key={section.id} href={`#${section.id}`} className="flex min-h-10 items-center gap-3 rounded-lg px-2 py-2 text-sm font-semibold text-[#4d6855] transition hover:bg-[#f0f7ef] hover:text-[#275e43]"><span className="w-6 text-xs text-[#80988a]">{String(i+1).padStart(2,'0')}</span><span className="flex-1">{section.title}</span><ChevronRight size={14}/></a>)}</nav>
+          <div className="mt-6 border-t border-[#e7eee5] pt-5"><div className="flex items-center gap-2 text-[#2d6a4f]"><ShieldCheck size={17}/><span className="text-sm font-bold">Need clarification?</span></div><p className="mt-2 text-xs leading-6 text-[#657a6a]">Questions about a booking or platform rule?</p><Link to="/contact" className="mt-3 inline-flex items-center gap-2 text-sm font-bold text-[#2d6a4f] hover:underline">Contact Us <ArrowRight size={14}/></Link></div>
+        </aside>
+        <article className="min-w-0 rounded-[24px] border border-[#e1e9dd] bg-white px-5 py-6 shadow-sm sm:px-9 sm:py-10">
+          <div className="border-b border-[#ebf0e9] pb-7">
+            <p className="text-xs font-extrabold uppercase tracking-[.14em] text-[#2d6a4f]">Before you begin</p><h2 className="mt-2 font-['Fraunces'] text-2xl font-bold text-[#193a29] sm:text-3xl">Learn and teach responsibly.</h2>
+            <p className="mt-3 text-sm leading-7 text-[#607363]">This is a draft explaining the current SkillCredit workflows. It should be reviewed by Team SkillCredit before being presented as final legal terms.</p>
+            <div className="mt-5 grid gap-3 sm:grid-cols-3">{[
+              {Icon:BookOpenCheck,title:'Skills & sessions',text:'Review listings before booking'},
+              {Icon:Wallet,title:'Credits & payments',text:'Check amounts and statuses'},
+              {Icon:UsersRound,title:'Community conduct',text:'Respect other members'}
+            ].map(({Icon,title,text})=><div key={title} className="rounded-xl border border-[#e2eadf] bg-[#f8fbf7] p-3"><Icon size={18} className="text-[#2d6a4f]"/><h3 className="mt-2 text-sm font-bold text-[#274433]">{title}</h3><p className="mt-1 text-xs leading-5 text-[#718073]">{text}</p></div>)}</div>
+          </div>
+          {sections.map((section,i)=><section key={section.id} id={section.id} className={`scroll-mt-24 py-7 ${i < sections.length - 1 ? 'border-b border-[#ebf0e9]' : ''}`}><div className="flex items-start gap-3"><span className="mt-1 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#edf6ee] text-xs font-extrabold text-[#2d6a4f]">{String(i+1).padStart(2,'0')}</span><h2 className="font-['Fraunces'] text-xl font-bold leading-snug text-[#1c432e] sm:text-2xl">{section.title}</h2></div>{section.paragraphs.map(p=><p key={p} className="mt-4 text-sm leading-8 text-[#536b5d] sm:text-[15px]">{p}</p>)}</section>)}
+          <div className="mt-3 rounded-xl border border-[#dbeade] bg-[#f4faf4] px-5 py-4 text-sm text-[#43614b]"><Sparkles size={16} className="mr-2 inline text-[#2d6a4f]"/>Review the <Link to="/privacy" className="font-bold text-[#2d6a4f] underline underline-offset-2">Privacy Policy</Link> for information practices, or <Link to="/contact" className="font-bold text-[#2d6a4f] underline underline-offset-2">contact the team</Link> for assistance.</div>
+        </article>
+      </div>
+      <footer className="mt-9 flex flex-wrap items-center justify-between gap-4 border-t border-[#e2eade] pt-6 text-xs text-[#6e806f] sm:text-sm"><p>© 2026 SkillCredit · Team SkillCredit</p><nav className="flex flex-wrap gap-5"><Link to="/privacy" className="hover:text-[#2d6a4f]">Privacy</Link><Link to="/contact" className="hover:text-[#2d6a4f]">Contact</Link><Link to="/" className="hover:text-[#2d6a4f]">Home</Link></nav></footer>
     </div>
-  );
+  </div>;
 }
