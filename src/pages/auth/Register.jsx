@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, UserRound, Mail, LockKeyhole } from 'lucide-react'; 
+import { ArrowLeft } from 'lucide-react'; 
 import supabase from '../../supabaseClient';
 
 export default function Register() {
@@ -93,68 +93,52 @@ export default function Register() {
   };
 
   return (
-    <main className="min-h-screen bg-[#f8f6f1] px-4 pb-10 pt-14 sm:px-6 sm:pt-16" style={{ fontFamily: "'DM Sans', sans-serif" }}>
-      <div className="mx-auto w-full max-w-[520px]">
-        <Link to="/" className="mb-8 inline-flex items-center gap-2 text-xs font-semibold text-[#817c70] transition hover:text-[#2d6a4f]">
-          <ArrowLeft size={15} /> Back to Home
-        </Link>
-        <header className="mb-8 text-center">
-          <Link to="/" className="inline-block text-[37px] font-bold leading-none tracking-[-0.045em] text-[#242424] sm:text-[43px]" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
-            <span className="text-[#2d6a4f]">Skill</span>Credit
+    <div className="min-h-screen bg-[#f7f8f7] px-4 py-10 sm:px-6 sm:py-14">
+      <div className="mx-auto w-full max-w-[440px]">
+        <div className="mb-8 flex items-center justify-between gap-4">
+          <Link to="/" className="text-xl font-bold tracking-tight text-[#1f513c] hover:text-[#173c2c]">SkillCredit</Link>
+          <Link to="/" className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 transition-colors hover:text-slate-900">
+            <ArrowLeft className="h-4 w-4" /> Home
           </Link>
-          <p className="mt-3 text-[13px] font-medium text-[#aaa191] sm:text-sm">Share skills · Earn credits · Keep learning</p>
-        </header>
-        <section className="rounded-[26px] border border-[#eee9df] bg-white px-6 py-9 shadow-[0_14px_40px_rgba(36,32,22,0.065)] sm:px-10 sm:py-11">
-          <div className="mb-8">
-            <h1 className="text-[30px] font-bold leading-tight tracking-tight text-[#202020] sm:text-[35px]" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>Create your account</h1>
-            <p className="mt-2 text-[15px] text-[#909090]">Join and get <span className="font-semibold text-[#2d6a4f]">20 free credits</span> to start learning <span aria-hidden="true">🎁</span></p>
-          </div>
+        </div>
+        <main className="rounded-xl border border-[#e1e6e2] bg-white px-6 py-8 shadow-[0_3px_20px_rgba(15,23,42,0.035)] sm:px-9 sm:py-10">
+          <header className="mb-7">
+            <h1 className="text-[26px] font-semibold tracking-tight text-slate-900">Create an account</h1>
+            <p className="mt-2 text-sm leading-6 text-slate-500">Register to start learning and sharing skills.</p>
+          </header>
           {errorMsg && (
-            <div role="alert" className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            <div role="alert" className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
               {errorMsg}
-              {errorMsg.includes('Please log in instead.') && <Link to="/login" className="mt-2 block font-semibold text-[#2d6a4f] hover:underline">Go to Log In</Link>}
+              {errorMsg.includes('Please log in instead.') && (
+                <Link to="/login" className="mt-2 block font-semibold text-[#286547] hover:underline">Go to Log In</Link>
+              )}
             </div>
           )}
-          <form onSubmit={handleRegister} className="space-y-5">
-          <div>
-            <label htmlFor="fullName" className="mb-2 block text-sm font-semibold text-[#454545]">Full Name</label>
-            <div className="relative">
-              <UserRound aria-hidden="true" size={18} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[#9d998f]" />
-              <input id="fullName" type="text" required autoComplete="name" value={fullName} onChange={(e) => setFullName(e.target.value)}
-                placeholder="Your full name" className="w-full min-h-[52px] rounded-xl border border-[#e8e0d2] bg-[#fdfbf8] pl-12 pr-4 text-[15px] text-[#292929] placeholder:text-[#b5aca0] outline-none transition-colors focus:border-[#2d6a4f] focus:bg-white focus:ring-2 focus:ring-[#2d6a4f]/10" />
+          <form onSubmit={handleRegister} className="space-y-4">
+            <div>
+              <label htmlFor="register-name" className="mb-2 block text-sm font-medium text-slate-700">Full name</label>
+              <input id="register-name" type="text" required autoComplete="name" value={fullName} onChange={(e) => setFullName(e.target.value)} className="w-full rounded-lg border border-slate-300 bg-white px-3.5 py-3 text-[15px] text-slate-900 placeholder:text-slate-400 outline-none transition-colors focus:border-[#2d6a4f] focus:ring-2 focus:ring-[#2d6a4f]/10" placeholder="Your full name" />
             </div>
-          </div>
-          <div>
-            <label htmlFor="email" className="mb-2 block text-sm font-semibold text-[#454545]">Email address</label>
-            <div className="relative">
-              <Mail aria-hidden="true" size={18} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[#9d998f]" />
-              <input id="email" type="email" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@example.com" className="w-full min-h-[52px] rounded-xl border border-[#e8e0d2] bg-[#fdfbf8] pl-12 pr-4 text-[15px] text-[#292929] placeholder:text-[#b5aca0] outline-none transition-colors focus:border-[#2d6a4f] focus:bg-white focus:ring-2 focus:ring-[#2d6a4f]/10" />
+            <div>
+              <label htmlFor="register-email" className="mb-2 block text-sm font-medium text-slate-700">Email address</label>
+              <input id="register-email" type="email" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full rounded-lg border border-slate-300 bg-white px-3.5 py-3 text-[15px] text-slate-900 placeholder:text-slate-400 outline-none transition-colors focus:border-[#2d6a4f] focus:ring-2 focus:ring-[#2d6a4f]/10" placeholder="name@example.com" />
             </div>
-          </div>
-          <div>
-            <label htmlFor="password" className="mb-2 block text-sm font-semibold text-[#454545]">Password</label>
-            <div className="relative">
-              <LockKeyhole aria-hidden="true" size={18} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[#9d998f]" />
-              <input id="password" type="password" required autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••" className="w-full min-h-[52px] rounded-xl border border-[#e8e0d2] bg-[#fdfbf8] pl-12 pr-4 text-[15px] text-[#292929] placeholder:text-[#b5aca0] outline-none transition-colors focus:border-[#2d6a4f] focus:bg-white focus:ring-2 focus:ring-[#2d6a4f]/10" />
+            <div>
+              <label htmlFor="register-password" className="mb-2 block text-sm font-medium text-slate-700">Password</label>
+              <input id="register-password" type="password" required autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full rounded-lg border border-slate-300 bg-white px-3.5 py-3 text-[15px] text-slate-900 placeholder:text-slate-400 outline-none transition-colors focus:border-[#2d6a4f] focus:ring-2 focus:ring-[#2d6a4f]/10" placeholder="Create a password" />
             </div>
-          </div>
-          <div>
-            <label htmlFor="confirmPassword" className="mb-2 block text-sm font-semibold text-[#454545]">Confirm Password</label>
-            <div className="relative">
-              <LockKeyhole aria-hidden="true" size={18} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[#9d998f]" />
-              <input id="confirmPassword" type="password" required autoComplete="new-password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="••••••••" className="w-full min-h-[52px] rounded-xl border border-[#e8e0d2] bg-[#fdfbf8] pl-12 pr-4 text-[15px] text-[#292929] placeholder:text-[#b5aca0] outline-none transition-colors focus:border-[#2d6a4f] focus:bg-white focus:ring-2 focus:ring-[#2d6a4f]/10" />
+            <div>
+              <label htmlFor="register-confirm-password" className="mb-2 block text-sm font-medium text-slate-700">Confirm password</label>
+              <input id="register-confirm-password" type="password" required autoComplete="new-password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="w-full rounded-lg border border-slate-300 bg-white px-3.5 py-3 text-[15px] text-slate-900 placeholder:text-slate-400 outline-none transition-colors focus:border-[#2d6a4f] focus:ring-2 focus:ring-[#2d6a4f]/10" placeholder="Confirm your password" />
             </div>
-          </div>
-            <button type="submit" disabled={loading} className="mt-2 w-full rounded-xl bg-[#2d6a4f] px-5 py-4 text-[15px] font-bold text-white transition-colors hover:bg-[#24553f] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#2d6a4f]/20 disabled:cursor-wait disabled:opacity-60">
-              {loading ? 'Creating account...' : 'Sign up & get 20 credits →'}
-            </button>
+            <button type="submit" disabled={loading} className="mt-2 w-full rounded-lg bg-[#286547] px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#1c5037] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-emerald-600/20 disabled:cursor-not-allowed disabled:opacity-50">{loading ? 'Creating account...' : 'Create account'}</button>
           </form>
-        </section>
-        <p className="mt-7 text-center text-sm text-[#888780]">Already have an account?{' '}<Link to="/login" className="font-bold text-[#2d6a4f] hover:underline">Log in</Link></p>
+          <div className="mt-7 border-t border-slate-100 pt-6 text-center text-sm text-slate-600">
+            Already have an account? <Link to="/login" className="font-semibold text-[#286547] hover:underline">Log in</Link>
+          </div>
+        </main>
+        <p className="mt-6 text-center text-xs text-slate-400">© SkillCredit · Learn and share skills</p>
       </div>
-    </main>
+    </div>
   );
 }
