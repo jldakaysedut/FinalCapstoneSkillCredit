@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Mail, LockKeyhole } from 'lucide-react';
 import supabase from '../../supabaseClient';
 
 export default function Login() {
@@ -92,79 +92,50 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center py-20 px-4 sm:px-6 relative" style={{ background: "#f8faf9", fontFamily: "'DM Sans', sans-serif" }}>
-      
-      <Link 
-        to="/" 
-        className="absolute top-5 left-5 sm:top-7 sm:left-8 flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-[#2d6a4f] transition-colors"
-      >
-        <ArrowLeft className="w-4 h-4" />
-        Back to Home
-      </Link>
-
-      <div className="max-w-[440px] w-full bg-white p-6 sm:p-9 rounded-2xl border border-gray-200 shadow-[0_8px_30px_rgba(0,0,0,0.035)]">
-        
-        <div className="text-center mb-8">
-          <div className="mb-5 inline-flex items-center gap-2 text-[#236447]">
-            <img src="/logo.png" alt="" className="h-8 w-8 object-contain" />
-            <span className="text-base font-bold tracking-tight">SkillCredit</span>
-          </div>
-          <h2 className="text-[26px] font-semibold tracking-tight text-gray-900">Welcome back</h2>
-          <p className="text-gray-500 mt-2 text-sm">Log in to continue your learning journey.</p>
-        </div>
-
-        {errorMsg && (
-          <div className="mb-6 p-4 bg-red-50 text-red-700 rounded-lg text-sm font-medium border border-red-200">
-            {errorMsg}
-          </div>
-        )}
-
-        <form onSubmit={handleLogin} className="space-y-5">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Email address</label>
-            <input 
-              type="email" 
-              required 
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3.5 py-3 outline-none focus:border-[#2d6a4f] focus:ring-2 focus:ring-[#2d6a4f]/10 transition-colors bg-white" 
-              placeholder="you@example.com"
-            />
-          </div>
-
-          <div>
-            <div className="flex justify-between items-center mb-1">
-              <label className="block text-sm font-medium text-gray-700">Password</label>
-              <Link to="/forgot-password" className="text-xs font-semibold text-[#2d6a4f] hover:underline">
-                Forgot password?
-              </Link>
-            </div>
-            <input 
-              type="password" 
-              required 
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3.5 py-3 outline-none focus:border-[#2d6a4f] focus:ring-2 focus:ring-[#2d6a4f]/10 transition-colors bg-white" 
-              placeholder="••••••••"
-            />
-          </div>
-
-          <button 
-            type="submit" 
-            disabled={loading}
-            className="w-full py-3.5 mt-2 bg-[#2d6a4f] text-white font-semibold rounded-lg hover:bg-[#24573f] transition-colors duration-150 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-emerald-600/20 disabled:opacity-50"
-          >
-            {loading ? 'Logging in...' : 'Log In'}
-          </button>
-        </form>
-
-        <p className="mt-8 text-center text-sm text-gray-600">
-          Don't have an account yet?{' '}
-          <Link to="/register" className="font-semibold text-[#2d6a4f] hover:underline">
-            Sign up now
+    <main className="min-h-screen bg-[#f8f6f1] px-4 pb-10 pt-14 sm:px-6 sm:pt-16" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+      <div className="mx-auto w-full max-w-[520px]">
+        <Link to="/" className="mb-8 inline-flex items-center gap-2 text-xs font-semibold text-[#817c70] transition hover:text-[#2d6a4f]">
+          <ArrowLeft size={15} /> Back to Home
+        </Link>
+        <header className="mb-8 text-center">
+          <Link to="/" className="inline-block text-[37px] font-bold leading-none tracking-[-0.045em] text-[#242424] sm:text-[43px]" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
+            <span className="text-[#2d6a4f]">Skill</span>Credit
           </Link>
-        </p>
+          <p className="mt-3 text-[13px] font-medium text-[#aaa191] sm:text-sm">Share skills · Earn credits · Keep learning</p>
+        </header>
+        <section className="rounded-[26px] border border-[#eee9df] bg-white px-6 py-9 shadow-[0_14px_40px_rgba(36,32,22,0.065)] sm:px-10 sm:py-11">
+          <div className="mb-8">
+            <h1 className="text-[31px] font-bold leading-tight tracking-tight text-[#202020] sm:text-[35px]" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>Welcome back <span aria-hidden="true">👋</span></h1>
+            <p className="mt-2 text-[15px] text-[#909090]">Continue learning and earning credits.</p>
+          </div>
+          {errorMsg && <div role="alert" className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{errorMsg}</div>}
+          <form onSubmit={handleLogin} className="space-y-5">
+          <div>
+            <label htmlFor="email" className="mb-2 block text-sm font-semibold text-[#454545]">Email address</label>
+            <div className="relative">
+              <Mail aria-hidden="true" size={18} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[#9d998f]" />
+              <input id="email" type="email" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@example.com" className="w-full min-h-[52px] rounded-xl border border-[#e8e0d2] bg-[#fdfbf8] pl-12 pr-4 text-[15px] text-[#292929] placeholder:text-[#b5aca0] outline-none transition-colors focus:border-[#2d6a4f] focus:bg-white focus:ring-2 focus:ring-[#2d6a4f]/10" />
+            </div>
+          </div>
+          <div>
+            <div className="mb-2 flex items-center justify-between gap-3">
+              <label htmlFor="password" className="text-sm font-semibold text-[#454545]">Password</label>
+              <Link to="/forgot-password" className="text-xs font-semibold text-[#2d6a4f] hover:underline">Forgot?</Link>
+            </div>
+            <div className="relative">
+              <LockKeyhole aria-hidden="true" size={18} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[#9d998f]" />
+              <input id="password" type="password" required autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••" className="w-full min-h-[52px] rounded-xl border border-[#e8e0d2] bg-[#fdfbf8] pl-12 pr-4 text-[15px] text-[#292929] placeholder:text-[#b5aca0] outline-none transition-colors focus:border-[#2d6a4f] focus:bg-white focus:ring-2 focus:ring-[#2d6a4f]/10" />
+            </div>
+          </div>
+          <button type="submit" disabled={loading} className="mt-2 w-full rounded-xl bg-[#2d6a4f] px-5 py-4 text-[15px] font-bold text-white transition-colors hover:bg-[#24553f] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#2d6a4f]/20 disabled:cursor-wait disabled:opacity-60">
+            {loading ? 'Logging in...' : 'Log in →'}
+          </button>
+          </form>
+        </section>
+        <p className="mt-7 text-center text-sm text-[#888780]">Don't have an account?{' '}<Link to="/register" className="font-bold text-[#2d6a4f] hover:underline">Sign up free — get 20 credits</Link></p>
       </div>
-    </div>
+    </main>
   );
 }
