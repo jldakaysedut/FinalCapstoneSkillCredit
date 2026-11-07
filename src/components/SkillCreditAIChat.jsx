@@ -292,8 +292,8 @@ export default function SkillCreditAIChat({ userId, onBack }) {
               <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-white bg-emerald-500" />
             </div>
             <div className="min-w-0">
-              <h2 className="truncate text-[15px] font-bold leading-tight text-gray-900">SkillCredit AI</h2>
-              <p className="truncate text-[11px] font-medium text-emerald-600">Your SkillCredit AI assistant</p>
+              <h2 className="truncate text-[15px] font-bold leading-tight text-gray-900">Skiro AI</h2>
+              <p className="truncate text-[11px] font-medium text-emerald-600">Your Skiro AI assistant</p>
             </div>
           </div>
           <div className="flex shrink-0 items-center gap-1">
@@ -317,7 +317,7 @@ export default function SkillCreditAIChat({ userId, onBack }) {
               <button type="button" onClick={clearAll} disabled={!allMessages.length || sending} className="text-[11px] font-semibold text-rose-600 disabled:opacity-40">Clear all</button>
             </div>
           </div>
-           {usage && <p className="mb-2 rounded-lg bg-gray-50 px-2 py-2 text-[11px] text-gray-600" aria-label="SkillCredit AI mobile message allowance">
+           {usage && <p className="mb-2 rounded-lg bg-gray-50 px-2 py-2 text-[11px] text-gray-600" aria-label="Skiro AI mobile message allowance">
              <Clock3 className="mr-1 inline h-3.5 w-3.5 text-gray-400" />AI usage: {isWindowOver ? 'Updating…' : `${Math.max(0, Number(effectiveRemaining) || 0)} of ${usage.limit || 20} left`} · Rolling 1-hour window
            </p>}
           {!conversations.length && <p className="px-2 py-3 text-xs text-gray-400">No saved conversations yet.</p>}
@@ -339,7 +339,7 @@ export default function SkillCreditAIChat({ userId, onBack }) {
           ) : visibleMessages.length === 0 ? (
             <div className="m-auto flex w-full max-w-[520px] flex-col items-center px-2 py-8 text-center sm:py-14">
               <span className="flex h-14 w-14 items-center justify-center rounded-full border border-emerald-100 bg-emerald-100 text-emerald-700"><Sparkles className="h-7 w-7" /></span>
-              <h3 className="mt-3 text-[18px] font-bold tracking-tight text-gray-900">SkillCredit AI</h3>
+              <h3 className="mt-3 text-[18px] font-bold tracking-tight text-gray-900">Skiro AI</h3>
               <p className="mt-1 text-[13px] leading-5 text-gray-500">Ask about your credits, sessions, skill listings, or create a new teaching skill. I'll help with verified SkillCredit information.</p>
             </div>
           ) : (
@@ -394,7 +394,7 @@ export default function SkillCreditAIChat({ userId, onBack }) {
           )}
           {sending && <div className="mx-auto mt-4 flex max-w-[920px] items-center gap-2 pl-1 text-[12px] text-gray-500">
             <span className="flex h-8 w-8 items-center justify-center rounded-full border border-emerald-100 bg-emerald-100 text-emerald-700"><Sparkles className="h-4 w-4" /></span>
-            <span>{mode === 'describe' ? 'Preparing your editable skill draft' : mode === 'wallet' ? 'Checking your account records' : mode === 'recommend' ? 'Finding available skills' : 'SkillCredit AI is thinking'}</span>
+            <span>{mode === 'describe' ? 'Preparing your editable skill draft' : mode === 'wallet' ? 'Checking your account records' : mode === 'recommend' ? 'Finding available skills' : 'Skiro AI is thinking'}</span>
             <span className="flex gap-1" aria-hidden="true"><span className="h-1.5 w-1.5 animate-bounce rounded-full bg-emerald-400"/><span className="h-1.5 w-1.5 animate-bounce rounded-full bg-emerald-400 [animation-delay:120ms]"/><span className="h-1.5 w-1.5 animate-bounce rounded-full bg-emerald-400 [animation-delay:240ms]"/></span>
           </div>}
           <div ref={bottom} />
@@ -409,7 +409,7 @@ export default function SkillCreditAIChat({ userId, onBack }) {
         <div className="shrink-0 border-t border-gray-100 bg-white px-3 py-3 sm:px-4">
           {isQuotaBlocked && <div className="mb-2 flex items-start gap-2 rounded-xl bg-amber-50 px-3 py-2 text-[12px] text-amber-900" role="status">
             <Clock3 className="mt-0.5 h-4 w-4 shrink-0" />
-            <span>{(usage?.reason === 'user_limit' || effectiveRemaining === 0) ? 'You have reached your AI message allowance.' : 'SkillCredit AI is taking a short break.'}
+            <span>{(usage?.reason === 'user_limit' || effectiveRemaining === 0) ? 'You have reached your AI message allowance.' : 'Skiro AI is taking a short break.'}
               {usage?.reason !== 'provider_cooldown' && timeUntil(usage?.retry_at || usage?.reset_at) && <span className="ml-1">Available again around {timeUntil(usage?.retry_at || usage?.reset_at)}.</span>}
               <span className="ml-1">Your previous chats are safe.</span>
             </span>
@@ -441,7 +441,7 @@ export default function SkillCreditAIChat({ userId, onBack }) {
                 className="min-h-[22px] max-h-28 w-full resize-none bg-transparent text-[14px] leading-[22px] text-gray-900 outline-none placeholder:text-gray-400"
                 onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); if (maySend && draft.trim()) e.currentTarget.form?.requestSubmit(); } }} />
             </div>
-            <button type="submit" disabled={!maySend || !draft.trim()} title="Send to SkillCredit AI" aria-label="Send message"
+            <button type="submit" disabled={!maySend || !draft.trim()} title="Send to Skiro AI" aria-label="Send message"
               className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-white shadow-sm transition hover:bg-emerald-700 disabled:opacity-40">
               <Send className="h-4 w-4" />
             </button>
@@ -451,10 +451,10 @@ export default function SkillCreditAIChat({ userId, onBack }) {
       </section>
 
       {/* RIGHT — same 240px information panel placement as other Messages chats. */}
-      {showInfoPanel && <aside className="hidden h-full max-h-full min-h-0 w-[240px] shrink-0 overflow-x-hidden overflow-y-auto overscroll-y-contain border-l border-gray-100 bg-white lg:block [scrollbar-width:thin] [scrollbar-color:#94a3b8_#f8fafc] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-slate-50 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300" aria-label="SkillCredit AI profile and chat history" tabIndex={0}>
+      {showInfoPanel && <aside className="hidden h-full max-h-full min-h-0 w-[240px] shrink-0 overflow-x-hidden overflow-y-auto overscroll-y-contain border-l border-gray-100 bg-white lg:block [scrollbar-width:thin] [scrollbar-color:#94a3b8_#f8fafc] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-slate-50 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300" aria-label="Skiro AI profile and chat history" tabIndex={0}>
         <div className="flex flex-col items-center border-b border-gray-100 px-5 pb-5 pt-8 text-center">
           <span className="flex h-14 w-14 items-center justify-center rounded-full border border-emerald-100 bg-emerald-100 text-emerald-800"><Sparkles className="h-6 w-6" /></span>
-          <h3 className="mt-3 text-[16px] font-bold tracking-tight text-gray-900">SkillCredit AI</h3>
+          <h3 className="mt-3 text-[16px] font-bold tracking-tight text-gray-900">Skiro AI</h3>
           <p className="mt-0.5 text-[12px] font-medium text-emerald-600">Your AI assistant</p>
           <p className="mt-2 text-[11px] leading-4 text-gray-400">Explore skills, review your learning, and get help with your account.</p>
           <button type="button" onClick={newChat} disabled={sending}
@@ -471,7 +471,7 @@ export default function SkillCreditAIChat({ userId, onBack }) {
             <p className="flex items-center gap-2"><Sparkles className="h-4 w-4 shrink-0 text-emerald-600" />SkillCredit assistant</p>
             <p className="flex items-center gap-2"><MessageCircle className="h-4 w-4 shrink-0 text-gray-400" />{visibleMessages.length} messages here</p>
             <p className="flex items-start gap-2"><ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-gray-400" />Your account data stays private. Skill drafts require your review.</p>
-             {usage && <p className="flex items-start gap-2" aria-label="SkillCredit AI message allowance">
+             {usage && <p className="flex items-start gap-2" aria-label="Skiro AI message allowance">
                <Clock3 className="mt-0.5 h-4 w-4 shrink-0 text-gray-400" />
                <span><span className="font-medium text-gray-700">AI usage:</span> {isWindowOver ? 'Updating…' : `${Math.max(0, Number(effectiveRemaining) || 0)} of ${usage.limit || 20} left`}<span className="block text-[11px] text-gray-400">Rolling 1-hour window</span></span>
              </p>}

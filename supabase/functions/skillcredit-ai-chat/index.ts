@@ -240,20 +240,98 @@ function skillCard(row: Record<string, unknown>, instructorName = ''): SearchCar
 }
 
 
+// Small, explainable synonym expansion. We never invent listings or teachers.
+// User prompts and model-suggested tool arguments are both normalized here.
+const SKILL_SYNONYMS: { match: RegExp; terms: string[] }[] = [
+  { match: /\b(cod(?:e|ing)|program(?:ming|mer)?|developer|software|python|javascript|java|html|css)\b/i,
+    terms: ['coding', 'programming', 'code', 'python', 'javascript', 'web development', 'software'] },
+  { match: /\b(make\s*up|makeup|mua|cosmetic(?:s)?|beauty|bridal makeup)\b/i,
+    terms: ['makeup', 'make up', 'beauty', 'cosmetics', 'cosmetic', 'bridal'] },
+  { match: /\b(photoshop|photo editing|retouch|photo manipulation)\b/i,
+    terms: ['photoshop', 'photo editing', 'photo', 'retouching', 'graphic design'] },
+  { match: /\b(graphic design|graphic artist|digital art|illustrat(?:ion|or))\b/i,
+    terms: ['graphic design', 'digital art', 'illustration', 'design'] },
+  { match: /\b(garden(?:ing|er)?|plant care|plants?|horticulture)\b/i,
+    terms: ['gardening', 'garden', 'plant care', 'plants', 'horticulture'] },
+  { match: /\b(cook(?:ing)?|baking|chef|pastry)\b/i,
+    terms: ['cooking', 'baking', 'pastry', 'food'] },
+  { match: /\b(english|conversation|speaking|public speaking|communication)\b/i,
+    terms: ['english', 'public speaking', 'communication', 'language'] },
+  { match: /\b(video edit(?:ing|or)?|capcut|premiere|film editing)\b/i,
+    terms: ['video editing', 'capcut', 'premiere', 'video'] },
+];
+
+function searchTerms(raw: string): { terms: string[]; intent: string } {
+  const value = cleanTerm(raw).toLowerCase();
+  const stripped = value
+    .replace(/^(?:(?:please|can you|could you|i want to|i need to|i am looking for|looking for|find me|find|search for|search|show me|recommend|hanap(?:in)?|sino|who can)\s+)+/gi, '')
+    .replace(/^(?:(?:a|an|the|some|good|best|trusted|available|affordable|cheap|beginner|professional)\s+)+/gi, '')
+    .replace(/^(?:(?:teacher|instructor|mentor|tutor|artist|someone|person|people|user)s?\s+)?(?:who\s+)?(?:can\s+)?(?:teach(?:es|ing)?|for|of|on|about|in)\s+/i, '')
+    .replace(/\s+(?:teacher|instructor|mentor|tutor|lessons?|courses?|classes?|skills?)$/i, '')
+    .trim();
+  const phrase = stripped || value;
+  const terms: string[] = [];
+  const add = (t: string) => {
+    const item = t.toLowerCase().replace(/[^\p{L}\p{N}\s-]/gu, '').replace(/\s+/g, ' ').trim();
+    if (item.length >= 2 && item.length <= 48 && !terms.includes(item)) terms.push(item);
+  };
+  add(phrase);
+  for (const group of SKILL_SYNONYMS) if (group.match.test(phrase)) group.terms.forEach(add);
+  // General multi-word queries can still match specific content words.
+  // Avoid generic stopwords which would flood matches.
+  if (terms.length < 3 && phrase.includes(' ')) {
+    for (const word of phrase.split(' ')) {
+      if (!/^(teacher|teach|teaches|teaching|skill|skills|class|course|lesson|lessons|artist|someone|find|learn|about|with|beginner|looking|who|for|the|and|me|make|good|best)$/.test(word)) add(word);
+    }
+  }
+  return { terms: terms.slice(0, 8), intent: phrase };
+}
+
+function relevance(row: Record<string, unknown>, terms: string[], intent: string): number {
+  const title = String(row.title || '').toLowerCase();
+  const category = String(row.category || '').toLowerCase();
+  const description = String(row.description || '').toLowerCase();
+  const outcomes = String(row.outcomes || '').toLowerCase();
+  let score = 0;
+  for (let i = 0; i < terms.length; i++) {
+    const term = terms[i];
+    const boost = i === 0 ? 2 : 1;
+    if (title.includes(term)) score += 12 * boost;
+    if (category.includes(term)) score += 6 * boost;
+    if (description.includes(term)) score += 3 * boost;
+    if (outcomes.includes(term)) score += 2 * boost;
+  }
+  if (intent.length > 2 && title.includes(intent)) score += 20;
+  return score;
+}
+
 async function findSkills(term: string, url: string, jwt: string, anon: string): Promise<ToolResult> {
   const query = cleanTerm(term);
   const browse = /^(?:all|available|skills?|courses?|lessons?)$/i.test(query) ||
     /\b(?:available skills|all skills|what skills|browse skills|skills available|show me skills|list skills)\b/i.test(query);
-  if (query.length < 2 && !browse) return { count: 0, cards: [], note: 'Provide a skill/category or ask to browse available skills.' };
-  const rows = await queryTable(url, 'skills', jwt, anon, (u) => {
-    u.searchParams.set('select', 'id,instructor_id,title,category,credit_cost');
-    u.searchParams.set('status', 'eq.approved');
-    u.searchParams.set('is_active', 'eq.true');
-    if (!browse) u.searchParams.set('or', `(title.ilike.*${query}*,category.ilike.*${query}*,description.ilike.*${query}*)`);
-    u.searchParams.set('order', 'created_at.desc');
-    u.searchParams.set('limit', String(MAX_RESULTS));
-  });
-  const ids = [...new Set(rows.map((r) => r.instructor_id).filter(isUuid))];
+  if (query.length < 2 && !browse) return { count: 0, cards: [], note: 'Tell me the skill or subject you want to learn.' };
+  const { terms, intent } = searchTerms(query);
+  const candidates = new Map<string, Record<string, unknown>>();
+  // We search a bounded number of alternatives, with read-only JWT + RLS.
+  // Query batches avoid huge PostgREST URLs, and rank the real returned records.
+  const batches = browse ? [[]] : [terms.slice(0, 4), terms.slice(4, 8)].filter((b) => b.length);
+  for (const batch of batches) {
+    const rows = await queryTable(url, 'skills', jwt, anon, (u) => {
+      u.searchParams.set('select', 'id,instructor_id,title,category,description,outcomes,credit_cost');
+      u.searchParams.set('status', 'eq.approved');
+      u.searchParams.set('is_active', 'eq.true');
+      if (batch.length) {
+        const filters = batch.flatMap((t) => ['title','category','description','outcomes'].map((field) => `${field}.ilike.*${t}*`));
+        u.searchParams.set('or', `(${filters.join(',')})`);
+      }
+      u.searchParams.set('order', 'created_at.desc');
+      u.searchParams.set('limit', browse ? String(MAX_RESULTS) : '100');
+    });
+    for (const row of rows) if (isUuid(row.id)) candidates.set(row.id, row);
+  }
+  const ranked = [...candidates.values()].map((row) => ({ row, score: browse ? 1 : relevance(row, terms, intent) }))
+    .filter((item) => item.score > 0).sort((a, b) => b.score - a.score).slice(0, MAX_RESULTS);
+  const ids = [...new Set(ranked.map((item) => item.row.instructor_id).filter(isUuid))];
   const people = ids.length ? await queryTable(url, 'user_profiles', jwt, anon, (u) => {
     u.searchParams.set('select', 'id,full_name');
     u.searchParams.set('id', `in.(${ids.join(',')})`);
@@ -261,18 +339,17 @@ async function findSkills(term: string, url: string, jwt: string, anon: string):
     u.searchParams.set('is_banned', 'eq.false');
     u.searchParams.set('is_active', 'eq.true');
   }) : [];
-  // Hide listings if their instructor is deleted, banned, inactive or not readable under RLS.
   const peopleById = new Map(people.map((p) => [p.id, small(p.full_name, 90)]));
-  const cards = rows.filter((r) => peopleById.has(r.instructor_id))
-    .map((r) => skillCard(r, peopleById.get(r.instructor_id) || ''))
+  const cards = ranked.filter((item) => peopleById.has(item.row.instructor_id))
+    .map((item) => skillCard(item.row, peopleById.get(item.row.instructor_id) || ''))
     .filter((v): v is SearchCard => Boolean(v));
-  return { count: cards.length, cards };
+  return { count: cards.length, cards,
+    note: cards.length ? 'Verified approved active listings, ranked using related search terms.' : 'No matching approved and active SkillCredit listings were found, including related keywords.' };
 }
 
 async function findTeachers(term: string, url: string, jwt: string, anon: string): Promise<ToolResult> {
   const skills = await findSkills(term, url, jwt, anon);
-  if (!skills.cards.length) return { count: 0, cards: [] };
-  // Skill lookup already verifies instructor visibility; fetch only public profile fields.
+  if (!skills.cards.length) return { count: 0, cards: [], note: skills.note };
   const instructorRows = await queryTable(url, 'skills', jwt, anon, (u) => {
     u.searchParams.set('select', 'id,instructor_id');
     u.searchParams.set('id', `in.(${skills.cards.map((c) => c.id).join(',')})`);
@@ -289,7 +366,8 @@ async function findTeachers(term: string, url: string, jwt: string, anon: string
     u.searchParams.set('limit', String(MAX_RESULTS));
   }) : [];
   const users = profiles.map(userCard).filter((v): v is SearchCard => Boolean(v));
-  return { count: users.length, cards: [...users, ...skills.cards].slice(0, 12), note: 'Includes matching teachers and their approved skill listings.' };
+  return { count: users.length, cards: [...users, ...skills.cards].slice(0, 12),
+    note: 'Includes verified matching instructors and their approved active skill listings.' };
 }
 
 // All account reads run under the caller's own JWT, with an explicit user_id filter.
@@ -367,6 +445,35 @@ async function mySessionCreditTotals(userId: string, url: string, jwt: string, a
     is_complete: full }, links: [{ label: 'Open Wallet', path: '/payments' }] };
 }
 
+// Option A: scheduled-month PROXY, not an earning/payout timestamp.
+// A completed session can have been paid in a different month; we explicitly label that.
+async function myCompletedScheduledMonth(userId: string, url: string, jwt: string, anon: string, monthDelta: number): Promise<ToolResult> {
+  const period = philippineMonth(monthDelta);
+  let sum = 0, count = 0, full = false;
+  const PAGE = 300, MAX_ROWS = 6000;
+  for (let offset = 0; offset < MAX_ROWS; offset += PAGE) {
+    const rows = await queryTable(url, 'sessions', jwt, anon, (u) => {
+      u.searchParams.set('select', 'id,credit_amount,scheduled_date');
+      u.searchParams.set('instructor_id', `eq.${userId}`);
+      u.searchParams.set('status', 'eq.completed');
+      u.searchParams.set('scheduled_date', `gte.${period.start}`);
+      u.searchParams.set('and', `(scheduled_date.lt.${period.end})`);
+      u.searchParams.set('order', 'id.asc');
+      u.searchParams.set('limit', String(PAGE));
+      u.searchParams.set('offset', String(offset));
+    });
+    for (const row of rows) {
+      const amount = Number(row.credit_amount);
+      if (Number.isFinite(amount) && amount >= 0) { sum += amount; count++; }
+    }
+    if (rows.length < PAGE) { full = true; break; }
+  }
+  return { count, cards: [], facts: { period: period.label,
+    scheduled_month_completed_teaching_credits: full ? sum : null,
+    scheduled_month_completed_sessions: full ? count : null,
+    is_complete: full } };
+}
+
 const monthlyWords = /\b(this month|current month|monthly|ngayong buwan|nitong buwan|last month|previous month|nakaraang buwan|january|february|march|april|june|july|august|september|october|november|december)\b/i;
 // Recognize a named month too, so a question about November never silently shows all-time totals.
 function requestedMonthOffset(message: string): number {
@@ -390,50 +497,65 @@ function requestedWalletIntent(message: string, mode: string): boolean {
   return (personalQuestion || (own && aboutWallet)) && !generalHow;
 }
 async function walletAnswerForQuestion(message: string, userId: string, url: string, jwt: string, anon: string): Promise<{ answer: string; links: AppLink[] }> {
-  const wallet = await myWallet(userId, url, jwt, anon);
-  const balance = Number(wallet.facts?.credits_balance);
-  if (!wallet.count || !Number.isFinite(balance)) return { answer: 'I could not verify your wallet balance with your current account permissions. Please check your Wallet page.', links: wallet.links || [] };
   const isMonthly = monthlyWords.test(message) || /\b(?:in may|may\s+20\d{2})\b/i.test(message);
   const monthOffset = requestedMonthOffset(message);
   const wantsRewards = /\b(reward|rewards|streak|claim|claimed|bonus|daily)\b/i.test(message);
   const wantsTopups = /\b(top.?up|paymongo|payment history|purchase|purchased|transaction)\b/i.test(message);
-  const wantsEarned = /\b(earned|earn|earnings|income|teaching|kumita|kinita|total earn|nakuha)\b/i.test(message);
+  const wantsEarned = /\b(earned|earn|earning|earnings|income|teaching|kumita|kinita|kita|total earn|nakuha)\b/i.test(message);
   const wantsSpent = /\b(spent|spend|spending|ginastos|deduct|deducted|used credits)\b/i.test(message);
   const wantsSummary = /\b(summary|overview|breakdown|activity|total credits?|statistics|stats)\b/i.test(message);
-  const answer = [`Your current SkillCredit balance is **${balance.toLocaleString('en-US')} CR**, retrieved from your account.`];
-  if ((wantsRewards || isMonthly || wantsSummary) && unsupportedPeriods.test(message) && !isMonthly) {
-    answer.push('I cannot give an exact total for that requested time period from this monthly summary. Try asking about this month, last month, or a named month.');
-  } else if (wantsRewards || isMonthly || wantsSummary) {
+  const wantsBalance = /\b(wallet|balance|how many credits|credit balance|credits ko)\b/i.test(message);
+  const answers: string[] = [];
+  const links: AppLink[] = [{ label: 'Open Wallet', path: '/payments' }];
+  // Never substitute a wallet balance for a question specifically about earnings.
+  if (wantsBalance || (!wantsEarned && !wantsSpent && !wantsRewards && !wantsTopups)) {
     try {
-      const rewards = await myRewardMonth(userId, url, jwt, anon, monthOffset);
-      answer.push(`**Daily rewards in ${rewards.facts?.reward_month}:** ${rewards.facts?.rewards_earned} CR from ${rewards.facts?.reward_claim_count} verified claims.`);
-    } catch {
-      answer.push('I could not verify your daily reward claims right now, so I cannot give a reward total.');
-    }
+      const wallet = await myWallet(userId, url, jwt, anon);
+      const balance = Number(wallet.facts?.credits_balance);
+      answers.push(wallet.count && Number.isFinite(balance)
+        ? `**Current wallet balance:** ${balance.toLocaleString('en-US')} CR (not the same as earnings).`
+        : 'I could not verify your current wallet balance.');
+    } catch { answers.push('I could not verify your current wallet balance.'); }
   }
-  if (wantsEarned || wantsSpent || wantsSummary) {
-    if (isMonthly || unsupportedPeriods.test(message)) {
-      answer.push('**Time-specific teaching earnings or spending:** An exact monthly figure is not verifiable yet. Session records have a booking creation date, but no confirmed credit posting/completion timestamp or complete transaction ledger. I will not treat booking dates as earnings dates.');
+  if (wantsEarned && isMonthly) {
+    try {
+      const proxy = await myCompletedScheduledMonth(userId, url, jwt, anon, monthOffset);
+      if (proxy.facts?.is_complete) {
+        answers.push(`**${proxy.facts.period} — completed teaching sessions scheduled in this month:** ${Number(proxy.facts.scheduled_month_completed_teaching_credits).toLocaleString('en-US')} CR across ${proxy.facts.scheduled_month_completed_sessions} session(s).`);
+        answers.push('**Important:** This is a scheduled-date estimate, NOT verified earnings credited during that month. Your database does not store the date when teaching credits were actually awarded.');
+      } else answers.push('I could not compute a complete monthly scheduled-session estimate safely.');
+    } catch { answers.push('I could not verify your completed scheduled sessions for that month.'); }
+  } else if (wantsEarned || wantsSpent || wantsSummary) {
+    if (unsupportedPeriods.test(message) && !isMonthly) {
+      answers.push('Exact earnings/spending for this requested period are not recorded. I cannot use booking creation dates as credit posting dates.');
     } else {
       try {
         const totals = await mySessionCreditTotals(userId, url, jwt, anon);
         if (totals.facts?.is_complete) {
-          if (wantsEarned || wantsSummary) answer.push(`**Completed-session credits (all recorded sessions):** ${totals.facts?.earned_completed_sessions} CR across ${totals.facts?.completed_teaching_sessions} completed teaching sessions. This matches the Wallet's session-based calculation; it is not a full credit ledger.`);
-          if (wantsSpent || wantsSummary) answer.push(`**Session credits counted as spent in Wallet:** ${totals.facts?.spent_currently_counted_sessions} CR across currently eligible session statuses. This is not a historical total of every debit or refund.`);
-        } else answer.push('There are too many session records to calculate a complete total safely. Check your Wallet for the available history.');
-      } catch { answer.push('I could not verify your session credit totals right now.'); }
+          if (wantsEarned || wantsSummary) answers.push(`**All-time completed teaching-session credits:** ${Number(totals.facts.earned_completed_sessions).toLocaleString('en-US')} CR across ${totals.facts.completed_teaching_sessions} completed sessions (not a payout ledger).`);
+          if (wantsSpent || wantsSummary) answers.push(`**Credits associated with currently counted learning sessions:** ${Number(totals.facts.spent_currently_counted_sessions).toLocaleString('en-US')} CR (not a complete historical spending ledger).`);
+        } else answers.push('Too many sessions to safely compute a complete total.');
+      } catch { answers.push('I could not verify session-credit totals.'); }
     }
+  }
+  if (wantsSpent && isMonthly) answers.push('Exact monthly spending is unavailable: session scheduled/booking dates do not prove when credits were deducted or refunded.');
+  if (wantsRewards || wantsSummary) {
+    if (unsupportedPeriods.test(message) && !isMonthly) answers.push('Reward totals for that period cannot be verified with this monthly-summary query.');
+    else try {
+      const rewards = await myRewardMonth(userId, url, jwt, anon, monthOffset);
+      answers.push(`**Daily rewards in ${rewards.facts?.reward_month}:** ${rewards.facts?.rewards_earned} CR from ${rewards.facts?.reward_claim_count} verified claim(s).`);
+    } catch { answers.push('I could not verify daily reward claims.'); }
   }
   if (wantsTopups) {
     try {
       const tx = await myTopups(userId, url, jwt, anon);
       const history = (tx.facts?.recent_paymongo_topups_only || []) as Record<string, unknown>[];
-      answer.push(history.length ? '**Recent top-ups (latest 5):**\n' + history.map((t) =>
+      answers.push(history.length ? '**Recent top-ups (up to 5; not full monthly history):**\n' + history.map((t) =>
         `- ${tidy(t.status, 22) || 'Unknown'} · ${t.credits_added} CR · ₱${t.amount_php} · ${tidy(t.date, 25)}`).join('\n')
         : 'No recent top-up records were returned. A pending payment is not a successful credit purchase.');
-    } catch { answer.push('I could not verify your recent top-up transactions right now.'); }
+    } catch { answers.push('I could not verify recent top-ups.'); }
   }
-  return { answer: answer.join('\n\n'), links: wallet.links || [] };
+  return { answer: answers.join('\n\n'), links };
 }
 
 async function mySessions(userId: string, url: string, jwt: string, anon: string): Promise<ToolResult> {
@@ -590,11 +712,20 @@ function explicitSearch(message: string, mode: string): { name: string; args: Re
   const text = message.trim().replace(/[?.!]+$/g, '');
   const find = /\b(find|search|look for|looking for|show me|hanap|hanapin|sino|who teaches|recommend)\b/i.test(text);
   if (!find && !['recommend', 'teachers'].includes(mode)) return null;
+  const intentTeacher = /\b(?:teacher|instructor|tutor|mentor|artist|who teach(?:es)?|someone who teach(?:es)?)\b/i.test(text);
+  if (intentTeacher) {
+    const subject = text.replace(/^(?:(?:find me|find|search for|search|show me|recommend|looking for)\s+)+/i, '')
+      .replace(/^(?:a|an|the|some)\s+/i, '')
+      .replace(/^(?:teacher|instructor|tutor|mentor|someone|person)(?:\s+who)?\s+(?:can\s+)?(?:teach(?:es|ing)?\s+)?/i, '')
+      .replace(/^(?:who\s+)?teach(?:es|ing)?\s+/i, '');
+    return { name: 'find_teachers', args: { skill: subject || text } };
+  }
   const teacher = text.match(/\b(?:teaches?|teaching|teacher(?:s)?(?:\s+of|\s+for)?|instructor(?:s)?(?:\s+of|\s+for)?|mentor(?:s)?(?:\s+for)?|who teaches)\s+(.+)$/i);
   if (teacher?.[1]) return { name: 'find_teachers', args: { skill: teacher[1] } };
   const skill = text.match(/\b(?:find|search|recommend|show me|looking for)\s+(?:for\s+)?(.+?)\s+(?:skills?|classes|lessons|courses)$/i)
     || text.match(/\b(?:skills?|lessons|courses)\s+(?:about|for|on|in)\s+(.+)$/i);
   if (skill?.[1]) return { name: 'search_skills', args: { query: skill[1] } };
+  if (find && /^(?:find me|find|show me|search for|looking for)\s+/i.test(text)) return { name: 'search_skills', args: { query: text } };
   if (mode === 'teachers') return { name: 'find_teachers', args: { skill: text.replace(/^(?:find|search(?: for)?|hanap(?:in)?|show me)\s+(?:a\s+)?(?:teacher|mentor|instructor|someone|user)(?:\s+who)?\s*/i, '').replace(/^(?:teaches?|teaching|for)\s+/i, '') } };
   if (mode === 'recommend') return { name: 'search_skills', args: { query: text.replace(/^(?:find|search(?: for)?|recommend|show me|looking for)\s+/i, '').replace(/\s+(?:skills?|lessons|classes|courses)$/i, '') } };
   return null;
@@ -766,7 +897,7 @@ SKILL CREATOR AUTO-FILL OUTPUT RULES:
 ` : '';
   const system = `${SKILLCREDIT_KNOWLEDGE}\n` +
     `Current category: ${mode}. Category guidance: ${MODE_GUIDANCE[mode]}\n${creatorGuidance}` +
-    'You are SkillCredit AI, a friendly, capable assistant for SkillCredit users. Support casual Filipino, Taglish and English. ' +
+    'You are Skiro AI, a friendly, capable assistant for SkillCredit users. Support casual Filipino, Taglish and English. ' +
     'Use only the verified SkillCredit knowledge here and authorized tool results for platform-specific factual claims. ' +
     'Use read-only search tools for live skills, verified instructors and personal records. Never claim a database search succeeded unless a tool actually ran. ' +
     'If a feature, policy, payment status, price, booking state or account fact cannot be verified, say what is unknown and direct to the relevant page. Never claim precise monthly earning or spending from booking created_at because it is not the credit posting date. ' +
@@ -824,6 +955,22 @@ SKILL CREATOR AUTO-FILL OUTPUT RULES:
     } catch (e) {
       console.error('SkillCredit AI account read failed', e instanceof Error ? e.message : 'unknown');
       return respond({ error: 'Unable to retrieve your account records right now. Please try the corresponding SkillCredit page.' }, 502);
+    }
+  }
+
+  // Explicit searches should be reliable even if the model picks a too-literal keyword.
+  // This still uses only approved active listings and the user's JWT/RLS.
+  if (!creatorFocus && (mode === 'recommend' || /\b(find|looking for|search|hanap|show me|who teaches|recommend)\b/i.test(message))) {
+    const direct = explicitSearch(message, mode);
+    if (direct) {
+      try {
+        const found = await executeTool(direct.name, direct.args, url, jwt, anon, userId);
+        const cards = resultCards([found]);
+        return respond({ answer: cards.length
+          ? `I found **${cards.length} matching SkillCredit results** using related skills and keywords. Open a verified card to see the details.`
+          : found.note || 'No relevant approved active listings found, even after checking related keywords.',
+          results: cards, links: resultLinks([found]) });
+      } catch (e) { console.error('Skiro search failed', e instanceof Error ? e.name : 'unknown'); }
     }
   }
 
