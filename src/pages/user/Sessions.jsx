@@ -155,7 +155,8 @@ export default function Sessions() {
     const { data } = await supabase.from('reports')
       .select('reference_id')
       .or(`reporter_id.eq.${userId},reported_user_id.eq.${userId}`)
-      .eq('reference_type', 'session');
+      .eq('reference_type', 'session')
+      .neq('status', 'resolved');
     if (data) setSubmittedReports(data.map(r => r.reference_id));
   };
 
@@ -381,7 +382,7 @@ export default function Sessions() {
     if (roleFilter === 'Learning' && s.student_id   !== currentUserId) return false;
     
     if (statusTab !== 'All') {
-      const isActuallyDisputed = submittedReports.includes(s.id) || s.status === 'disputed';
+      const isActuallyDisputed = (s.status === 'disputed' || (submittedReports.includes(s.id) && !['completed', 'cancelled'].includes(s.status)));
       if (statusTab.toLowerCase() === 'disputed') {
         return isActuallyDisputed;
       } else if (statusTab.toLowerCase() === 'pending') {
@@ -411,7 +412,7 @@ export default function Sessions() {
     if (t === 'All') {
       acc[t] = sessions.length;
     } else if (t === 'Disputed') {
-      acc[t] = sessions.filter(s => submittedReports.includes(s.id) || s.status === 'disputed').length;
+      acc[t] = sessions.filter(s => (s.status === 'disputed' || (submittedReports.includes(s.id) && !['completed', 'cancelled'].includes(s.status)))).length;
     } else if (t === 'Pending') {
       acc[t] = sessions.filter(s => (s.status === 'pending' || s.status === 'reschedule_proposed') && !submittedReports.includes(s.id)).length;
     } else {
@@ -630,7 +631,7 @@ export default function Sessions() {
                       const myCompleted    = isInstructor ? Boolean(session.instructor_completed) : Boolean(session.student_completed);
                       const otherCompleted = isInstructor ? Boolean(session.student_completed) : Boolean(session.instructor_completed);
 
-                      const hasReported    = submittedReports.includes(session.id) || session.status === 'disputed';
+                      const hasReported    = (session.status === 'disputed' || (submittedReports.includes(session.id) && !['completed', 'cancelled'].includes(session.status)));
                       
                       const meta = hasReported ? STATUS_DOT['disputed'] : (STATUS_DOT[session.status] || STATUS_DOT.cancelled);
 

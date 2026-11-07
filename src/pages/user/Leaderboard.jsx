@@ -5,32 +5,32 @@ import {
   Star, GraduationCap, Coins, Users, Trophy,
   TrendingUp, Award, ChevronRight
 } from 'lucide-react';
-​
+
 // ─────────────────────────────────────────────────────────────────
 // LEADERBOARD V1 — Sessions-style clean header
 // Header: small uppercase label + big bold h1 + pill toggle on right
 // Matches My Sessions page header exactly.
 // ─────────────────────────────────────────────────────────────────
-​
+
 const CATEGORY_TABS = [
   { key: 'ratings',  label: 'Top Rated',    icon: Star,          color: 'text-amber-600',   active: 'bg-gray-900 text-white border-gray-900'   },
   { key: 'sessions', label: 'Most Sessions', icon: GraduationCap, color: 'text-sky-600',     active: 'bg-gray-900 text-white border-gray-900'   },
   { key: 'credits',  label: 'Credits',       icon: Coins,         color: 'text-emerald-600', active: 'bg-gray-900 text-white border-gray-900'   },
 ];
-​
+
 const MEDALS = {
   1: { label: 'Champion',  bg: 'from-amber-400 to-yellow-300',  ring: 'ring-amber-300',  text: 'text-amber-900',  badge: 'bg-amber-100 border-amber-300 text-amber-800'  },
   2: { label: 'Runner-up', bg: 'from-gray-400 to-gray-300',     ring: 'ring-gray-300',   text: 'text-gray-700',   badge: 'bg-gray-100 border-gray-300 text-gray-600'    },
   3: { label: '3rd Place', bg: 'from-orange-400 to-amber-300',  ring: 'ring-orange-300', text: 'text-orange-900', badge: 'bg-orange-50 border-orange-300 text-orange-700' },
 };
-​
+
 export default function Leaderboard() {
   const navigate = useNavigate();
   const [loading,      setLoading]      = useState(true);
   const [categoryTab,  setCategoryTab]  = useState('ratings');
   const [profiles,     setProfiles]     = useState([]);
   const [statsSummary, setStatsSummary] = useState({ totalUsers: 0, topRating: '0.0', totalSessionsCompleted: 0, totalCreditsCirculating: 0 });
-​
+
   useEffect(() => {
     const run = async () => {
       setLoading(true);
@@ -64,7 +64,7 @@ export default function Leaderboard() {
     };
     run();
   }, []);
-​
+
   const sorted = useMemo(() => {
     const list = [...profiles];
     if (categoryTab === 'ratings')  list.sort((a, b) => b.avgRating - a.avgRating || b.totalReviews - a.totalReviews);
@@ -72,7 +72,7 @@ export default function Leaderboard() {
     if (categoryTab === 'credits')  list.sort((a, b) => b.creditsBalance - a.creditsBalance);
     return list;
   }, [profiles, categoryTab]);
-​
+
   const getPrimaryScore = (user) => {
     if (categoryTab === 'ratings')  return user.avgRating > 0 ? user.avgRating : '—';
     if (categoryTab === 'sessions') return user.sessionsCompleted;
@@ -83,7 +83,7 @@ export default function Leaderboard() {
     if (categoryTab === 'sessions') return 'sessions taught';
     return 'wallet balance';
   };
-​
+
   if (loading) return (
     <div role="status" aria-live="polite" aria-label="Loading leaderboard" className="min-h-screen bg-[#faf9f6]">
       <div className="mx-auto max-w-[1000px] animate-pulse px-6 py-5 md:px-8">
@@ -115,11 +115,11 @@ export default function Leaderboard() {
   const top2to3   = sorted.slice(1, 3).map((u, i) => ({ user: u, rank: i + 2 }));
   const top4to10  = sorted.slice(3, 10).map((u, i) => ({ user: u, rank: i + 4 }));
   const community = sorted.slice(10).map((u, i) => ({ user: u, rank: i + 11 }));
-​
+
   return (
     <div className="min-h-screen" style={{ background: '#faf9f6' }}>
       <div className="max-w-[1000px] mx-auto px-6 md:px-8 py-5">
-​
+
         {/* ══ PAGE HEADER — Sessions style ══ */}
         <div className="mb-5">
           <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-700 mb-1">Community Rankings</p>
@@ -137,7 +137,7 @@ export default function Leaderboard() {
             </div>
           </div>
         </div>
-​
+
         {/* ══ STAT STRIP — same kanban-pill style, sits below header ══ */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 bg-gray-50 p-3 rounded-xl border border-gray-100 gap-2">
           {[
@@ -153,7 +153,7 @@ export default function Leaderboard() {
             </div>
           ))}
         </div>
-​
+
         {sorted.length === 0 ? (
           <div className="flex flex-col items-center py-20 bg-white border border-gray-200 rounded-2xl text-center shadow-sm">
             <Trophy className="w-10 h-10 text-gray-300 mb-4" />
@@ -162,7 +162,7 @@ export default function Leaderboard() {
           </div>
         ) : (
           <div className="space-y-10">
-​
+
             {/* ══ #1 CHAMPION SPOTLIGHT ══ */}
             {champion && (() => {
               const { user, rank } = champion;
@@ -212,7 +212,7 @@ export default function Leaderboard() {
                 </div>
               );
             })()}
-​
+
             {/* ══ #2 & #3 SIDE BY SIDE ══ */}
             {top2to3.length > 0 && (
               <div>
@@ -254,7 +254,7 @@ export default function Leaderboard() {
                 </div>
               </div>
             )}
-​
+
             {/* ══ TOP 10 GRID (#4–#10) ══ */}
             {top4to10.length > 0 && (
               <div>
@@ -292,7 +292,7 @@ export default function Leaderboard() {
                 </div>
               </div>
             )}
-​
+
             {/* ══ COMMUNITY (11+) COMPACT LIST ══ */}
             {community.length > 0 && (
               <div>
@@ -324,7 +324,7 @@ export default function Leaderboard() {
                 </div>
               </div>
             )}
-​
+
           </div>
         )}
       </div>

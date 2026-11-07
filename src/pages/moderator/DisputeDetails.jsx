@@ -333,13 +333,20 @@ export default function DisputeDetails() {
             }
 
             if (disciplinaryAction === 'escalate') {
-              await supabase
-                .from('admin_escalations')
-                .insert([{
-                  user_id: loserId,
-                  repeat_offender_id: repeatOffenderId,
-                  status: 'pending'
-                }]);
+              // admin_escalations has no user_id column. The offender is linked
+              // through repeat_offender_id, and moderator_id identifies the actor.
+              if (!repeatOffenderId) {
+                console.error('Escalation skipped: repeat offender record is missing.');
+              } else {
+                const { error: escalationError } = await supabase
+                  .from('admin_escalations')
+                  .insert([{
+                    repeat_offender_id: repeatOffenderId,
+                    moderator_id: currentUserId,
+                    status: 'pending'
+                  }]);
+                if (escalationError) console.error('Escalation insert failed:', escalationError);
+              }
             }
           }
         }

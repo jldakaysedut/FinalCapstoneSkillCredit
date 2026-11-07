@@ -624,34 +624,42 @@ export default function Messages() {
   };
 
   const handleQuickMarkDone = async () => {
+    if (isProcessingDone || !selectedContact || selectedContact.type === 'ticket') return;
     setIsProcessingDone(true);
-    const { data: session, error } = await supabase.from('sessions')
-      .select(`*, instructor:user_profiles!instructor_id(id,full_name), student:user_profiles!student_id(id,full_name)`)
-      .eq('id', selectedContact.id).single();
-    
-    if (error || !session) { setIsProcessingDone(false); return; }
+    try {
+      const { data: session, error: sessionError } = await supabase.from('sessions')
+        .select(`*, instructor:user_profiles!instructor_id(id,full_name), student:user_profiles!student_id(id,full_name)`)
+        .eq('id', selectedContact.id).single();
+      if (sessionError) throw sessionError;
+      if (!session) throw new Error('Session not found. Please refresh.');
+      if (session.student_id !== currentUserId && session.instructor_id !== currentUserId) {
+        throw new Error('You are not a participant in this session.');
+      }
+      if (session.status !== 'active') {
+        throw new Error('This session is no longer active. Please refresh.');
+      }
 
-    const isInstructor = session.instructor_id === currentUserId;
-    const myCompletedLocal = isInstructor ? session.instructor_completed : session.student_completed;
-    const otherCompletedLocal = isInstructor ? session.student_completed : session.instructor_completed;
+      const isInstructor = session.instructor_id === currentUserId;
+      const myCompleted = isInstructor ? session.instructor_completed : session.student_completed;
+      if (myCompleted) {
+        alert('You have already marked this as done! Waiting for your partner.');
+        return;
+      }
+      if (!await confirmDialog('Mark session as done?')) return;
 
-    if (myCompletedLocal) {
-      alert("You have already marked this as done! Waiting for your partner.");
-      setIsProcessingDone(false);
-      return;
-    }
+      // Use the exact RPC from Sessions.jsx. Never update instructor balance
+      // or completion flags from the chat UI: payout and timestamp are atomic.
+      const { data: outcome, error: completionError } = await supabase.rpc('confirm_session_completion', {
+        p_session_id: session.id
+      });
+      if (completionError) throw completionError;
+      if (!outcome || !['waiting', 'completed'].includes(outcome.state)) {
+        throw new Error('Unexpected completion response. Please refresh the session.');
+      }
 
-    if (await confirmDialog('Mark session as done?')) {
-      const payload = isInstructor ? { instructor_completed: true } : { student_completed: true };
-      
-      if (otherCompletedLocal) {
-        payload.status = 'completed';
-        const { data: id } = await supabase.from('user_profiles').select('credits_balance').eq('id', session.instructor_id).single();
-        await supabase.from('user_profiles').update({ credits_balance: Number(id?.credits_balance || 0) + Number(session.credit_amount || 0) }).eq('id', session.instructor_id);
-        
+      if (outcome.state === 'completed' && outcome.awarded === true) {
         window.dispatchEvent(new Event('credit_updated'));
-        
-        await supabase.from('notifications').insert([
+        const { error: notificationError } = await supabase.from('notifications').insert([
           {
             user_id: session.student_id,
             type: 'session_completed',
@@ -665,24 +673,38 @@ export default function Messages() {
             link_url: `/sessions?session=${session.id}`
           }
         ]);
-      } else {
+        if (notificationError) console.error('Completion notification failed (credits already awarded):', notificationError);
+      } else if (outcome.state === 'waiting' && outcome.new_confirmation === true) {
         const targetUserId = isInstructor ? session.student_id : session.instructor_id;
         const actorName = isInstructor ? session.instructor?.full_name || 'The teacher' : session.student?.full_name || 'The learner';
-        await supabase.from('notifications').insert([{
+        const { error: notificationError } = await supabase.from('notifications').insert([{
           user_id: targetUserId,
           type: 'session_update',
           content: `${actorName} has marked the session as done. Please confirm to finalize the completion.`,
           link_url: `/sessions?session=${session.id}`
         }]);
+        if (notificationError) console.error('Completion notification failed:', notificationError);
       }
-      
-      await supabase.from('sessions').update(payload).eq('id', session.id);
-      
-      if (!otherCompletedLocal) {
-         alert("Marked as done! Waiting for partner confirmation.");
+
+      // Refresh the local chat card state so it matches the finalized session.
+      const { data: updated } = await supabase.from('sessions')
+        .select('status,student_completed,instructor_completed')
+        .eq('id', session.id).maybeSingle();
+      if (updated) {
+        setSelectedContact(previous => previous?.id === session.id
+          ? { ...previous, sessionStatus: updated.status, student_completed: updated.student_completed, instructor_completed: updated.instructor_completed }
+          : previous);
+        setContacts(previous => previous.map(contact => contact.id === session.id
+          ? { ...contact, sessionStatus: updated.status, student_completed: updated.student_completed, instructor_completed: updated.instructor_completed }
+          : contact));
       }
+      if (outcome.state === 'waiting') alert('Marked as done! Waiting for partner confirmation.');
+    } catch (err) {
+      console.error('Chat quick completion failed:', err);
+      alert(`Error processing transaction: ${err?.message || 'Unknown error'}`);
+    } finally {
+      setIsProcessingDone(false);
     }
-    setIsProcessingDone(false);
   };
 
   const toggleMute = () => {
