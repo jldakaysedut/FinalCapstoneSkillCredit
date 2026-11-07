@@ -538,7 +538,7 @@ export default function Sessions() {
           <div className="absolute inset-0 pointer-events-none opacity-20"
             style={{ backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)', backgroundSize: '20px 20px' }} />
 
-          <div className="relative flex min-w-0 flex-col 	gap-2 px-3 py-2 min-[360px]:px-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-6 sm:py-5">
+          <div className="relative flex min-w-0 flex-col gap-3 px-3 py-3 min-[360px]:px-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-6 sm:py-5">
             <div>
               <p className="text-[9px] sm:text-[10px] font-semibold uppercase tracking-widest text-emerald-400 mb-1">Booking Manager</p>
               <h1 className="font-bold text-[18px] sm:text-[22px] text-white tracking-tight leading-tight flex items-center gap-1.5 sm:gap-2">
@@ -607,10 +607,10 @@ export default function Sessions() {
               className="px-6 py-2.5 bg-emerald-700 text-white font-bold rounded-xl text-sm shadow-sm">Show all</button>
           </div>
         ) : (
-          <div className="space-y-10">
+          <div className="space-y-6 sm:space-y-10">
             {activeGroups.map(group => (
               <div key={group}>
-                <div className="flex items-center gap-3 mb-4">
+                <div className="flex items-center gap-2 mb-2 sm:gap-3 sm:mb-4">
                   <p className="text-[11px] font-semibold uppercase tracking-widest text-gray-400">{group}</p>
                   <div className="flex-1 h-px bg-gray-200" />
                   <span className="text-[10px] font-bold text-gray-300">{grouped[group].length}</span>
@@ -619,7 +619,7 @@ export default function Sessions() {
                 <div className="relative pl-3 min-[360px]:pl-4 sm:pl-6">
                   <div className="absolute left-[9px] top-2 bottom-2 w-px bg-gray-200" />
 
-                  <div className="space-y-3">
+                  <div className="space-y-2 sm:space-y-3">
                     {grouped[group].map((session) => {
                       const isInstructor   = session.instructor_id === currentUserId;
                       const isProcessing   = processingId === session.id;
@@ -669,37 +669,37 @@ export default function Sessions() {
 
                             <div className={`h-1 w-full ${meta.bar}`} />
 
-                            <div className="px-3 py-3 sm:px-5 sm:py-4 relative z-20">
+                            <div className="px-2.5 py-2.5 min-[360px]:px-3 sm:px-5 sm:py-4 relative z-20">
 
                               <button
                                 onClick={() => setExpandedId(isExpanded ? null : session.id)}
-                                className="absolute top-5 right-4 p-1.5 rounded-full hover:bg-gray-100 text-gray-400 transition focus:outline-none z-30 cursor-pointer">
-                                <ChevronDown className={`w-5 h-5 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
+                                className="absolute top-2.5 right-2 p-1.5 sm:top-5 sm:right-4 rounded-full hover:bg-gray-100 text-gray-400 transition focus:outline-none z-30 cursor-pointer">
+                                <ChevronDown className={`w-4 h-4 sm:w-5 sm:h-5 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
                               </button>
 
-                              <div className="flex min-w-0 items-start gap-2 sm:gap-4 mb-3 pr-7 sm:pr-8 relative z-20">
+                              <div className="flex min-w-0 items-start gap-2 sm:gap-4 mb-2 sm:mb-3 pr-6 sm:pr-8 relative z-20">
                                 <div onClick={() => partnerId && navigate(`/user/${partnerId}`)}
-                                  className="w-9 h-9 sm:w-12 sm:h-12 rounded-xl overflow-hidden bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-lg border border-emerald-200 cursor-pointer hover:scale-105 transition shrink-0">
+                                  className="w-8 h-8 min-[360px]:w-9 min-[360px]:h-9 sm:w-12 sm:h-12 rounded-xl overflow-hidden bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-lg border border-emerald-200 cursor-pointer hover:scale-105 transition shrink-0">
                                   {displayAvatar ? <img src={displayAvatar} alt={displayName} className="w-full h-full object-cover" /> : displayName.charAt(0).toUpperCase()}
                                 </div>
 
                                 <div className="flex-1 min-w-0">
-                                  <div className="flex items-center gap-2 flex-wrap mb-0.5">
+                                  <div className="flex min-w-0 items-center gap-x-1.5 gap-y-1 flex-wrap mb-1 sm:gap-2 sm:mb-0.5">
                                     <span onClick={() => partnerId && navigate(`/user/${partnerId}`)}
-                                      className="min-w-0 max-w-full break-words font-bold text-[13px] sm:text-[15px] text-gray-900 cursor-pointer hover:text-emerald-700 transition">{displayName}</span>
+                                      className="min-w-0 max-w-full break-words leading-4 font-bold text-[12px] sm:text-[15px] text-gray-900 cursor-pointer hover:text-emerald-700 transition">{displayName}</span>
                                     <span className={`text-[10px] font-semibold uppercase tracking-wider border px-2 py-0.5 rounded-full ${
                                       isInstructor ? 'bg-sky-50 text-sky-700 border-sky-100' : 'bg-purple-50 text-purple-700 border-purple-100'
                                     }`}>{isInstructor ? 'Learner' : 'Teacher'}</span>
                                     <span className={`text-[10px] font-bold border px-2 py-0.5 rounded-full ${meta.chip}`}>{meta.label}</span>
                                   </div>
 
-                                  <button onClick={() => navigate(`/skill/${session.skill_id}`)} className="text-[12px] text-gray-400 font-medium hover:text-emerald-700 hover:underline block truncate max-w-xs cursor-pointer">
+                                  <button onClick={() => navigate(`/skill/${session.skill_id}`)} className="block w-full max-w-full text-left text-[11px] min-[360px]:text-[12px] leading-4 text-gray-500 font-medium hover:text-emerald-700 hover:underline line-clamp-2 sm:line-clamp-1 sm:max-w-xs cursor-pointer">
                                     {session.skill?.title || 'Unknown Skill'} · {session.skill?.duration || '?'}
                                   </button>
 
-                                  <div className="mt-2 flex min-w-0 items-start sm:items-center gap-2">
-                                    <CalendarDays className="w-4 h-4 text-emerald-600" />
-                                    <span className="min-w-0 break-words text-[12px] sm:text-[13px] font-semibold text-gray-800">{time}</span>
+                                  <div className="mt-1.5 sm:mt-2 flex min-w-0 items-start sm:items-center gap-1.5 sm:gap-2">
+                                    <CalendarDays className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 text-emerald-600" />
+                                    <span className="min-w-0 break-words text-[11px] min-[360px]:text-[12px] sm:text-[13px] leading-4 font-semibold text-gray-800">{time}</span>
                                   </div>
                                 </div>
                               </div>
@@ -718,7 +718,7 @@ export default function Sessions() {
                               )}
 
                               {/* ── ACTION BAR ── */}
-                              <div className="flex flex-wrap items-center justify-end gap-2 pt-3 border-t border-gray-100 relative z-30">
+                              <div className="flex flex-wrap items-center justify-end gap-1.5 pt-2 sm:gap-2 sm:pt-3 border-t border-gray-100 relative z-30">
                                 
                                 <div className="flex items-center justify-between w-full">
                                   
@@ -855,10 +855,10 @@ export default function Sessions() {
                               </div>
 
                               {isExpanded && (
-                                <div className="mt-4 pt-4 border-t border-gray-100 flex flex-col sm:flex-row gap-6 animate-in slide-in-from-top-2 duration-200 relative z-30">
+                                <div className="mt-2.5 pt-2.5 sm:mt-4 sm:pt-4 border-t border-gray-100 flex flex-col sm:flex-row gap-2.5 sm:gap-6 animate-in slide-in-from-top-2 duration-200 relative z-30">
                                   <div className="flex-1">
-                                    <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-3">Details</p>
-                                    <div className="grid min-w-0 grid-cols-[68px_minmax(0,1fr)] sm:grid-cols-[80px_1fr] gap-x-2 gap-y-2 text-[12px] sm:text-[13px] [&>span]:break-words">
+                                    <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-1.5 sm:mb-3">Details</p>
+                                    <div className="grid min-w-0 grid-cols-[62px_minmax(0,1fr)] min-[360px]:grid-cols-[68px_minmax(0,1fr)] sm:grid-cols-[80px_1fr] gap-x-2 gap-y-1 sm:gap-y-2 text-[11px] min-[360px]:text-[12px] sm:text-[13px] leading-4 sm:leading-normal [&>span]:break-words">
                                       <span className="text-gray-400 font-bold">Format</span><span className="text-gray-900 font-medium">{session.skill?.format || 'N/A'}</span>
                                       <span className="text-gray-400 font-bold">Credits</span><span className="text-gray-900 font-medium">{session.credit_amount} cr</span>
                                       <span className="text-gray-400 font-bold">Booked On</span><span className="text-gray-900 font-medium">{bookedDate}</span>
@@ -866,8 +866,8 @@ export default function Sessions() {
                                     </div>
                                   </div>
                                   <div className="flex-1">
-                                    <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-3">Quick Links</p>
-                                    <button onClick={() => navigate(`/skill/${session.skill_id}`)} className="inline-flex items-center gap-1 text-[13px] font-medium text-gray-900 hover:text-emerald-700 transition cursor-pointer">View listing <ArrowRight className="w-3.5 h-3.5" /></button>
+                                    <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-1.5 sm:mb-3">Quick Links</p>
+                                    <button onClick={() => navigate(`/skill/${session.skill_id}`)} className="inline-flex items-center gap-1 text-[12px] sm:text-[13px] font-medium text-gray-900 hover:text-emerald-700 transition cursor-pointer">View listing <ArrowRight className="w-3.5 h-3.5" /></button>
                                   </div>
                                 </div>
                               )}
