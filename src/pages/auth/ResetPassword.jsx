@@ -56,13 +56,13 @@ export default function ResetPassword() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#f8faf9] px-4 sm:px-6 py-12">
-      <div className="w-full max-w-md rounded-2xl border border-gray-200 bg-white p-6 sm:p-9 shadow-[0_8px_30px_rgba(0,0,0,0.035)]">
+    <div className="flex min-h-screen items-center justify-center bg-[#faf9f6] px-4 sm:px-6 py-12">
+      <div className="w-full max-w-md rounded-2xl border border-gray-200 bg-white p-6 sm:p-8 shadow-[0_12px_34px_rgba(0,0,0,0.055)]">
         <div className="mb-6 flex flex-col items-center text-center">
           <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
             <Lock className="h-6 w-6" />
           </div>
-          <h2 className="text-[26px] font-semibold tracking-tight text-gray-900">Create New Password</h2>
+          <h2 className="text-2xl font-bold text-gray-900">Create New Password</h2>
           <p className="mt-2 text-sm text-gray-500">Enter your new password below to regain access to your account.</p>
         </div>
 
@@ -84,7 +84,7 @@ export default function ResetPassword() {
         ) : (
           <form onSubmit={handleUpdatePassword} className="space-y-5">
             <div>
-              <label htmlFor="new-password" className="mb-1.5 block text-sm font-medium text-gray-700">New Password</label>
+              <label htmlFor="new-password" className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-gray-600">New Password</label>
               <input
                 id="new-password"
                 type="password"
@@ -92,12 +92,12 @@ export default function ResetPassword() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-100 focus-visible:outline-none"
+                className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm outline-none transition focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-100 focus-visible:outline-none"
               />
             </div>
 
             <div>
-              <label htmlFor="confirm-password" className="mb-1.5 block text-sm font-medium text-gray-700">Confirm Password</label>
+              <label htmlFor="confirm-password" className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-gray-600">Confirm Password</label>
               <input
                 id="confirm-password"
                 type="password"
@@ -105,14 +105,14 @@ export default function ResetPassword() {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-100 focus-visible:outline-none"
+                className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm outline-none transition focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-100 focus-visible:outline-none"
               />
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#2d6a4f] py-3 text-sm font-semibold text-white transition-colors duration-150 hover:bg-[#24573f] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-emerald-600/20 disabled:opacity-50"
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-700 py-3 text-sm font-bold text-white transition-colors duration-150 hover:bg-emerald-800 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-emerald-600/20 disabled:opacity-50"
             >
               {loading ? 'Updating Password...' : 'Save New Password'} <ArrowRight className="h-4 w-4" />
             </button>

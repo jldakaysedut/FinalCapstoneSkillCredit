@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react'; 
+import { ArrowLeft, Rocket } from 'lucide-react'; 
 import supabase from '../../supabaseClient';
 
 export default function Register() {
@@ -93,51 +93,99 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f7f8f7] px-4 py-10 sm:px-6 sm:py-14">
-      <div className="mx-auto w-full max-w-[440px]">
-        <div className="mb-8 flex items-center justify-between gap-4">
-          <Link to="/" className="text-xl font-bold tracking-tight text-[#1f513c] hover:text-[#173c2c]">SkillCredit</Link>
-          <Link to="/" className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 transition-colors hover:text-slate-900">
-            <ArrowLeft className="h-4 w-4" /> Home
-          </Link>
+    <div className="min-h-screen flex items-center justify-center py-16 px-4 sm:px-6 lg:px-8 relative" style={{ background: "#faf8f4", fontFamily: "'DM Sans', sans-serif" }}>
+      
+      <Link 
+        to="/" 
+        className="absolute top-6 left-6 md:top-8 md:left-8 flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-[#2d6a4f] transition"
+      >
+        <ArrowLeft className="w-4 h-4" />
+        Back to Home
+      </Link>
+
+      <div className="max-w-md w-full bg-white p-6 sm:p-8 rounded-2xl shadow-[0_12px_38px_rgb(0,0,0,0.06)] border border-[#e8e2d9] transition-shadow duration-200 hover:shadow-[0_16px_44px_rgb(0,0,0,0.075)]">
+        
+        <div className="text-center mb-8">
+          <h2 className="text-3xl font-bold text-[#111]" style={{ fontFamily:"'Fraunces',serif", letterSpacing:"-0.02em" }}>Create an account</h2>
+          <p className="text-gray-500 mt-2 text-sm">Join the community and start learning today.</p>
         </div>
-        <main className="rounded-xl border border-[#e1e6e2] bg-white px-6 py-8 shadow-[0_3px_20px_rgba(15,23,42,0.035)] sm:px-9 sm:py-10">
-          <header className="mb-7">
-            <h1 className="text-[26px] font-semibold tracking-tight text-slate-900">Create an account</h1>
-            <p className="mt-2 text-sm leading-6 text-slate-500">Register to start learning and sharing skills.</p>
-          </header>
-          {errorMsg && (
-            <div role="alert" className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-              {errorMsg}
-              {errorMsg.includes('Please log in instead.') && (
-                <Link to="/login" className="mt-2 block font-semibold text-[#286547] hover:underline">Go to Log In</Link>
-              )}
-            </div>
-          )}
-          <form onSubmit={handleRegister} className="space-y-4">
-            <div>
-              <label htmlFor="register-name" className="mb-2 block text-sm font-medium text-slate-700">Full name</label>
-              <input id="register-name" type="text" required autoComplete="name" value={fullName} onChange={(e) => setFullName(e.target.value)} className="w-full rounded-lg border border-slate-300 bg-white px-3.5 py-3 text-[15px] text-slate-900 placeholder:text-slate-400 outline-none transition-colors focus:border-[#2d6a4f] focus:ring-2 focus:ring-[#2d6a4f]/10" placeholder="Your full name" />
-            </div>
-            <div>
-              <label htmlFor="register-email" className="mb-2 block text-sm font-medium text-slate-700">Email address</label>
-              <input id="register-email" type="email" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full rounded-lg border border-slate-300 bg-white px-3.5 py-3 text-[15px] text-slate-900 placeholder:text-slate-400 outline-none transition-colors focus:border-[#2d6a4f] focus:ring-2 focus:ring-[#2d6a4f]/10" placeholder="name@example.com" />
-            </div>
-            <div>
-              <label htmlFor="register-password" className="mb-2 block text-sm font-medium text-slate-700">Password</label>
-              <input id="register-password" type="password" required autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full rounded-lg border border-slate-300 bg-white px-3.5 py-3 text-[15px] text-slate-900 placeholder:text-slate-400 outline-none transition-colors focus:border-[#2d6a4f] focus:ring-2 focus:ring-[#2d6a4f]/10" placeholder="Create a password" />
-            </div>
-            <div>
-              <label htmlFor="register-confirm-password" className="mb-2 block text-sm font-medium text-slate-700">Confirm password</label>
-              <input id="register-confirm-password" type="password" required autoComplete="new-password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="w-full rounded-lg border border-slate-300 bg-white px-3.5 py-3 text-[15px] text-slate-900 placeholder:text-slate-400 outline-none transition-colors focus:border-[#2d6a4f] focus:ring-2 focus:ring-[#2d6a4f]/10" placeholder="Confirm your password" />
-            </div>
-            <button type="submit" disabled={loading} className="mt-2 w-full rounded-lg bg-[#286547] px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#1c5037] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-emerald-600/20 disabled:cursor-not-allowed disabled:opacity-50">{loading ? 'Creating account...' : 'Create account'}</button>
-          </form>
-          <div className="mt-7 border-t border-slate-100 pt-6 text-center text-sm text-slate-600">
-            Already have an account? <Link to="/login" className="font-semibold text-[#286547] hover:underline">Log in</Link>
+
+        {errorMsg && (
+          <div className="mb-6 p-4 bg-red-50 text-red-700 rounded-lg text-sm font-medium border border-red-200">
+            {errorMsg}
+            {errorMsg.includes('Please log in instead.') && (
+              <Link to="/login" className="block mt-2 font-bold text-[#2d6a4f] hover:underline">
+                Go to Log In
+              </Link>
+            )}
           </div>
-        </main>
-        <p className="mt-6 text-center text-xs text-slate-400">© SkillCredit · Learn and share skills</p>
+        )}
+
+        <form onSubmit={handleRegister} className="space-y-4">
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-1">Full Name</label>
+            <input 
+              type="text" 
+              required 
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              className="w-full border border-gray-300 rounded-xl p-3 outline-none focus:border-[#2d6a4f] focus:ring-2 focus:ring-[#2d6a4f]/15 transition-colors duration-150 bg-gray-50 focus:bg-white" 
+              placeholder="e.g. John Lhoyde Dakay"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-1">Email address</label>
+            <input 
+              type="email" 
+              required 
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full border border-gray-300 rounded-xl p-3 outline-none focus:border-[#2d6a4f] focus:ring-2 focus:ring-[#2d6a4f]/15 transition-colors duration-150 bg-gray-50 focus:bg-white" 
+              placeholder="you@example.com"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-1">Password</label>
+            <input 
+              type="password" 
+              required 
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full border border-gray-300 rounded-xl p-3 outline-none focus:border-[#2d6a4f] focus:ring-2 focus:ring-[#2d6a4f]/15 transition-colors duration-150 bg-gray-50 focus:bg-white" 
+              placeholder="••••••••"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-1">Confirm Password</label>
+            <input 
+              type="password" 
+              required 
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              className="w-full border border-gray-300 rounded-xl p-3 outline-none focus:border-[#2d6a4f] focus:ring-2 focus:ring-[#2d6a4f]/15 transition-colors duration-150 bg-gray-50 focus:bg-white" 
+              placeholder="••••••••"
+            />
+          </div>
+
+          <button 
+            type="submit" 
+            disabled={loading}
+            className="w-full py-3.5 mt-4 bg-[#2d6a4f] text-white font-bold rounded-xl hover:bg-[#1b4332] transition-colors duration-150 shadow-sm hover:shadow-md focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-emerald-600/20 disabled:opacity-50 flex justify-center items-center gap-2"
+          >
+            {loading ? 'Creating account...' : <><Rocket size={18} /> Sign Up & Get 20 Credits</>}
+          </button>
+        </form>
+
+        <p className="mt-8 text-center text-sm text-gray-600">
+          Already have an account?{' '}
+          <Link to="/login" className="font-bold text-[#2d6a4f] hover:underline">
+            Log in here
+          </Link>
+        </p>
+
       </div>
     </div>
   );

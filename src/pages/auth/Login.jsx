@@ -92,41 +92,74 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f7f8f7] px-4 py-10 sm:px-6 sm:py-14">
-      <div className="mx-auto w-full max-w-[440px]">
-        <div className="mb-8 flex items-center justify-between gap-4">
-          <Link to="/" className="text-xl font-bold tracking-tight text-[#1f513c] hover:text-[#173c2c]">SkillCredit</Link>
-          <Link to="/" className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 transition-colors hover:text-slate-900">
-            <ArrowLeft className="h-4 w-4" /> Home
-          </Link>
+    <div className="min-h-screen flex items-center justify-center py-16 px-4 sm:px-6 lg:px-8 relative" style={{ background: "#faf8f4", fontFamily: "'DM Sans', sans-serif" }}>
+      
+      <Link 
+        to="/" 
+        className="absolute top-6 left-6 md:top-8 md:left-8 flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-[#2d6a4f] transition"
+      >
+        <ArrowLeft className="w-4 h-4" />
+        Back to Home
+      </Link>
+
+      <div className="max-w-md w-full bg-white p-6 sm:p-8 rounded-2xl shadow-[0_12px_38px_rgb(0,0,0,0.06)] border border-[#e8e2d9] transition-shadow duration-200 hover:shadow-[0_16px_44px_rgb(0,0,0,0.075)]">
+        
+        <div className="text-center mb-8">
+          <h2 className="text-3xl font-bold text-[#111]" style={{ fontFamily:"'Fraunces',serif", letterSpacing:"-0.02em" }}>Welcome back</h2>
+          <p className="text-gray-500 mt-2 text-sm">Log in to continue your learning journey.</p>
         </div>
-        <main className="rounded-xl border border-[#e1e6e2] bg-white px-6 py-8 shadow-[0_3px_20px_rgba(15,23,42,0.035)] sm:px-9 sm:py-10">
-          <header className="mb-7">
-            <h1 className="text-[26px] font-semibold tracking-tight text-slate-900">Log in to your account</h1>
-            <p className="mt-2 text-sm leading-6 text-slate-500">Enter your credentials to access SkillCredit.</p>
-          </header>
-          {errorMsg && (
-            <div role="alert" className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{errorMsg}</div>
-          )}
-          <form onSubmit={handleLogin} className="space-y-5">
-            <div>
-              <label htmlFor="login-email" className="mb-2 block text-sm font-medium text-slate-700">Email address</label>
-              <input id="login-email" type="email" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full rounded-lg border border-slate-300 bg-white px-3.5 py-3 text-[15px] text-slate-900 placeholder:text-slate-400 outline-none transition-colors focus:border-[#2d6a4f] focus:ring-2 focus:ring-[#2d6a4f]/10" placeholder="name@example.com" />
-            </div>
-            <div>
-              <div className="mb-2 flex items-center justify-between gap-3">
-                <label htmlFor="login-password" className="block text-sm font-medium text-slate-700">Password</label>
-                <Link to="/forgot-password" className="text-sm font-medium text-[#286547] hover:underline">Forgot password?</Link>
-              </div>
-              <input id="login-password" type="password" required autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full rounded-lg border border-slate-300 bg-white px-3.5 py-3 text-[15px] text-slate-900 placeholder:text-slate-400 outline-none transition-colors focus:border-[#2d6a4f] focus:ring-2 focus:ring-[#2d6a4f]/10" placeholder="Enter your password" />
-            </div>
-            <button type="submit" disabled={loading} className="mt-2 w-full rounded-lg bg-[#286547] px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#1c5037] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-emerald-600/20 disabled:cursor-not-allowed disabled:opacity-50">{loading ? 'Logging in...' : 'Log in'}</button>
-          </form>
-          <div className="mt-7 border-t border-slate-100 pt-6 text-center text-sm text-slate-600">
-            Don't have an account? <Link to="/register" className="font-semibold text-[#286547] hover:underline">Create an account</Link>
+
+        {errorMsg && (
+          <div className="mb-6 p-4 bg-red-50 text-red-700 rounded-lg text-sm font-medium border border-red-200">
+            {errorMsg}
           </div>
-        </main>
-        <p className="mt-6 text-center text-xs text-slate-400">© SkillCredit · Learn and share skills</p>
+        )}
+
+        <form onSubmit={handleLogin} className="space-y-5">
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-1">Email address</label>
+            <input 
+              type="email" 
+              required 
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full border border-gray-300 rounded-xl p-3.5 outline-none focus:border-[#2d6a4f] focus:ring-2 focus:ring-[#2d6a4f]/15 transition-colors duration-150 bg-gray-50 focus:bg-white" 
+              placeholder="you@example.com"
+            />
+          </div>
+
+          <div>
+            <div className="flex justify-between items-center mb-1">
+              <label className="block text-sm font-bold text-gray-700">Password</label>
+              <Link to="/forgot-password" className="text-xs font-bold text-[#2d6a4f] hover:underline">
+                Forgot password?
+              </Link>
+            </div>
+            <input 
+              type="password" 
+              required 
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full border border-gray-300 rounded-xl p-3.5 outline-none focus:border-[#2d6a4f] focus:ring-2 focus:ring-[#2d6a4f]/15 transition-colors duration-150 bg-gray-50 focus:bg-white" 
+              placeholder="••••••••"
+            />
+          </div>
+
+          <button 
+            type="submit" 
+            disabled={loading}
+            className="w-full py-3.5 mt-2 bg-[#2d6a4f] text-white font-bold rounded-xl hover:bg-[#1b4332] transition-colors duration-150 shadow-sm hover:shadow-md focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-emerald-600/20 disabled:opacity-50"
+          >
+            {loading ? 'Logging in...' : 'Log In'}
+          </button>
+        </form>
+
+        <p className="mt-8 text-center text-sm text-gray-600">
+          Don't have an account yet?{' '}
+          <Link to="/register" className="font-bold text-[#2d6a4f] hover:underline">
+            Sign up now
+          </Link>
+        </p>
       </div>
     </div>
   );
