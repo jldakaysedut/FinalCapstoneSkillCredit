@@ -234,7 +234,7 @@ export default function SkillDetails() {
               </div>
 
               <h3 onClick={() => navigate(`/user/${instructorId}`)}
-                className="max-w-full break-words font-bold text-[12px] min-[360px]:text-[13px] lg:text-[15px] text-gray-900 tracking-tight leading-snug cursor-pointer hover:text-emerald-700 transition mb-1">{instructorName}</h3>
+                className="max-w-full break-words [overflow-wrap:anywhere] font-bold text-[12px] min-[360px]:text-[13px] lg:text-[15px] text-gray-900 tracking-tight leading-snug cursor-pointer hover:text-emerald-700 transition mb-1">{instructorName}</h3>
               <p className="max-w-full line-clamp-2 lg:line-clamp-none break-words text-[10px] lg:text-[11px] text-gray-500 leading-snug mb-2 lg:mb-3">{instructorBio || 'Platform Instructor and Member'}</p>
 
               {(instructorAvail || instructorContact || memberSince) && (
@@ -278,22 +278,24 @@ export default function SkillDetails() {
             </div>
 
 
-            {(instructorAvail || instructorContact) && (
-              <div className="col-span-2 min-w-0 space-y-1.5 rounded-xl border border-gray-200 bg-white p-2.5 lg:hidden">
-                {instructorAvail && (
-                  <div className="flex min-w-0 items-start gap-2 text-left">
-                    <Clock className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-600" />
-                    <p className="min-w-0 break-words text-[11px] text-gray-700"><span className="font-semibold text-gray-500">Availability: </span>{instructorAvail}</p>
-                  </div>
-                )}
-                {instructorContact && (
-                  <div className="flex min-w-0 items-start gap-2 text-left">
-                    <Mail className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-600" />
-                    <p className="min-w-0 break-all text-[11px] text-gray-700"><span className="font-semibold text-gray-500">Contact: </span>{instructorContact}</p>
-                  </div>
-                )}
-              </div>
-            )}
+            <div className="col-span-2 min-w-0 space-y-1.5 rounded-xl border border-gray-200 bg-white p-2.5 lg:hidden">
+              {instructorAvail ? (
+                <div className="flex min-w-0 items-start gap-2 text-left">
+                  <Clock className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-600" />
+                  <p className="min-w-0 break-words text-[11px] text-gray-700"><span className="font-semibold text-gray-500">Availability: </span>{instructorAvail}</p>
+                </div>
+              ) : (
+                <p className="text-[11px] text-gray-400">Availability not provided</p>
+              )}
+              {instructorContact ? (
+                <div className="flex min-w-0 items-start gap-2 text-left">
+                  <Mail className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-600" />
+                  <p className="min-w-0 break-all text-[11px] text-gray-700"><span className="font-semibold text-gray-500">Contact: </span>{instructorContact}</p>
+                </div>
+              ) : (
+                <p className="text-[11px] text-gray-400">Contact information not provided</p>
+              )}
+            </div>
             <div className="col-span-2 min-w-0 bg-white border border-gray-200 rounded-2xl p-3 lg:p-4 shadow-sm">
               <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-1">Session Cost</p>
               <div className="flex items-end gap-1 mb-3">
@@ -352,7 +354,7 @@ export default function SkillDetails() {
             </div>
           </div>
 
-          <div className="flex-1 min-w-0 space-y-4">
+          <div className="min-w-0 flex-1 space-y-3 sm:space-y-4">
             {skill.cover_image_url && (
               <div className="w-full h-40 min-[360px]:h-48 sm:h-64 bg-white rounded-2xl overflow-hidden border border-gray-200 shadow-sm">
                 <img src={skill.cover_image_url} alt={skill.title} className="w-full h-full object-cover" />
@@ -383,31 +385,31 @@ export default function SkillDetails() {
             </div>
 
             <div className="bg-white border border-gray-200 rounded-2xl p-3 sm:p-5 shadow-sm">
-              <p className="text-sm font-bold tracking-tight text-gray-900 mb-3">About This Session</p>
-              <p className="text-[13px] text-gray-600 leading-relaxed whitespace-pre-wrap">{skill.description}</p>
+              <p className="text-sm font-bold tracking-tight text-gray-900 mb-2 sm:mb-3">About This Session</p>
+              <p className="text-[12px] sm:text-[13px] text-gray-600 leading-relaxed whitespace-pre-wrap">{skill.description}</p>
             </div>
 
             {skill.outcomes && (
               <div className="bg-white border border-gray-200 rounded-2xl p-3 sm:p-5 shadow-sm">
-                <p className="flex items-center gap-1.5 text-sm font-bold tracking-tight text-gray-900 mb-3"><Target className="w-4 h-4 text-emerald-600" /> What You Will Walk Away With</p>
-                <p className="text-[13px] text-gray-600 leading-relaxed whitespace-pre-wrap">{skill.outcomes}</p>
+                <p className="flex items-center gap-1.5 text-sm font-bold tracking-tight text-gray-900 mb-2 sm:mb-3"><Target className="w-4 h-4 text-emerald-600" /> What You Will Walk Away With</p>
+                <p className="text-[12px] sm:text-[13px] text-gray-600 leading-relaxed whitespace-pre-wrap">{skill.outcomes}</p>
               </div>
             )}
 
             {skill.reviewsList && skill.reviewsList.length > 0 && (
               <div className="bg-white border border-gray-200 rounded-2xl p-3 sm:p-5 shadow-sm">
-                <p className="flex items-center gap-1.5 text-sm font-bold tracking-tight text-gray-900 mb-4"><MessageSquare className="w-4 h-4 text-sky-600" /> Student Feedback ({skill.totalReviews})</p>
+                <p className="flex items-center gap-1.5 text-sm font-bold tracking-tight text-gray-900 mb-3 sm:mb-4"><MessageSquare className="w-4 h-4 text-sky-600" /> Student Feedback ({skill.totalReviews})</p>
                 
-                <div className="space-y-4">
+                <div className="space-y-2.5 sm:space-y-4">
                   {skill.reviewsList.slice(0, 5).map((review, idx) => {
                     const studentData = Array.isArray(review.student) ? review.student[0] : review.student;
                     const reviewerName = studentData?.full_name || 'Anonymous Student';
                     const reviewerAvatar = studentData?.avatar_url || null;
 
                     return (
-                      <div key={idx} className="pb-4 border-b border-gray-50 last:border-0 last:pb-0">
-                        <div className="flex items-center gap-3 mb-2">
-                          <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center font-bold text-xs text-emerald-800 overflow-hidden shrink-0">
+                      <div key={idx} className="border-b border-gray-50 pb-2.5 last:border-0 last:pb-0 sm:pb-4">
+                        <div className="mb-1.5 flex min-w-0 items-center gap-2 sm:mb-2 sm:gap-3">
+                          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-emerald-100 flex items-center justify-center font-bold text-xs text-emerald-800 overflow-hidden shrink-0">
                             {reviewerAvatar ? <img src={reviewerAvatar} alt="" className="w-full h-full object-cover" /> : reviewerName.charAt(0)}
                           </div>
                           <div>
@@ -420,7 +422,7 @@ export default function SkillDetails() {
                           </div>
                         </div>
                         {review.feedback && (
-                          <p className="text-[12px] text-gray-600 pl-11 italic">"{review.feedback}"</p>
+                          <p className="break-words pl-9 text-[11px] italic text-gray-600 sm:pl-11 sm:text-[12px]">"{review.feedback}"</p>
                         )}
                       </div>
                     );

@@ -280,10 +280,10 @@ export default function SkillCreditAIChat({ userId, onBack }) {
       {/* CENTER — matches the existing person/support chat pane in Messages.jsx. */}
       <section className="flex min-w-0 min-h-0 flex-1 flex-col bg-white">
         {/* Same header/avatar proportions as the user/support conversation header. */}
-        <header className="flex min-w-0 shrink-0 items-center justify-between gap-2 border-b border-gray-100 bg-white px-3 py-2.5 sm:px-5 sm:py-3.5">
+        <header className="relative z-20 flex min-w-0 shrink-0 items-center justify-between gap-2 border-b border-gray-100 bg-white px-3 py-2.5 sm:px-5 sm:py-3.5">
           <div className="flex min-w-0 items-center gap-2 sm:gap-3">
-            <button type="button" onClick={onBack} className="mr-1 text-gray-500 md:hidden" aria-label="Back to conversations">
-              <ArrowLeft className="h-4 w-4" />
+            <button type="button" onClick={onBack} className="mr-1 inline-flex h-10 shrink-0 items-center gap-1 rounded-lg px-1 text-[12px] font-semibold text-gray-700 hover:bg-gray-100 md:hidden" aria-label="Back to conversations">
+              <ArrowLeft className="h-4 w-4" /><span>Back</span>
             </button>
             <div className="relative shrink-0">
               <span className="flex h-10 w-10 items-center justify-center rounded-full border border-emerald-100 bg-emerald-100 text-emerald-800">

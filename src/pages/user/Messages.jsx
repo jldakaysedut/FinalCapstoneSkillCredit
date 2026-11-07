@@ -739,7 +739,7 @@ export default function Messages() {
   const otherCompleted = selectedContact ? (isContactInstructor ? selectedContact.studentCompleted : selectedContact.instructorCompleted) : false;
 
   if (loadingContacts) return (
-    <div role="status" aria-live="polite" aria-label="Loading messages" className="flex h-[calc(100dvh-64px)] min-h-0 min-w-0 md:h-[calc(100vh-70px)] bg-white overflow-hidden text-gray-900">
+    <div role="status" aria-live="polite" aria-label="Loading messages" className="fixed inset-x-0 bottom-0 top-16 z-30 flex min-h-0 min-w-0 overflow-hidden bg-white text-gray-900 md:static md:z-auto md:h-[calc(100vh-70px)]">
       
       <div className="w-full md:w-[260px] lg:w-[280px] border-r border-gray-100 flex flex-col shrink-0 bg-white">
         <div className="px-3 pt-3 pb-2 sm:px-5 sm:pt-5 sm:pb-3 flex items-center shrink-0">
@@ -897,7 +897,7 @@ export default function Messages() {
   );
 
   return (
-    <div className="flex h-[calc(100dvh-64px)] min-h-0 min-w-0 md:h-[calc(100vh-70px)] bg-white overflow-hidden text-gray-900">
+    <div className="fixed inset-x-0 bottom-0 top-16 z-30 flex min-h-0 min-w-0 overflow-hidden bg-white text-gray-900 md:static md:z-auto md:h-[calc(100vh-70px)]">
 
       {/* ══ LEFT PANEL ══ */}
       <div className={`w-full md:w-[260px] lg:w-[280px] border-r border-gray-100 flex flex-col shrink-0 bg-white ${
@@ -976,43 +976,56 @@ export default function Messages() {
       </div>
 
       {/* ══ CENTER: Chat ══ */}
-      <div className={`flex-1 min-h-0 min-w-0 flex flex-col bg-white ${ !(selectedContact || aiActive) ? 'hidden md:flex' : 'flex' } ${selectedContact ? 'pt-14 md:pt-0' : ''}`}>
+      <div className={`flex-1 min-h-0 min-w-0 flex flex-col bg-white ${ !(selectedContact || aiActive) ? 'hidden md:flex' : 'flex' }`}>
         {aiActive ? (
           <SkillCreditAIChat userId={currentUserId} onBack={() => setAiActive(false)} />
         ) : selectedContact ? (
           <>
-            <div className="fixed inset-x-0 top-16 z-40 flex h-14 min-w-0 shrink-0 items-center justify-between gap-2 border-b border-gray-100 bg-white px-2.5 py-2 shadow-sm sm:px-5 md:static md:z-auto md:h-auto md:px-5 md:py-3.5 md:shadow-none">
-              <div className="flex min-w-0 items-center gap-2 sm:gap-3">
-                <button type="button" onClick={() => setSelectedContact(null)} aria-label="Back to conversations" className="md:hidden inline-flex h-10 shrink-0 items-center gap-1 rounded-lg px-1 text-[12px] font-semibold text-gray-700 hover:bg-gray-100"><ArrowLeft className="h-4 w-4" /><span>Back</span></button>
+            <div className="relative z-20 flex min-h-14 min-w-0 shrink-0 items-center border-b border-gray-100 bg-white px-2.5 py-2 shadow-sm sm:px-5 md:justify-between md:gap-2 md:py-3.5 md:shadow-none">
+              {/* Mobile: Back stays on the left; avatar/name on the right are the profile link. */}
+              <div className="flex w-full min-w-0 items-center justify-between gap-2 md:hidden">
+                <button type="button" onClick={() => setSelectedContact(null)} aria-label="Back to conversations"
+                  className="inline-flex h-10 shrink-0 items-center gap-1 rounded-lg px-1 text-[12px] font-semibold text-gray-700 hover:bg-gray-100">
+                  <ArrowLeft className="h-4 w-4" /><span>Back</span>
+                </button>
+                <button type="button" onClick={handleVisitProfile} disabled={selectedContact.userId === 'support'}
+                  aria-label={selectedContact.userId === 'support' ? 'Support conversation' : `Visit ${selectedContact.name}'s profile`}
+                  title={selectedContact.userId === 'support' ? 'Support conversation' : `Visit ${selectedContact.name}'s profile`}
+                  className="flex max-w-[calc(100%-72px)] min-w-0 flex-row-reverse items-center gap-2 rounded-xl px-1 py-1 text-right hover:bg-gray-50 disabled:cursor-default disabled:hover:bg-transparent">
+                  <span className="relative shrink-0">
+                    <Avatar contact={selectedContact} size="md" />
+                    {!isClosed && <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-white bg-emerald-500" />}
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block truncate text-[13px] font-bold leading-tight text-gray-900">{selectedContact.name}</span>
+                    <span className="mt-0.5 flex items-center justify-end gap-1 text-[11px] text-gray-400">
+                      {isClosed ? <><Lock className="h-3 w-3" /> Closed</> : <span className="font-medium text-emerald-600">Active now</span>}
+                    </span>
+                  </span>
+                </button>
+              </div>
+              {/* Desktop: preserve the original conversation header and info toggle. */}
+              <div className="hidden min-w-0 items-center gap-3 md:flex">
                 <div className="relative">
                   <Avatar contact={selectedContact} size="md" />
-                  {!isClosed && <div className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full" />}
+                  {!isClosed && <div className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-white bg-emerald-500" />}
                 </div>
                 <div className="min-w-0">
-                  <h2 className="truncate font-bold text-[14px] sm:text-[15px] text-gray-900 leading-tight">
+                  <h2 className="truncate text-[15px] font-bold leading-tight text-gray-900">
                     {selectedContact.name}
-                    {isMuted && <span className="text-[11px] text-gray-400 font-normal ml-1.5">(Muted)</span>}
+                    {isMuted && <span className="ml-1.5 text-[11px] font-normal text-gray-400">(Muted)</span>}
                   </h2>
                   <p className="text-[11px] text-gray-400">
-                    {isClosed ? <span className="inline-flex items-center gap-1"><Lock className="w-3 h-3" /> Closed</span> : <span className="text-emerald-600 font-medium">Active now</span>}
+                    {isClosed ? <span className="inline-flex items-center gap-1"><Lock className="h-3 w-3" /> Closed</span> : <span className="font-medium text-emerald-600">Active now</span>}
                   </p>
                 </div>
               </div>
-              <div className="flex shrink-0 items-center gap-1">
-                {selectedContact.userId !== 'support' && (
-                  <button type="button" onClick={handleVisitProfile} aria-label={`Visit ${selectedContact.name}'s profile`}
-                    className="lg:hidden inline-flex h-9 shrink-0 items-center justify-center gap-1 rounded-lg bg-emerald-50 px-2 text-[12px] font-semibold text-emerald-800 hover:bg-emerald-100"
-                    title={`Visit ${selectedContact.name}'s profile`}>
-                    <UserRound className="h-4 w-4" /><span className="hidden min-[350px]:inline">Profile</span>
-                  </button>
-                )}
-                <button onClick={() => setShowInfoPanel(p => !p)}
-                  className={`hidden lg:flex w-9 h-9 rounded-full items-center justify-center transition cursor-pointer ${
-                    showInfoPanel ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                  }`} title="Toggle Info Panel">
-                  <PanelRight className="w-5 h-5" />
-                </button>
-              </div>
+              <button onClick={() => setShowInfoPanel(p => !p)}
+                className={`hidden h-9 w-9 items-center justify-center rounded-full transition lg:flex ${
+                  showInfoPanel ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`} title="Toggle Info Panel">
+                <PanelRight className="h-5 w-5" />
+              </button>
             </div>
 
             {/* ── STICKY ACTION BANNER ── */}
@@ -1255,7 +1268,7 @@ export default function Messages() {
             </div>
 
             {isClosed ? (
-              <div className="px-3 py-3 sm:px-5 sm:py-4 border-t border-gray-100 flex flex-col items-center justify-center min-h-[64px] sm:min-h-[80px] shrink-0">
+              <div className="flex min-h-[42px] shrink-0 flex-col items-center justify-center border-t border-gray-100 px-3 py-2 sm:min-h-[80px] sm:px-5 sm:py-4">
                 {selectedContact.type === 'ticket' && selectedContact.sessionStatus === 'resolved' ? (
                   selectedContact.rating ? (
                     <div className="text-center">
