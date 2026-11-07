@@ -32,7 +32,10 @@ BEGIN
   IF v_session.status IS DISTINCT FROM 'active' THEN
     RAISE EXCEPTION 'Only active sessions can be marked complete' USING ERRCODE = '22023';
   END IF;
-  IF v_session.credit_amount IS NULL OR v_session.credit_amount < 0 THEN
+  IF v_session.credits_awarded_at IS NOT NULL THEN
+    RAISE EXCEPTION 'This session already has a credit award timestamp. Contact support before retrying.' USING ERRCODE = '23505';
+  END IF;
+  IF v_session.credit_amount IS NULL OR v_session.credit_amount <= 0 THEN
     RAISE EXCEPTION 'Invalid session credit amount' USING ERRCODE = '22023';
   END IF;
 

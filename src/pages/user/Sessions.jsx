@@ -211,19 +211,24 @@ export default function Sessions() {
       } 
       else if (action === 'mark_done') {
         if (!await confirmDialog('Mark session as done?')) { setProcessingId(null); return; }
+        // Only this branch has changed. The database handles final credit award
+        // and credits_awarded_at atomically, without touching dispute/refund logic.
+        const { data: outcome, error: completionError } = await supabase.rpc('confirm_session_completion', {
+          p_session_id: session.id
+        });
+        if (completionError) throw completionError;
+        if (!outcome || !['waiting', 'completed'].includes(outcome.state)) {
+          throw new Error('Unexpected completion response. Please refresh and check the session.');
+        }
+
         const isInstructor = session.instructor_id === currentUserId;
-        const payload = isInstructor ? { instructor_completed: true } : { student_completed: true };
-        const otherDone = isInstructor ? session.student_completed : session.instructor_completed;
         const targetUserId = isInstructor ? session.student_id : session.instructor_id;
         const actorName = isInstructor ? session.instructor?.full_name || 'The teacher' : session.student?.full_name || 'The learner';
 
-        if (otherDone) {
-          payload.status = 'completed';
-          const { data: id } = await supabase.from('user_profiles').select('credits_balance').eq('id', session.instructor_id).single();
-          await supabase.from('user_profiles').update({ credits_balance: Number(id?.credits_balance || 0) + Number(session.credit_amount || 0) }).eq('id', session.instructor_id);
+        if (outcome.state === 'completed' && outcome.awarded === true) {
           window.dispatchEvent(new Event('credit_updated'));
-
-          await supabase.from('notifications').insert([
+          // Notification failure must NOT undo/retry a successful credit award.
+          const { error: noticeError } = await supabase.from('notifications').insert([
             {
               user_id: session.student_id,
               type: 'session_completed',
@@ -237,22 +242,23 @@ export default function Sessions() {
               link_url: `/sessions?session=${session.id}`
             }
           ]);
-        } else {
-          await supabase.from('notifications').insert([{
+          if (noticeError) console.error('Completion notification failed (credits already awarded):', noticeError);
+        } else if (outcome.state === 'waiting' && outcome.new_confirmation === true) {
+          const { error: noticeError } = await supabase.from('notifications').insert([{
             user_id: targetUserId,
             type: 'session_update',
             content: `${actorName} has marked the session as done. Please confirm to finalize the completion.`,
             link_url: `/sessions?session=${session.id}`
           }]);
+          if (noticeError) console.error('Completion notification failed:', noticeError);
         }
-        await supabase.from('sessions').update(payload).eq('id', session.id);
       } else if (action === 'undo_done') {
         if (!await confirmDialog("Undo 'Mark as Done'?")) { setProcessingId(null); return; }
         const isInstructor = session.instructor_id === currentUserId;
         await supabase.from('sessions').update(isInstructor ? { instructor_completed: false } : { student_completed: false }).eq('id', session.id);
       }
       fetchSessions(currentUserId);
-    } catch (err) { console.error(err.message); alert('Error processing transaction.'); }
+    } catch (err) { console.error('Session transaction failed:', err); alert(`Error processing transaction: ${err?.message || 'Unknown error'}`); }
     finally { setProcessingId(null); }
   };
 
