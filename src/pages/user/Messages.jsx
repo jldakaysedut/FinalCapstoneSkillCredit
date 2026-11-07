@@ -715,7 +715,7 @@ export default function Messages() {
   const handleVisitProfile = () => {
     if (!selectedContact) return;
     if (selectedContact.userId === 'support') return;
-    navigate(`/profile/${selectedContact.userId}`);
+    navigate(`/user/${selectedContact.userId}`);
   };
 
   const TAB_FILTERS = {
@@ -976,14 +976,14 @@ export default function Messages() {
       </div>
 
       {/* ══ CENTER: Chat ══ */}
-      <div className={`flex-1 min-w-0 flex flex-col bg-white ${ !(selectedContact || aiActive) ? 'hidden md:flex' : 'flex' }`}>
+      <div className={`flex-1 min-h-0 min-w-0 flex flex-col bg-white ${ !(selectedContact || aiActive) ? 'hidden md:flex' : 'flex' } ${selectedContact ? 'pt-14 md:pt-0' : ''}`}>
         {aiActive ? (
           <SkillCreditAIChat userId={currentUserId} onBack={() => setAiActive(false)} />
         ) : selectedContact ? (
           <>
-            <div className="px-3 py-2.5 sm:px-5 sm:py-3.5 border-b border-gray-100 flex min-w-0 items-center justify-between gap-2 shrink-0 bg-white">
+            <div className="fixed inset-x-0 top-16 z-40 flex h-14 min-w-0 shrink-0 items-center justify-between gap-2 border-b border-gray-100 bg-white px-2.5 py-2 shadow-sm sm:px-5 md:static md:z-auto md:h-auto md:px-5 md:py-3.5 md:shadow-none">
               <div className="flex min-w-0 items-center gap-2 sm:gap-3">
-                <button onClick={() => setSelectedContact(null)} aria-label="Back to conversations" className="md:hidden text-gray-500 mr-1"><ArrowLeft className="w-4 h-4" /></button>
+                <button type="button" onClick={() => setSelectedContact(null)} aria-label="Back to conversations" className="md:hidden inline-flex h-10 shrink-0 items-center gap-1 rounded-lg px-1 text-[12px] font-semibold text-gray-700 hover:bg-gray-100"><ArrowLeft className="h-4 w-4" /><span>Back</span></button>
                 <div className="relative">
                   <Avatar contact={selectedContact} size="md" />
                   {!isClosed && <div className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full" />}
@@ -998,9 +998,16 @@ export default function Messages() {
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-1">
+              <div className="flex shrink-0 items-center gap-1">
+                {selectedContact.userId !== 'support' && (
+                  <button type="button" onClick={handleVisitProfile} aria-label={`Visit ${selectedContact.name}'s profile`}
+                    className="lg:hidden inline-flex h-9 shrink-0 items-center justify-center gap-1 rounded-lg bg-emerald-50 px-2 text-[12px] font-semibold text-emerald-800 hover:bg-emerald-100"
+                    title={`Visit ${selectedContact.name}'s profile`}>
+                    <UserRound className="h-4 w-4" /><span className="hidden min-[350px]:inline">Profile</span>
+                  </button>
+                )}
                 <button onClick={() => setShowInfoPanel(p => !p)}
-                  className={`w-9 h-9 rounded-full flex items-center justify-center transition cursor-pointer ${
+                  className={`hidden lg:flex w-9 h-9 rounded-full items-center justify-center transition cursor-pointer ${
                     showInfoPanel ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                   }`} title="Toggle Info Panel">
                   <PanelRight className="w-5 h-5" />
