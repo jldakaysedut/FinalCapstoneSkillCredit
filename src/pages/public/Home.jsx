@@ -538,10 +538,14 @@ export default function Home() {
             </div>
           </div>
           <div style={{ display:"flex", gap:16 }}>
-            {["Privacy","Terms","Contact"].map(l => (
-              <a key={l} href="#" style={{ fontSize:13, color:"#555", fontWeight:600, transition:"color .15s" }}
+            {[
+              { label: "Privacy", path: "/privacy" },
+              { label: "Terms", path: "/terms" },
+              { label: "Contact", path: "/contact" },
+            ].map(({ label, path }) => (
+              <Link key={path} to={path} style={{ fontSize:13, color:"#cbd5d1", fontWeight:600, transition:"color .15s" }}
                 onMouseOver={e => (e.currentTarget.style.color="#fff")}
-                onMouseOut={e  => (e.currentTarget.style.color="#555")}>{l}</a>
+                onMouseOut={e  => (e.currentTarget.style.color="#cbd5d1")}>{label}</Link>
             ))}
           </div>
         </div>

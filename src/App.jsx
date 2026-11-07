@@ -12,6 +12,9 @@ import SupportLayout from './layouts/SupportLayout';
 
 // 2. Import Pages
 import Home from './pages/public/Home';
+import PrivacyPolicy from './pages/public/PrivacyPolicy';
+import TermsConditions from './pages/public/TermsConditions';
+import ContactUs from './pages/public/ContactUs';
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
 // 🚨 IDINAGDAG: Forgot and Reset Password Pages
@@ -69,6 +72,9 @@ export default function App() {
         {/* PUBLIC ROUTES */}
         <Route element={<MainLayout />}>
           <Route path="/" element={<Home />} />
+          <Route path="/privacy" element={<PrivacyPolicy />} />
+          <Route path="/terms" element={<TermsConditions />} />
+          <Route path="/contact" element={<ContactUs />} />
         </Route>
 
         {/* AUTH ROUTES */}
