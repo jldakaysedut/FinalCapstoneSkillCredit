@@ -139,6 +139,11 @@ const getNotificationMeta = (type) => {
         Icon: CheckCheck, iconColor: 'text-emerald-600', iconBg: 'bg-emerald-50 border-emerald-200',
         badge: type === 'session_completed' ? 'Completed' : 'Session Update', badgeClass: 'bg-emerald-100 text-emerald-800 border-emerald-200', bgBox: 'bg-emerald-50/40 hover:bg-emerald-50',
       };
+    case 'session_reminder_1h':
+      return {
+        Icon: CalendarDays, iconColor: 'text-emerald-700', iconBg: 'bg-emerald-50 border-emerald-200',
+        badge: 'Session Reminder', badgeClass: 'bg-emerald-100 text-emerald-800 border-emerald-200', bgBox: 'bg-emerald-50/40 hover:bg-emerald-50',
+      };
     case 'session_cancelled':
       return {
         Icon: AlertTriangle, iconColor: 'text-gray-500', iconBg: 'bg-gray-50 border-gray-200',
@@ -628,6 +633,65 @@ export default function UserLayout() {
       }
     };
 
+    // Lightweight reminder: no new DB, SQL, cron, or email service.
+    // Only checks while this signed-in Web layout is open.
+    // The existing notifications table stores the alert and its exact session link.
+    let reminderCheckRunning = false;
+    const checkUpcomingSessionReminders = async (uid) => {
+      if (!uid || disposed || reminderCheckRunning || document.visibilityState === 'hidden') return;
+      reminderCheckRunning = true;
+      try {
+        const { data: dueSessions, error: dueError } = await supabase
+          .from('sessions')
+          .select('id, student_id, instructor_id, scheduled_date, scheduled_time, status, skill:skills(title)')
+          .eq('status', 'upcoming')
+          .or(`student_id.eq.${uid},instructor_id.eq.${uid}`);
+        if (dueError) { console.warn('Could not check upcoming sessions:', dueError); return; }
+        const now = Date.now();
+        for (const session of (dueSessions || [])) {
+          if (disposed) break;
+          const date = String(session.scheduled_date || '');
+          const time = String(session.scheduled_time || '');
+          // Session schedule is stored as Philippine local time (YYYY-MM-DD, HH:MM).
+          if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !/^\d{2}:\d{2}/.test(time)) continue;
+          const start = Date.parse(`${date}T${time.slice(0, 5)}:00+08:00`);
+          const minutesLeft = (start - now) / 60000;
+          if (!Number.isFinite(minutesLeft) || minutesLeft <= 0 || minutesLeft > 60) continue;
+          const link = `/sessions?session=${session.id}`;
+          const cacheKey = `skillcredit:reminder1h:${uid}:${session.id}:${date}:${time.slice(0, 5)}`;
+          try { if (window.localStorage.getItem(cacheKey)) continue; } catch { /* storage optional */ }
+          // Use existing notification records to reduce duplicates between browser sessions.
+          const { data: previous, error: lookupError } = await supabase
+            .from('notifications').select('id').eq('user_id', uid)
+            .eq('type', 'session_reminder_1h').eq('link_url', link).limit(1);
+          if (lookupError) { console.warn('Could not check existing reminder:', lookupError); continue; }
+          if ((previous || []).length) {
+            try { window.localStorage.setItem(cacheKey, 'seen'); } catch { /* optional */ }
+            continue;
+          }
+          const title = session.skill?.title || 'your scheduled skill';
+          const { error: addError } = await supabase.from('notifications').insert([{
+            user_id: uid,
+            type: 'session_reminder_1h',
+            content: `Your session for "${title}" starts in about 1 hour. Be ready!`,
+            link_url: link,
+          }]);
+          if (addError) { console.warn('Could not save session reminder:', addError); continue; }
+          try { window.localStorage.setItem(cacheKey, 'sent'); } catch { /* optional */ }
+          // The current user's Realtime notification listener displays the toast.
+        }
+      } catch (error) {
+        console.warn('Upcoming session reminder check failed:', error);
+      } finally {
+        reminderCheckRunning = false;
+      }
+    };
+    let reminderInterval = null;
+    const checkWhenVisible = () => {
+      if (document.visibilityState === 'visible' && currentUserId)
+        void checkUpcomingSessionReminders(currentUserId);
+    };
+
     const handleLocalUpdate = () => { if (currentUserId) fetchProfile(currentUserId); };
 
     const init = async () => {
@@ -635,6 +699,10 @@ export default function UserLayout() {
       if (disposed) return;
       if (!user) { navigate('/login', { replace: true }); return; }
       currentUserId = user.id;
+      // Recheck every minute while the signed-in website is open.
+      void checkUpcomingSessionReminders(user.id);
+      reminderInterval = window.setInterval(() => { void checkUpcomingSessionReminders(user.id); }, 60_000);
+      document.addEventListener('visibilitychange', checkWhenVisible);
 
       await fetchProfile(user.id);
       await fetchNotifications(user.id);
@@ -662,7 +730,7 @@ export default function UserLayout() {
         .on('postgres_changes',
           { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` },
           (payload) => {
-            if (payload.new) publishNotification(payload.new, payload.new.type === 'daily_reward');
+            if (payload.new) publishNotification(payload.new, ['daily_reward', 'session_cancelled', 'session_reminder_1h'].includes(payload.new.type));
           })
         .on('postgres_changes',
           { event: 'UPDATE', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` },
@@ -680,6 +748,8 @@ export default function UserLayout() {
     init().catch(error => console.error('UserLayout initialization failed:', error));
     return () => {
       disposed = true;
+      if (reminderInterval) window.clearInterval(reminderInterval);
+      document.removeEventListener('visibilitychange', checkWhenVisible);
       window.removeEventListener('credit_updated', handleLocalUpdate);
       if (profileChannel) supabase.removeChannel(profileChannel);
       if (notifsChannel)  supabase.removeChannel(notifsChannel);

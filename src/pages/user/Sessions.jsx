@@ -165,16 +165,31 @@ export default function Sessions() {
       if (action === 'cancel' || action === 'decline' || action === 'cancel_no_show') {
         const { data: sd } = await supabase.from('user_profiles').select('credits_balance').eq('id', session.student_id).single();
         await supabase.from('user_profiles').update({ credits_balance: Number(sd?.credits_balance || 0) + Number(session.credit_amount || 0) }).eq('id', session.student_id);
-        await supabase.from('sessions').update({ status: 'cancelled' }).eq('id', session.id);
+        const { error: cancelError } = await supabase.from('sessions').update({ status: 'cancelled' }).eq('id', session.id);
+        if (cancelError) throw cancelError;
         window.dispatchEvent(new Event('credit_updated'));
 
-        if (action === 'cancel_no_show') {
-          await supabase.from('notifications').insert([{
-            user_id: session.instructor_id,
+        // Tell the OTHER participant. The person who cancelled already sees the confirmation dialog.
+        // The UserLayout Realtime listener shows these notifications as toast popups.
+        const isLearnerActing = currentUserId === session.student_id;
+        const recipientId = isLearnerActing ? session.instructor_id : session.student_id;
+        const actorName = isLearnerActing
+          ? (session.student?.full_name || 'The learner')
+          : (session.instructor?.full_name || 'The instructor');
+        const skillTitle = session.skill?.title || 'your scheduled skill';
+        const reason = action === 'cancel_no_show'
+          ? 'The learner claimed a no-show refund.'
+          : action === 'decline'
+            ? `${actorName} declined the booking.`
+            : `${actorName} cancelled the booking.`;
+        if (recipientId) {
+          const { error: noticeError } = await supabase.from('notifications').insert([{
+            user_id: recipientId,
             type: 'session_cancelled',
-            content: `Your session was cancelled and the credits were refunded to the learner due to inactivity (Missed Schedule).`,
+            content: `${reason} Session: ${skillTitle}. The learner's credits have been refunded.`,
             link_url: `/sessions?session=${session.id}`
           }]);
+          if (noticeError) console.error('Cancellation notification failed:', noticeError);
         }
       } 
       else if (action === 'accept_schedule') {

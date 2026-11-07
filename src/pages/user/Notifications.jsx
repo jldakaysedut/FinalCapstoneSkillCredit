@@ -43,6 +43,7 @@ const TYPE_META = {
   session_update:      { dot: 'bg-blue-400',    ring: 'ring-blue-100',    icon: CheckCheck,   chip: 'bg-blue-50 border-blue-200 text-blue-700',        label: 'Session Update',  category: 'Booking'    },
   session_completed:   { dot: 'bg-emerald-500', ring: 'ring-emerald-100', icon: CheckCheck,   chip: 'bg-emerald-50 border-emerald-200 text-emerald-700', label: 'Completed',       category: 'Booking'    },
   session_cancelled:   { dot: 'bg-gray-400',    ring: 'ring-gray-100',    icon: X,            chip: 'bg-gray-50 border-gray-200 text-gray-700',       label: 'Cancelled',       category: 'Booking'    },
+  session_reminder_1h: { dot: 'bg-emerald-500', ring: 'ring-emerald-100', icon: CalendarDays, chip: 'bg-emerald-50 border-emerald-200 text-emerald-800', label: '1-Hour Reminder', category: 'Booking' },
   new_rating:          { dot: 'bg-amber-400',   ring: 'ring-amber-100',   icon: Star,         chip: 'bg-amber-50 border-amber-200 text-amber-700',      label: 'New Rating',      category: 'Review'     },
 };
 
