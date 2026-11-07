@@ -258,8 +258,6 @@ export default function MyListings() {
 
   useEffect(() => { fetchMyListings(); }, []);
 
-  useRealtimeRefresh(fetchMyListings, ['skills', 'sessions', 'reviews'], 'web_refresh_mylistings');
-
   // 🚨 ADDED HIGHLIGHT EFFECT
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -314,6 +312,9 @@ export default function MyListings() {
     setStats({ totalListings: enriched.length, totalSessions: gSess, totalEarned: gEarned, totalPending: gPend, totalUnrated: gUnrated, avgRating: gRevCnt > 0 ? (gRatingSum / gRevCnt).toFixed(1) : 0, totalReviews: gRevCnt, totalActive: gActive, totalCompleted: gCompleted, totalCancelled: gCancelled });
     setLoading(false);
   };
+
+  // Register realtime updates only after the callback has been initialized.
+  useRealtimeRefresh(fetchMyListings, ['skills', 'sessions', 'reviews'], 'web_refresh_mylistings');
 
   const handleDelete = async skillId => {
     if (!await confirmDialog('Are you sure you want to remove this listing?')) return;
