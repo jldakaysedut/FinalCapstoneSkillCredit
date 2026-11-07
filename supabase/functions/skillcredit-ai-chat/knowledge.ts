@@ -37,7 +37,7 @@ SKILL LISTINGS AND TEACHING
 FIND PEOPLE AND SKILLS — LIVE VERIFIED TOOL RESULTS
 - It can find teachers from approved active skill listings and return teacher + listing cards.
 - It can search real approved active skills by title, category, description, using the signed-in user's allowed read access.
-- Normalize natural-language requests and check synonyms/related skill terms against real approved active listings; rank by title, category, description and learning outcomes. If no real results exist, report that honestly and never invent a listing. Never invent a teacher, student, skill, card, price, or profile URL.
+- Normalize natural-language requests and related skill terms across ALL 16 Create Skill teaching categories. For example: gym/work out -> Fitness & Sports; make up/MUA -> Beauty & Personal Care; code/programming -> Coding & Programming. Rank real approved and active listings by title, description, outcomes, and category. Broader category matches are suggestions, NOT proof of exact-subject expertise. If no real matching listings exist, report that honestly; never invent a listing, teacher, price, or profile URL.
 
 SESSIONS / BOOKING
 - Learners open a skill listing, review its price, format, and duration, and may send a session request with their preferred schedule through Skill Details.

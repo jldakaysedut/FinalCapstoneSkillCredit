@@ -240,53 +240,66 @@ function skillCard(row: Record<string, unknown>, instructorName = ''): SearchCar
 }
 
 
-// Small, explainable synonym expansion. We never invent listings or teachers.
-// User prompts and model-suggested tool arguments are both normalized here.
-const SKILL_SYNONYMS: { match: RegExp; terms: string[] }[] = [
-  { match: /\b(cod(?:e|ing)|program(?:ming|mer)?|developer|software|python|javascript|java|html|css)\b/i,
-    terms: ['coding', 'programming', 'code', 'python', 'javascript', 'web development', 'software'] },
-  { match: /\b(make\s*up|makeup|mua|cosmetic(?:s)?|beauty|bridal makeup)\b/i,
-    terms: ['makeup', 'make up', 'beauty', 'cosmetics', 'cosmetic', 'bridal'] },
-  { match: /\b(photoshop|photo editing|retouch|photo manipulation)\b/i,
-    terms: ['photoshop', 'photo editing', 'photo', 'retouching', 'graphic design'] },
-  { match: /\b(graphic design|graphic artist|digital art|illustrat(?:ion|or))\b/i,
-    terms: ['graphic design', 'digital art', 'illustration', 'design'] },
-  { match: /\b(garden(?:ing|er)?|plant care|plants?|horticulture)\b/i,
-    terms: ['gardening', 'garden', 'plant care', 'plants', 'horticulture'] },
-  { match: /\b(cook(?:ing)?|baking|chef|pastry)\b/i,
-    terms: ['cooking', 'baking', 'pastry', 'food'] },
-  { match: /\b(english|conversation|speaking|public speaking|communication)\b/i,
-    terms: ['english', 'public speaking', 'communication', 'language'] },
-  { match: /\b(video edit(?:ing|or)?|capcut|premiere|film editing)\b/i,
-    terms: ['video editing', 'capcut', 'premiere', 'video'] },
+// Category names match the exact SKILL_CATEGORIES choices in CreateSkill.jsx.
+// Related phrases are discovery hints only: the DB is the authority for real listings.
+const SKILL_CATEGORY_HINTS: { category: string; match: RegExp; terms: string[] }[] = [
+  { category: 'Cooking & Baking', match: /\b(?:cook(?:ing)?|bak(?:e|ing|er)|chef|pastr(?:y|ies)|food prep|recipes?|culinary|desserts?|tinapay|luto|magluto)\b/i, terms: ['cooking', 'baking', 'chef', 'pastry', 'recipe', 'culinary', 'dessert'] },
+  { category: 'Gardening & Plant Care', match: /\b(?:garden(?:ing|er)?|plant(?:ing|s)?|horticulture|vegetable grow(?:ing)?|landscap(?:e|ing)|halaman|pagtatanim|magtanim|succulents?)\b/i, terms: ['gardening', 'plant care', 'plants', 'planting', 'horticulture', 'vegetable'] },
+  { category: 'Home Repair & DIY', match: /\b(?:diy|home repair|house repair|fix(?:ing)? (?:house|home|furniture)|plumb(?:ing|er)|carpent(?:ry|er)|woodwork(?:ing)?|electrical repair|handyman|maintenance|pag.?ayos ng bahay)\b/i, terms: ['home repair', 'diy', 'plumbing', 'carpentry', 'maintenance', 'woodwork'] },
+  { category: 'Fitness & Sports', match: /\b(?:gym|work\s*out|workouts?|exercis(?:e|ing)|fitness|weight\s*lift(?:ing)?|strength train(?:ing)?|body\s*build(?:ing)?|muscle|cardio|aerobics?|sports?|basketball|volleyball|yoga|pilates|personal train(?:er|ing)|mag.?gym|mag.?exercise|papayat)\b/i, terms: ['fitness', 'workout', 'gym', 'exercise', 'strength training', 'sports', 'cardio', 'weightlifting'] },
+  { category: 'Beauty & Personal Care', match: /\b(?:make\s*up|makeup|mua|cosmetic(?:s)?|beauty|bridal (?:makeup|make up)|skincare|skin care|hair ?styling|hairstyl(?:e|ing)|nail art|manicure|salon|pagme.?makeup)\b/i, terms: ['makeup', 'make up', 'beauty', 'cosmetics', 'skincare', 'hair styling', 'personal care'] },
+  { category: 'Computer, Phone & Electronics Help', match: /\b(?:computer (?:repair|help|troubleshoot)|pc (?:repair|help|troubleshoot)|laptop (?:repair|help)|phone (?:repair|fix|help)|mobile phone repair|electronics?|hardware repair|device troubleshooting|tech support|printer (?:repair|help))\b/i, terms: ['computer repair', 'computer help', 'laptop repair', 'phone repair', 'electronics', 'troubleshooting'] },
+  { category: 'School Subjects & Tutoring', match: /\b(?:tutor(?:ing)?|math(?:ematics)?|algebra|geometry|physics|chemistry|biology|science (?:lesson|tutor)|homework|school subject|exam prep|academic|aral|mathematics|reviewer)\b/i, terms: ['tutoring', 'math', 'science', 'school', 'homework', 'academic', 'physics'] },
+  { category: 'Writing & Editing', match: /\b(?:writ(?:e|ing|er)|essay|proofread(?:ing)?|grammar|copywrit(?:er|ing)|edit(?:ing|or) (?:text|document|article)|creative writing|blogg?(?:ing)?|scriptwrit(?:ing)?|resume writing)\b/i, terms: ['writing', 'editing', 'essay', 'proofreading', 'copywriting', 'grammar', 'scriptwriting'] },
+  { category: 'Languages & Public Speaking', match: /\b(?:english (?:speaking|conversation|language)|foreign languages?|learn (?:english|spanish|french|korean|japanese|chinese)|public speak(?:ing)?|speech|pronunciation|communication skill|conversation practice|language learn(?:ing)?|tagalog (?:lesson|tutor)|bisaya (?:lesson|tutor))\b/i, terms: ['language', 'public speaking', 'english', 'communication', 'pronunciation', 'speech', 'conversation'] },
+  { category: 'Music & Singing', match: /\b(?:music|sing(?:ing|er)?|vocals?|voice lessons?|guitar|piano|ukulele|drums?|violin|songwrit(?:ing)?|instrument(?:s)?|kumanta|kanta)\b/i, terms: ['music', 'singing', 'guitar', 'piano', 'vocals', 'instrument', 'drums'] },
+  { category: 'Graphic Design & Digital Art', match: /\b(?:graphic design|graphic artist|digital art|illustrat(?:ion|or)|photoshop|photo edit(?:ing)?|retouch(?:ing)?|canva|logo design|poster design|draw(?:ing)?|digital paint(?:ing)?)\b/i, terms: ['graphic design', 'digital art', 'photoshop', 'illustration', 'canva', 'photo editing', 'logo design'] },
+  { category: 'Video, Animation & AI Content Creation', match: /\b(?:video edit(?:ing|or)?|capcut|premiere pro|after effects|motion graphics|animat(?:ion|or)|filmmak(?:ing|er)|video creat(?:ion|or)|ai video|ai content|content creation|reels editing|tiktok video|youtube edit(?:ing)?)\b/i, terms: ['video editing', 'animation', 'capcut', 'video', 'content creation', 'motion graphics', 'ai video'] },
+  { category: 'Business, Entrepreneurship & Marketing', match: /\b(?:business|entrepreneur(?:ship)?|marketing|selling|sales|digital market(?:ing)?|social media market(?:ing)?|small business|startup|branding strategy|ecommerce|e-commerce|negosyo|magbenta)\b/i, terms: ['business', 'entrepreneurship', 'marketing', 'sales', 'selling', 'ecommerce'] },
+  { category: 'Finance, Investing & Trading', match: /\b(?:financ(?:e|ial)|invest(?:ing|ment)?|trad(?:e|ing|er)|stock market|crypto|cryptocurrency|forex|budget(?:ing)?|personal finance|money management|saving money|stocks|pag.?iipon)\b/i, terms: ['finance', 'investing', 'trading', 'budgeting', 'stock market', 'financial planning'] },
+  { category: 'Website & App Design', match: /\b(?:web(?:site|page)? design|app design|ui\s*\/?\s*ux|user interface|user experience|figma|wirefram(?:e|ing)|prototype|web layout|mobile app design|landing page design)\b/i, terms: ['website design', 'app design', 'ui ux', 'figma', 'wireframe', 'prototype', 'web design'] },
+  { category: 'Coding & Programming', match: /\b(?:cod(?:e|ing)|program(?:ming|mer)?|software develop(?:ment|er)?|python|javascript|typescript|java\b|html\b|css\b|react\b|node\.?js|web develop(?:ment|er)?|app develop(?:ment|er)?|debugg?(?:ing)?|mag.?code)\b/i, terms: ['coding', 'programming', 'code', 'python', 'javascript', 'web development', 'software'] },
 ];
 
-function searchTerms(raw: string): { terms: string[]; intent: string } {
+function searchTerms(raw: string): { terms: string[]; intent: string; categories: string[] } {
   const value = cleanTerm(raw).toLowerCase();
   const stripped = value
-    .replace(/^(?:(?:please|can you|could you|i want to|i need to|i am looking for|looking for|find me|find|search for|search|show me|recommend|hanap(?:in)?|sino|who can)\s+)+/gi, '')
+    .replace(/^(?:(?:please|can you|could you|help me|i want to|i need to|i am looking for|looking for|find me|find|search for|search|show me|recommend|suggest|hanap(?:in)?|sino|who can)\s+)+/gi, '')
     .replace(/^(?:(?:a|an|the|some|good|best|trusted|available|affordable|cheap|beginner|professional)\s+)+/gi, '')
-    .replace(/^(?:(?:teacher|instructor|mentor|tutor|artist|someone|person|people|user)s?\s+)?(?:who\s+)?(?:can\s+)?(?:teach(?:es|ing)?|for|of|on|about|in)\s+/i, '')
+    .replace(/^(?:(?:teacher|instructor|mentor|tutor|artist|someone|person|skill|skills|lesson|course)s?\s+)?(?:who\s+)?(?:can\s+)?(?:teach(?:es|ing)?|for|of|on|about|in)\s+/i, '')
     .replace(/\s+(?:teacher|instructor|mentor|tutor|lessons?|courses?|classes?|skills?)$/i, '')
     .trim();
   const phrase = stripped || value;
   const terms: string[] = [];
+  const categories: string[] = [];
   const add = (t: string) => {
-    const item = t.toLowerCase().replace(/[^\p{L}\p{N}\s-]/gu, '').replace(/\s+/g, ' ').trim();
+    const item = t.toLowerCase().replace(/[^\p{L}\p{N}\s-]/gu, ' ').replace(/\s+/g, ' ').trim();
     if (item.length >= 2 && item.length <= 48 && !terms.includes(item)) terms.push(item);
   };
+  // Keep user intent most important. Match category concepts across natural phrases.
   add(phrase);
-  for (const group of SKILL_SYNONYMS) if (group.match.test(phrase)) group.terms.forEach(add);
-  // General multi-word queries can still match specific content words.
-  // Avoid generic stopwords which would flood matches.
-  if (terms.length < 3 && phrase.includes(' ')) {
-    for (const word of phrase.split(' ')) {
-      if (!/^(teacher|teach|teaches|teaching|skill|skills|class|course|lesson|lessons|artist|someone|find|learn|about|with|beginner|looking|who|for|the|and|me|make|good|best)$/.test(word)) add(word);
+  for (const hint of SKILL_CATEGORY_HINTS) {
+    if (hint.match.test(value)) {
+      categories.push(hint.category);
+      hint.terms.forEach(add);
     }
   }
-  return { terms: terms.slice(0, 8), intent: phrase };
+  // A category can be looked up directly even if the user uses its exact title.
+  for (const hint of SKILL_CATEGORY_HINTS) {
+    if (value.includes(hint.category.toLowerCase()) && !categories.includes(hint.category)) {
+      categories.push(hint.category);
+      hint.terms.forEach(add);
+    }
+  }
+  // Limited fallback words, without stopwords like "skill", "about", or "teacher".
+  if (terms.length < 3 && phrase.includes(' ')) {
+    for (const word of phrase.split(' ')) {
+      if (!/^(teacher|teach|teaches|teaching|skill|skills|class|course|lesson|lessons|artist|someone|find|learn|about|with|beginner|looking|who|for|the|and|me|make|good|best|help|want|need)$/.test(word)) add(word);
+    }
+  }
+  // The max length bounds PostgREST filters and prevents unrelated broad scans.
+  return { terms: terms.slice(0, 12), intent: phrase, categories: categories.slice(0, 3) };
 }
-
 function relevance(row: Record<string, unknown>, terms: string[], intent: string): number {
   const title = String(row.title || '').toLowerCase();
   const category = String(row.category || '').toLowerCase();
@@ -310,11 +323,11 @@ async function findSkills(term: string, url: string, jwt: string, anon: string):
   const browse = /^(?:all|available|skills?|courses?|lessons?)$/i.test(query) ||
     /\b(?:available skills|all skills|what skills|browse skills|skills available|show me skills|list skills)\b/i.test(query);
   if (query.length < 2 && !browse) return { count: 0, cards: [], note: 'Tell me the skill or subject you want to learn.' };
-  const { terms, intent } = searchTerms(query);
+  const { terms, intent, categories } = searchTerms(query);
   const candidates = new Map<string, Record<string, unknown>>();
   // We search a bounded number of alternatives, with read-only JWT + RLS.
   // Query batches avoid huge PostgREST URLs, and rank the real returned records.
-  const batches = browse ? [[]] : [terms.slice(0, 4), terms.slice(4, 8)].filter((b) => b.length);
+  const batches = browse ? [[]] : [terms.slice(0, 4), terms.slice(4, 8), terms.slice(8, 12)].filter((b) => b.length);
   for (const batch of batches) {
     const rows = await queryTable(url, 'skills', jwt, anon, (u) => {
       u.searchParams.set('select', 'id,instructor_id,title,category,description,outcomes,credit_cost');
@@ -329,7 +342,21 @@ async function findSkills(term: string, url: string, jwt: string, anon: string):
     });
     for (const row of rows) if (isUuid(row.id)) candidates.set(row.id, row);
   }
-  const ranked = [...candidates.values()].map((row) => ({ row, score: browse ? 1 : relevance(row, terms, intent) }))
+  // Exact category fallback catches broad phrases like "gym / work out" -> Fitness & Sports.
+  // Do not treat every category member as an exact topic match; ranking prefers title.
+  for (const category of categories) {
+    const rows = await queryTable(url, 'skills', jwt, anon, (u) => {
+      u.searchParams.set('select', 'id,instructor_id,title,category,description,outcomes,credit_cost');
+      u.searchParams.set('status', 'eq.approved');
+      u.searchParams.set('is_active', 'eq.true');
+      u.searchParams.set('category', `eq.${category}`);
+      u.searchParams.set('order', 'created_at.desc');
+      u.searchParams.set('limit', '100');
+    });
+    for (const row of rows) if (isUuid(row.id)) candidates.set(row.id, row);
+  }
+  const ranked = [...candidates.values()].map((row) => ({ row, score: browse ? 1 :
+    relevance(row, terms, intent) + (categories.includes(String(row.category)) ? 3 : 0) }))
     .filter((item) => item.score > 0).sort((a, b) => b.score - a.score).slice(0, MAX_RESULTS);
   const ids = [...new Set(ranked.map((item) => item.row.instructor_id).filter(isUuid))];
   const people = ids.length ? await queryTable(url, 'user_profiles', jwt, anon, (u) => {
@@ -344,7 +371,7 @@ async function findSkills(term: string, url: string, jwt: string, anon: string):
     .map((item) => skillCard(item.row, peopleById.get(item.row.instructor_id) || ''))
     .filter((v): v is SearchCard => Boolean(v));
   return { count: cards.length, cards,
-    note: cards.length ? 'Verified approved active listings, ranked using related search terms.' : 'No matching approved and active SkillCredit listings were found, including related keywords.' };
+    note: cards.length ? 'Verified approved active listings, ranked by title and related skill terms. Some results may match the broader category rather than the exact topic.' : 'No matching approved and active SkillCredit listings were found, including related keywords.' };
 }
 
 async function findTeachers(term: string, url: string, jwt: string, anon: string): Promise<ToolResult> {
@@ -960,7 +987,7 @@ SKILL CREATOR AUTO-FILL OUTPUT RULES:
 
   // Explicit searches should be reliable even if the model picks a too-literal keyword.
   // This still uses only approved active listings and the user's JWT/RLS.
-  if (!creatorFocus && (mode === 'recommend' || /\b(find|looking for|search|hanap|show me|who teaches|recommend)\b/i.test(message))) {
+  if (!creatorFocus && (mode === 'recommend' || /\b(find|looking for|search|hanap|show me|who teaches|recommend|suggest|help me find)\b/i.test(message))) {
     const direct = explicitSearch(message, mode);
     if (direct) {
       try {
