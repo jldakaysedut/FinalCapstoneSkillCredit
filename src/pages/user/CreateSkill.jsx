@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
   ArrowLeft, ArrowRight, BookOpen, Briefcase, Check, ChefHat, Clock,
   Code2, Dumbbell, ExternalLink, FileText, Film, Hammer,
@@ -40,6 +40,9 @@ const STEPS = [
 
 export default function CreateSkill() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const appliedAiDraft = useRef(false);
+  const [aiDraftNotice, setAiDraftNotice] = useState(false);
   const [step, setStep]                 = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [pageLoading, setPageLoading]   = useState(true);
@@ -51,6 +54,35 @@ export default function CreateSkill() {
     title: '', category: 'Coding & Programming', description: '', outcomes: '',
     format: 'Video Call', duration: '1 hr', creditCost: '15', portfolioUrl: ''
   });
+
+  // SkillCredit AI can prepare this existing wizard with a validated editable draft.
+  // Navigation state (not query strings) avoids putting user prompts in the URL.
+  // Never insert a listing or automatically submit here.
+  useEffect(() => {
+    const incoming = location.state?.aiSkillDraft;
+    if (appliedAiDraft.current || !incoming || typeof incoming !== 'object') return;
+    appliedAiDraft.current = true;
+    const clip = (value, limit) => typeof value === 'string' ? value.slice(0,limit).trim() : '';
+    const title = clip(incoming.title, 120);
+    const description = clip(incoming.description, 2300);
+    const outcomes = clip(incoming.outcomes, 1200);
+    const category = SKILL_CATEGORIES.find((c) => c.name === incoming.category);
+    const duration = DURATIONS.includes(incoming.duration) ? incoming.duration : '1 hr';
+    const format = ['Video Call','Chat/Text','Docs','All Formats'].includes(incoming.format) ? incoming.format : 'Video Call';
+    if (!title || !description || !outcomes) return;
+    const hasExistingInput = Boolean(formData.title.trim() || formData.description.trim() || formData.outcomes.trim());
+    if (hasExistingInput && !window.confirm('Replace your current unsaved Create Skill fields with the AI draft?')) return;
+    setFormData((prev) => {
+      const nextCategory = category?.name || prev.category;
+      const matching = SKILL_CATEGORIES.find((c) => c.name === nextCategory);
+      return { ...prev, title, description, outcomes, category: nextCategory, duration, format,
+        creditCost: String((matching?.min || 15) * getHours(duration)) };
+    });
+    setStep(category ? 2 : 1); // Ask the user to choose a valid category if AI omitted it.
+    setAiDraftNotice(true);
+    // Clear one-time navigation payload; user edits remain in component state.
+    navigate(location.pathname, { replace: true, state: null });
+  }, [location.state, location.pathname, navigate]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     (async () => {
@@ -191,6 +223,12 @@ export default function CreateSkill() {
             </div>
           </div>
         </div>
+
+        {aiDraftNotice && <div role="status" className="mb-4 flex items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-[12px] text-emerald-900">
+          <Sparkles className="mt-0.5 h-4 w-4 shrink-0" />
+          <span className="flex-1"><strong>SkillCredit AI draft applied.</strong> Review the category, description, learning outcomes, format, duration, and credit cost before submitting. Nothing was published automatically.</span>
+          <button type="button" onClick={() => setAiDraftNotice(false)} title="Dismiss" aria-label="Dismiss AI draft notice" className="rounded-full p-1 hover:bg-emerald-100"><X className="h-4 w-4" /></button>
+        </div>}
 
         <div className="flex flex-col lg:flex-row gap-5 items-start">
 

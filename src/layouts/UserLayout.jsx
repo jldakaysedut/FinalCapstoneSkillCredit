@@ -251,6 +251,14 @@ const FloatingHelpButton = () => {
   const buttonDragRef = useRef(null);
   const wasDraggedRef = useRef(false);
 
+  // Navigation-only bridge: AI Help & safety shortcut opens the existing
+  // user-facing Support form; does not affect ticket creation or submission.
+  useEffect(() => {
+    const openSupportFromAI = () => setIsOpen(true);
+    window.addEventListener('skillcredit:open-support', openSupportFromAI);
+    return () => window.removeEventListener('skillcredit:open-support', openSupportFromAI);
+  }, []);
+
   const handleButtonPointerDown = (e) => {
     if (e.button !== undefined && e.button !== 0) return;
     const rect = e.currentTarget.getBoundingClientRect();

@@ -1,41 +1,30 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
-  ArrowLeft, ArrowUpRight, Bell, BookOpen, CalendarDays, Check, ChevronDown,
-  Clock3, Copy, GraduationCap, Loader2, MessageCircle, PanelRight,
-  PenLine, Search, Send, ShieldCheck, Sparkles, Trash2, UserRound, UsersRound, Wallet, X,
+  ArrowLeft, ArrowUpRight, BookOpen, CalendarDays, Check, ChevronDown,
+  Clock3, Copy, FilePenLine, Loader2, MessageCircle, PanelRight, Search, Send,
+  ShieldCheck, Sparkles, Trash2, UserRound, Wallet, X,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import supabase from '../supabaseClient';
 import { confirmDialog } from './confirmDialog';
 import AIMessageMarkdown from './AIMessageMarkdown';
 
-// These are assistant CATEGORIES (what it can help with), not new SkillCredit skill taxonomy.
-// The personal categories read only the authenticated user's own records via Supabase RLS.
+// UI categories only; the backend remains responsible for choosing and enforcing
+// verified SkillCredit read-only tools. Removing a menu option does not change Groq.
 const CATEGORIES = [
-  { id: 'chat', label: 'Ask SkillCredit', subtitle: 'Platform guides, rules and how-tos', icon: Sparkles,
-    sample: 'How does booking a session work in SkillCredit?', placeholder: 'Ask about SkillCredit features or how something works…' },
-  { id: 'users', label: 'Find users', subtitle: 'Search public member profiles', icon: UsersRound,
-    sample: 'Find a user named Maria', placeholder: 'Whose SkillCredit profile are you looking for?' },
-  { id: 'teachers', label: 'Find mentors', subtitle: 'People teaching real listed skills', icon: GraduationCap,
-    sample: 'Find someone who teaches Photoshop', placeholder: 'What skill should the mentor teach?' },
-  { id: 'recommend', label: 'Explore skills', subtitle: 'Real approved skill listings', icon: Search,
-    sample: 'Find photography skills', placeholder: 'What would you like to learn?' },
-  { id: 'sessions', label: 'My sessions', subtitle: 'Your own booking and session statuses', icon: CalendarDays,
-    sample: 'Show my recent sessions', placeholder: 'Ask about your recent sessions…' },
-  { id: 'wallet', label: 'My wallet', subtitle: 'Live balance and recent top-ups', icon: Wallet,
-    sample: 'How many SkillCredits do I have?', placeholder: 'Ask about your balance or top-up history…' },
-  { id: 'notifications', label: 'Notifications', subtitle: 'Recent alerts from your account', icon: Bell,
-    sample: 'Show my recent notifications', placeholder: 'Ask about recent notifications…' },
-  { id: 'listings', label: 'My listings', subtitle: 'Your teaching listings and statuses', icon: BookOpen,
-    sample: 'Show the status of my skill listings', placeholder: 'Ask about your submitted skill listings…' },
-  { id: 'describe', label: 'Write a skill', subtitle: 'Draft editable descriptions and outcomes', icon: PenLine,
-    sample: 'Write a listing description for beginner Photoshop editing', placeholder: 'Tell me the skill you want to teach…' },
-  { id: 'community', label: 'Community', subtitle: 'Posts, comments, reactions and reports', icon: MessageCircle,
-    sample: 'How can I post a question in the Community?', placeholder: 'Ask about the SkillCredit Community…' },
-  { id: 'support', label: 'Help & safety', subtitle: 'Support, disputes and reporting', icon: ShieldCheck,
-    sample: 'How can I report a problem with a session?', placeholder: 'Describe what you need help with…' },
+  { id: 'chat', label: 'Ask SkillCredit', icon: Sparkles,
+    placeholder: 'Ask about SkillCredit features or how something works…' },
+  { id: 'recommend', label: 'Explore skills', icon: Search,
+    placeholder: 'What would you like to learn?' },
+  { id: 'sessions', label: 'My sessions', icon: CalendarDays,
+    placeholder: 'Ask about your sessions or bookings…' },
+  { id: 'wallet', label: 'My wallet', icon: Wallet,
+    placeholder: 'Ask about your SkillCredits or top-up history…' },
+  { id: 'listings', label: 'My listings', icon: BookOpen,
+    placeholder: 'Ask about your posted skills…' },
+  { id: 'describe', label: 'Skill Creator', icon: FilePenLine,
+    placeholder: 'Tell me what you want to teach. I can draft your title, description and learning outcomes…' },
 ];
-const QUICK_IDS = ['chat', 'users', 'teachers', 'recommend'];
 const MAX_CHARS = 2000;
 const CARD_PREFIX = '__SKILLCREDIT_AI_RESULTS_V1__:';
 const SAFE_PAGES = new Set(['/payments', '/sessions', '/notifications', '/my-listings', '/create-skill', '/community', '/messages', '/dashboard']);
@@ -44,22 +33,39 @@ const timeOf = (date) => new Date(date).toLocaleString([], { month: 'short', day
 const titleOf = (items) => items.find((m) => m.role === 'user')?.content?.slice(0, 55) || 'New conversation';
 const isUuid = (s) => typeof s === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
 
+// Form drafts are from AI output but still untrusted: do not allow arbitrary routes,
+// unexpected field names or large data into React Router state.
+function safeSkillDraft(value) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+  const fields = ['title', 'description', 'outcomes', 'category', 'format', 'duration'];
+  const limits = [120, 2300, 1200, 95, 30, 15];
+  const draft = Object.fromEntries(fields.map((key, i) => [key, typeof value[key] === 'string' ? value[key].slice(0, limits[i]).trim() : '']));
+  return draft.title && draft.description && draft.outcomes ? draft : null;
+}
+const timeUntil = (s) => {
+  if (!s) return null;
+  const date = new Date(s);
+  return Number.isFinite(date.getTime()) ? date.toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : null;
+};
+
 // Reuses ai_chat_messages.content TEXT; previous conversations and their clickable cards survive.
 // Only allow IDs/routes from verified result types. Never navigate to a raw model-generated URL.
 function unpackMessage(content) {
-  if (typeof content !== 'string' || !content.startsWith(CARD_PREFIX)) return { text: content || '', cards: [], links: [] };
+  if (typeof content !== 'string' || !content.startsWith(CARD_PREFIX)) return { text: content || '', cards: [], links: [], draft: null };
   try {
     const parsed = JSON.parse(content.slice(CARD_PREFIX.length));
     if (typeof parsed?.text !== 'string' || !Array.isArray(parsed?.cards)) throw Error('Invalid AI card data');
     return {
       text: parsed.text,
+      draft: safeSkillDraft(parsed.draft),
       cards: parsed.cards.filter((c) => c && (c.type === 'user' || c.type === 'skill') && isUuid(c.id) && typeof c.title === 'string').slice(0, 12),
       links: (Array.isArray(parsed.links) ? parsed.links : []).filter((link) => link && SAFE_PAGES.has(link.path) && typeof link.label === 'string').slice(0, 3),
     };
-  } catch { return { text: 'Saved AI search cards are not readable.', cards: [], links: [] }; }
+  } catch { return { text: 'Saved AI content is not readable.', cards: [], links: [], draft: null }; }
 }
-function packMessage(text, cards, links) {
-  if ((!Array.isArray(cards) || !cards.length) && (!Array.isArray(links) || !links.length)) return text;
+function packMessage(text, cards, links, draft) {
+  const safeDraft = safeSkillDraft(draft);
+  if ((!Array.isArray(cards) || !cards.length) && (!Array.isArray(links) || !links.length) && !safeDraft) return text;
   const safeCards = (cards || []).filter((c) => c && ['user', 'skill'].includes(c.type) && isUuid(c.id)).slice(0, 12)
     .map((c) => ({ type: c.type, id: c.id, title: String(c.title || '').slice(0, 120),
       subtitle: String(c.subtitle || '').slice(0, 125), avatar_url: String(c.avatar_url || '').slice(0, 260),
@@ -67,7 +73,7 @@ function packMessage(text, cards, links) {
   const safeLinks = (links || []).filter((link) => SAFE_PAGES.has(link?.path)).slice(0, 3)
     .map((link) => ({ path: link.path, label: String(link.label || 'Open page').slice(0, 55) }));
   // ai_chat_messages.content has a 12000-character maximum in the AI SQL patch.
-  const payload = { text: text.slice(0, 4200), cards: safeCards, links: safeLinks };
+  const payload = { text: text.slice(0, 4200), cards: safeCards, links: safeLinks, draft: safeDraft };
   let packed = CARD_PREFIX + JSON.stringify(payload);
   // Conservatively stay under the DB content limit even for verbose search cards.
   while (packed.length > 11000 && payload.cards.length) {
@@ -75,6 +81,8 @@ function packMessage(text, cards, links) {
     packed = CARD_PREFIX + JSON.stringify(payload);
   }
   if (packed.length > 11000) packed = CARD_PREFIX + JSON.stringify({ ...payload, text: text.slice(0, 2500) });
+  // Fall back to readable text if a very long draft still exceeds the DB check constraint.
+  if (packed.length > 11000) return text.slice(0, 10000);
   return packed;
 }
 
@@ -107,6 +115,9 @@ export default function SkillCreditAIChat({ userId, onBack }) {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState('');
+  const [usage, setUsage] = useState(null);
+  const [clock, setClock] = useState(Date.now());
+  const [lastSentAt, setLastSentAt] = useState(0);
   const [showHistory, setShowHistory] = useState(false);
   const [showInfoPanel, setShowInfoPanel] = useState(true); // Visual layout toggle only.
   const [showCategories, setShowCategories] = useState(false);
@@ -114,6 +125,28 @@ export default function SkillCreditAIChat({ userId, onBack }) {
   const bottom = useRef(null);
   const inputRef = useRef(null);
   const sendingRef = useRef(false);
+  const quotaResetMs = usage?.reset_at ? Date.parse(usage.reset_at) : NaN;
+  const retryMs = usage?.retry_at ? Date.parse(usage.retry_at) : NaN;
+  const isWindowOver = Number.isFinite(quotaResetMs) && clock >= quotaResetMs;
+  const effectiveRemaining = isWindowOver ? (Number(usage?.limit) || 15) : usage?.remaining;
+  const isQuotaBlocked = Boolean(usage && !isWindowOver && effectiveRemaining === 0) ||
+    Boolean(usage?.reason && usage.reason !== 'ok' && Number.isFinite(retryMs) && clock < retryMs);
+  const shortPause = lastSentAt && clock - lastSentAt < 5000;
+  const maySend = !sending && !loading && !isQuotaBlocked && !shortPause;
+
+  useEffect(() => {
+    const interval = setInterval(() => setClock(Date.now()), 1000);
+    return () => clearInterval(interval);
+  }, []);
+  const refreshUsage = async () => {
+    if (!userId) return;
+    try {
+      const { data, error: e } = await supabase.functions.invoke('skillcredit-ai-chat', { body: { action: 'usage_status' } });
+      if (!e && data?.usage) setUsage(data.usage);
+    } catch { /* The server still enforces limits if the status check fails. */ }
+  };
+  useEffect(() => { void refreshUsage(); }, [userId]); // eslint-disable-line react-hooks/exhaustive-deps
+
 
   useEffect(() => {
     let alive = true;
@@ -149,15 +182,13 @@ export default function SkillCreditAIChat({ userId, onBack }) {
   }, [allMessages]);
   const visibleMessages = useMemo(() => allMessages.filter((m) => m.chat_id === activeChatId), [allMessages, activeChatId]);
   const category = CATEGORIES.find((c) => c.id === mode) || CATEGORIES[0];
-  const CategoryIcon = category.icon;
   useEffect(() => { bottom.current?.scrollIntoView({ behavior: 'smooth' }); }, [visibleMessages.length, sending]);
 
-  const pickCategory = (id, sample = false) => {
+  const pickCategory = (id) => {
     if (sendingRef.current) return;
     const next = CATEGORIES.find((c) => c.id === id);
     if (!next) return;
     setMode(next.id);
-    if (sample) setDraft(next.sample);
     setShowCategories(false);
     inputRef.current?.focus();
   };
@@ -186,9 +217,9 @@ export default function SkillCreditAIChat({ userId, onBack }) {
   const send = async (e) => {
     e.preventDefault();
     const text = draft.trim();
-    if (!userId || !text || sendingRef.current || text.length > MAX_CHARS) return;
+    if (!userId || !text || sendingRef.current || isQuotaBlocked || shortPause || text.length > MAX_CHARS) return;
     sendingRef.current = true;
-    setSending(true); setError(''); setShowCategories(false);
+    setSending(true); setError(''); setShowCategories(false); setLastSentAt(Date.now());
     const chatId = activeChatId || idOf();
     if (!activeChatId) setActiveChatId(chatId);
     setDraft('');
@@ -202,19 +233,33 @@ export default function SkillCreditAIChat({ userId, onBack }) {
       setAllMessages((prev) => [...prev, saved]);
       const { data, error: invokeError } = await supabase.functions.invoke('skillcredit-ai-chat', { body: { mode, message: text, history } });
       if (invokeError) {
-        let reason = invokeError.message;
-        try { const details = await invokeError.context?.json(); reason = details?.error || reason; } catch { /* keep original */ }
+        let reason = 'SkillCredit AI is temporarily unavailable. Please try again later.';
+        let issueCode = '';
+        try {
+          const details = await invokeError.context?.json();
+          reason = details?.error || reason;
+          issueCode = details?.code || '';
+          if (details?.usage) setUsage(details.usage);
+          if (details?.retry_at) setUsage((previous) => ({ ...previous, allowed: false,
+            reason: issueCode || 'provider_cooldown', retry_at: details.retry_at }));
+        } catch { /* browser/network error; keep friendly message */ }
+        // A request declined by the limiter is not a real chat turn; remove the just-saved user prompt.
+        if (['user_limit', 'shared_limit', 'slow_down', 'provider_cooldown'].includes(issueCode)) {
+          const { error: cleanupError } = await supabase.from('ai_chat_messages').delete().eq('id', saved.id).eq('user_id', userId);
+          if (!cleanupError) setAllMessages((prev) => prev.filter((item) => item.id !== saved.id));
+        }
         throw new Error(reason);
       }
+      if (data?.usage) setUsage(data.usage);
       if (typeof data?.answer !== 'string' || !data.answer.trim()) throw new Error('AI did not return an answer.');
       const { data: assistantMessage, error: assistantSaveError } = await supabase.from('ai_chat_messages')
-        .insert({ user_id: userId, chat_id: chatId, role: 'assistant', content: packMessage(data.answer.trim(), data.results, data.links) })
+        .insert({ user_id: userId, chat_id: chatId, role: 'assistant', content: packMessage(data.answer.trim(), data.results, data.links, data.draft) })
         .select('id, chat_id, role, content, created_at').single();
       if (assistantSaveError) throw assistantSaveError;
       setAllMessages((prev) => [...prev, assistantMessage]);
     } catch (err) {
-      setError(`${err.message || 'Request failed.'} Your message was saved if it appears above; you can send another message.`);
-    } finally { sendingRef.current = false; setSending(false); }
+      setError(err.message || 'SkillCredit AI could not complete the request. Please try again.');
+    } finally { sendingRef.current = false; setSending(false); void refreshUsage(); }
   };
 
   return (
@@ -279,19 +324,7 @@ export default function SkillCreditAIChat({ userId, onBack }) {
             <div className="m-auto flex w-full max-w-[520px] flex-col items-center px-2 py-8 text-center sm:py-14">
               <span className="flex h-14 w-14 items-center justify-center rounded-full border border-emerald-100 bg-emerald-100 text-emerald-700"><Sparkles className="h-7 w-7" /></span>
               <h3 className="mt-3 text-[18px] font-bold tracking-tight text-gray-900">SkillCredit AI</h3>
-              <p className="mt-1 text-[13px] leading-5 text-gray-500">Ask anything about SkillCredit, find users or mentors, explore skills, and check your own account activity.</p>
-              <p className="mt-6 self-start text-left text-[11px] font-semibold uppercase tracking-wide text-gray-400">Try a message</p>
-              <div className="mt-2 grid w-full grid-cols-1 gap-2 text-left sm:grid-cols-2">
-                {QUICK_IDS.map((id) => { const opt = CATEGORIES.find((c) => c.id === id); const Icon = opt.icon;
-                  return <button type="button" key={id} onClick={() => pickCategory(id, true)}
-                    className="flex min-w-0 items-center gap-2 rounded-xl border border-gray-100 bg-gray-50 px-3 py-3 text-left transition hover:border-emerald-200 hover:bg-emerald-50">
-                    <Icon className="h-4 w-4 shrink-0 text-emerald-700" />
-                    <span className="min-w-0 flex-1 text-[12px] font-semibold text-gray-700">{opt.label}</span>
-                    <ArrowUpRight className="h-3.5 w-3.5 shrink-0 text-gray-400" />
-                  </button>;
-                })}
-              </div>
-              <p className="mt-4 text-[11px] text-gray-400">You can change AI topics below the message field.</p>
+              <p className="mt-1 text-[13px] leading-5 text-gray-500">Ask about your credits, sessions, skill listings, or create a new teaching skill. I'll help with verified SkillCredit information.</p>
             </div>
           ) : (
             <div className="mx-auto flex w-full max-w-[920px] flex-col">
@@ -316,6 +349,14 @@ export default function SkillCreditAIChat({ userId, onBack }) {
                         ? 'rounded-2xl rounded-br-sm bg-emerald-600 text-white'
                         : 'rounded-2xl rounded-bl-sm bg-gray-100 text-gray-900'}`}>
                         {isUser ? <p className="whitespace-pre-wrap break-words">{display.text}</p> : <AIMessageMarkdown text={display.text} />}
+                        {display.draft && <div className="mt-3 rounded-xl border border-emerald-200 bg-white p-3 text-gray-800">
+                          <div className="mb-1 flex items-center gap-2 text-[12px] font-bold text-emerald-800"><FilePenLine className="h-4 w-4" />Editable skill draft</div>
+                          <p className="mb-2 text-[11px] text-gray-500">Review the details in Create Skill. The form is not submitted automatically.</p>
+                          <button type="button" onClick={() => navigate('/create-skill', { state: { aiSkillDraft: display.draft } })}
+                            className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-2 text-[12px] font-semibold text-white hover:bg-emerald-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400">
+                            Apply to Create Skill <ArrowUpRight className="h-3.5 w-3.5" />
+                          </button>
+                        </div>}
                         {display.cards.length > 0 && <div className="mt-3 grid min-w-0 grid-cols-1 gap-2 border-t border-gray-200 pt-3 sm:grid-cols-2">
                           {display.cards.map((card) => <ResultCard key={`${card.type}:${card.id}`} card={card} onOpen={(r) => navigate(r.type === 'user' ? `/user/${r.id}` : `/skill/${r.id}`)} />)}
                         </div>}
@@ -336,8 +377,9 @@ export default function SkillCreditAIChat({ userId, onBack }) {
             </div>
           )}
           {sending && <div className="mx-auto mt-4 flex max-w-[920px] items-center gap-2 pl-1 text-[12px] text-gray-500">
-            <span className="flex h-8 w-8 items-center justify-center rounded-full border border-emerald-100 bg-emerald-100 text-emerald-700"><Loader2 className="h-4 w-4 animate-spin" /></span>
-            SkillCredit AI is responding…
+            <span className="flex h-8 w-8 items-center justify-center rounded-full border border-emerald-100 bg-emerald-100 text-emerald-700"><Sparkles className="h-4 w-4" /></span>
+            <span>{mode === 'describe' ? 'Preparing your editable skill draft' : mode === 'wallet' ? 'Checking your account records' : mode === 'recommend' ? 'Finding available skills' : 'SkillCredit AI is thinking'}</span>
+            <span className="flex gap-1" aria-hidden="true"><span className="h-1.5 w-1.5 animate-bounce rounded-full bg-emerald-400"/><span className="h-1.5 w-1.5 animate-bounce rounded-full bg-emerald-400 [animation-delay:120ms]"/><span className="h-1.5 w-1.5 animate-bounce rounded-full bg-emerald-400 [animation-delay:240ms]"/></span>
           </div>}
           <div ref={bottom} />
         </div>
@@ -349,6 +391,13 @@ export default function SkillCreditAIChat({ userId, onBack }) {
 
         {/* Same compact input area and green Send button as native Messages. */}
         <div className="shrink-0 border-t border-gray-100 bg-white px-3 py-3 sm:px-4">
+          {isQuotaBlocked && <div className="mb-2 flex items-start gap-2 rounded-xl bg-amber-50 px-3 py-2 text-[12px] text-amber-900" role="status">
+            <Clock3 className="mt-0.5 h-4 w-4 shrink-0" />
+            <span>{(usage?.reason === 'user_limit' || effectiveRemaining === 0) ? 'You have reached your AI message allowance.' : 'SkillCredit AI is taking a short break.'}
+              {usage?.reason !== 'provider_cooldown' && timeUntil(usage?.retry_at || usage?.reset_at) && <span className="ml-1">Available again around {timeUntil(usage?.retry_at || usage?.reset_at)}.</span>}
+              <span className="ml-1">Your previous chats are safe.</span>
+            </span>
+          </div>}
           {showCategories && <div className="mb-3 max-h-[240px] overflow-y-auto rounded-xl border border-gray-200 bg-white p-2 shadow-sm">
             <div className="mb-2 flex items-center justify-between px-1">
               <span className="text-[12px] font-bold text-gray-800">Choose an AI category</span>
@@ -365,44 +414,54 @@ export default function SkillCreditAIChat({ userId, onBack }) {
             <div className="flex min-w-0 flex-1 items-center rounded-2xl bg-gray-100 px-4 py-2.5 transition focus-within:bg-gray-50 focus-within:ring-2 focus-within:ring-emerald-400/30">
               <textarea ref={inputRef} value={draft} onChange={(e) => setDraft(e.target.value)} rows={1} maxLength={MAX_CHARS} placeholder={category.placeholder}
                 className="min-h-[22px] max-h-28 w-full resize-none bg-transparent text-[14px] leading-[22px] text-gray-900 outline-none placeholder:text-gray-400"
-                onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); if (!sending && draft.trim()) e.currentTarget.form?.requestSubmit(); } }} />
+                onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); if (maySend && draft.trim()) e.currentTarget.form?.requestSubmit(); } }} />
             </div>
-            <button type="submit" disabled={sending || loading || !draft.trim()} title="Send to SkillCredit AI" aria-label="Send message"
+            <button type="submit" disabled={!maySend || !draft.trim()} title="Send to SkillCredit AI" aria-label="Send message"
               className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-white shadow-sm transition hover:bg-emerald-700 disabled:opacity-40">
               <Send className="h-4 w-4" />
             </button>
           </form>
-          <p className="mt-1.5 truncate text-center text-[10px] text-gray-400">
-            <button type="button" onClick={() => setShowCategories((v) => !v)} aria-expanded={showCategories} title="Change AI topic" className="font-semibold text-gray-500 hover:text-emerald-700 focus-visible:outline-none focus-visible:underline">{category.label}</button>
-            {' · AI may make mistakes · Read-only assistant'}
-          </p>
+          {/* A single centered category control. No footer shortcuts; verified result cards keep their own links. */}
+          <div className="mt-2 flex items-center justify-center">
+            <button type="button" onClick={() => setShowCategories((v) => !v)} aria-expanded={showCategories}
+              title="Change AI category"
+              className="inline-flex items-center justify-center gap-2 rounded-full px-3 py-1 text-[11px] font-semibold text-gray-600 transition hover:bg-gray-100 hover:text-emerald-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400">
+              <Sparkles className="h-3.5 w-3.5 text-emerald-600" />
+              {category.label}<ChevronDown className={`h-3 w-3 transition-transform ${showCategories ? 'rotate-180' : ''}`} />
+            </button>
+          </div>
         </div>
       </section>
 
       {/* RIGHT — same 240px information panel placement as other Messages chats. */}
-      {showInfoPanel && <aside className="hidden w-[240px] shrink-0 flex-col overflow-y-auto border-l border-gray-100 bg-white lg:flex [&::-webkit-scrollbar]:hidden" aria-label="SkillCredit AI profile and chat history">
+      {showInfoPanel && <aside className="hidden h-full max-h-full min-h-0 w-[240px] shrink-0 overflow-x-hidden overflow-y-auto overscroll-y-contain border-l border-gray-100 bg-white lg:block [scrollbar-width:thin] [scrollbar-color:#94a3b8_#f8fafc] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-slate-50 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300" aria-label="SkillCredit AI profile and chat history" tabIndex={0}>
         <div className="flex flex-col items-center border-b border-gray-100 px-5 pb-5 pt-8 text-center">
           <span className="flex h-14 w-14 items-center justify-center rounded-full border border-emerald-100 bg-emerald-100 text-emerald-800"><Sparkles className="h-6 w-6" /></span>
           <h3 className="mt-3 text-[16px] font-bold tracking-tight text-gray-900">SkillCredit AI</h3>
           <p className="mt-0.5 text-[12px] font-medium text-emerald-600">Your AI assistant</p>
-          <p className="mt-2 text-[11px] leading-4 text-gray-400">Search SkillCredit, discover skills, and get help with your account.</p>
+          <p className="mt-2 text-[11px] leading-4 text-gray-400">Explore skills, review your learning, and get help with your account.</p>
           <button type="button" onClick={newChat} disabled={sending}
             className="mt-4 flex items-center gap-2 rounded-full bg-gray-100 px-4 py-2 text-[11px] font-semibold text-gray-700 transition hover:bg-emerald-100 hover:text-emerald-800 disabled:opacity-40">
             New chat
           </button>
         </div>
         <details open className="border-b border-gray-100">
-          <summary className="flex cursor-pointer list-none items-center justify-between px-5 py-3.5 transition hover:bg-gray-50">
+          <summary className="flex cursor-pointer list-none items-center justify-between px-5 py-3.5 transition hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-emerald-400">
             <span className="text-[14px] font-bold text-gray-900">Chat info</span>
             <ChevronDown className="h-4 w-4 text-gray-400" />
           </summary>
           <div className="space-y-2 px-5 pb-4 text-[12px] text-gray-600">
             <p className="flex items-center gap-2"><Sparkles className="h-4 w-4 shrink-0 text-emerald-600" />SkillCredit assistant</p>
             <p className="flex items-center gap-2"><MessageCircle className="h-4 w-4 shrink-0 text-gray-400" />{visibleMessages.length} messages here</p>
-            <p className="flex items-start gap-2"><ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-gray-400" />Read-only AI · no automatic bookings or payments</p>
+            <p className="flex items-start gap-2"><ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-gray-400" />Your account data stays private. Skill drafts require your review.</p>
+            {usage && <div className="mt-2 rounded-lg bg-emerald-50 px-3 py-2">
+              <div className="flex items-center justify-between gap-2 text-[11px] font-semibold text-emerald-800"><span>AI messages left</span><span>{effectiveRemaining ?? '—'} / {usage.limit || 15}</span></div>
+              <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-emerald-100"><div className="h-full rounded-full bg-emerald-600 transition-all" style={{ width: `${Math.min(100, Math.max(0, (Number(effectiveRemaining) / Number(usage.limit || 15)) * 100))}%` }} /></div>
+              <p className="mt-1 text-[10px] text-gray-500">Refreshes every 5 hours from your first message in the period.</p>
+            </div>}
           </div>
         </details>
-        <div className="min-h-0 flex-1">
+        <div>
           <div className="flex items-center justify-between gap-2 px-5 pb-2 pt-4">
             <h4 className="text-[14px] font-bold text-gray-900">Chat history</h4>
             <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-semibold text-gray-500">{conversations.length}</span>
