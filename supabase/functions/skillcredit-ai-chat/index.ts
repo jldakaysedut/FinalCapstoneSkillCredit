@@ -24,31 +24,102 @@ const CREATOR_CATEGORIES = new Set([
 const CREATOR_FORMATS = new Set(['Video Call','Chat/Text','Docs','All Formats']);
 const CREATOR_DURATIONS = new Set(['1 hr','2 hrs','3 hrs']);
 
-// Privileged service key is used ONLY for the usage-quota RPC. Never for app data queries.
-// Client requests are independently authenticated against Supabase Auth before calling.
-async function quotaRpc(url: string, serviceKey: string, fn: string, args: Record<string, unknown>): Promise<Record<string, unknown>> {
-  const response = await fetch(`${url}/rest/v1/rpc/${fn}`, {
-    method: 'POST',
-    headers: { authorization: `Bearer ${serviceKey}`, apikey: serviceKey,
-      'content-type': 'application/json', accept: 'application/json' },
-    body: JSON.stringify(args),
-  });
-  if (!response.ok) {
-    // Do not fall back to unlimited AI if rate limiting is misconfigured.
-    console.error('SkillCredit AI quota RPC failed', fn, response.status);
-    throw new Error('AI usage protection is not ready. Ask the SkillCredit administrator to check the AI quota SQL and service-role key.');
+// Lightweight protection: reuse existing ai_chat_messages records, without new
+// tables, SQL RPCs, or service-role access. This is NOT an atomic/global limit:
+// deleting conversations resets counts and concurrent requests can race.
+const AI_MESSAGE_LIMIT = 15;
+const AI_WINDOW_MS = 5 * 60 * 60 * 1000;
+const AI_GAP_MS = 5000;
+
+type SavedPrompt = { id: string; chat_id: string; created_at: string; content: string };
+async function readSavedPrompt(supabaseUrl: string, anon: string, jwt: string, userId: string, messageId: unknown, text: string): Promise<SavedPrompt | null> {
+  if (!isUuid(messageId)) return null;
+  const api = new URL(`${supabaseUrl}/rest/v1/ai_chat_messages`);
+  api.searchParams.set('select', 'id,chat_id,created_at,content');
+  api.searchParams.set('id', `eq.${messageId}`);
+  api.searchParams.set('user_id', `eq.${userId}`);
+  api.searchParams.set('role', 'eq.user');
+  api.searchParams.set('limit', '1');
+  const response = await fetch(api, { headers: { authorization: `Bearer ${jwt}`, apikey: anon, accept: 'application/json' } });
+  if (!response.ok) throw Error('Could not verify the saved AI message.');
+  const rows: unknown = await response.json();
+  if (!Array.isArray(rows) || !rows.length) return null;
+  const prompt = rows[0] as SavedPrompt;
+  const age = Date.now() - Date.parse(prompt.created_at);
+  if (prompt.content !== text || !isUuid(prompt.chat_id) || !Number.isFinite(age) || age < -30000 || age > 120000) return null;
+  return prompt;
+}
+
+async function readChatUsage(supabaseUrl: string, anon: string, jwt: string, userId: string, currentMessageId?: string): Promise<AIQuota> {
+  const now = Date.now();
+  const since = new Date(now - AI_WINDOW_MS).toISOString();
+  const api = new URL(`${supabaseUrl}/rest/v1/ai_chat_messages`);
+  api.searchParams.set('select', 'id,created_at');
+  api.searchParams.set('user_id', `eq.${userId}`);
+  api.searchParams.set('role', 'eq.user');
+  api.searchParams.set('created_at', `gte.${since}`);
+  api.searchParams.set('order', 'created_at.desc');
+  api.searchParams.set('limit', '16');
+  const response = await fetch(api, { headers: {
+    authorization: `Bearer ${jwt}`, apikey: anon, accept: 'application/json', prefer: 'count=exact',
+  } });
+  if (!response.ok) throw Error('AI message usage is unavailable.');
+  const rows: unknown = await response.json();
+  if (!Array.isArray(rows)) throw Error('Unexpected AI usage response.');
+  const contentRange = response.headers.get('content-range') || '';
+  const totalText = contentRange.split('/').at(-1) || '';
+  const total = Number(totalText);
+  // No guesswork on quota count: a missing total fails closed for expensive calls.
+  if (!contentRange.includes('/') || !Number.isSafeInteger(total) || total < rows.length) throw Error('AI usage count is not available.');
+  const recent = rows as {id: string;created_at:string}[];
+  const currentIndex = currentMessageId ? recent.findIndex((r) => r.id === currentMessageId) : -1;
+  // All AI prompts are saved before calling this function. An explicit saved ID
+  // prevents direct unaudited Groq calls that bypass the conversation store.
+  if (currentMessageId && currentIndex < 0) throw Error('Saved AI message could not be counted.');
+  const limitReached = total > AI_MESSAGE_LIMIT || (!currentMessageId && total >= AI_MESSAGE_LIMIT);
+  let resetAt: string | null = null;
+  if (total) {
+    let oldest = recent.at(-1);
+    if (total > recent.length) {
+      const earliestApi = new URL(`${supabaseUrl}/rest/v1/ai_chat_messages`);
+      earliestApi.searchParams.set('select','created_at');
+      earliestApi.searchParams.set('user_id', `eq.${userId}`);
+      earliestApi.searchParams.set('role','eq.user');
+      earliestApi.searchParams.set('created_at', `gte.${since}`);
+      earliestApi.searchParams.set('order','created_at.asc');
+      earliestApi.searchParams.set('limit','1');
+      const earliestResponse = await fetch(earliestApi, { headers: { authorization: `Bearer ${jwt}`, apikey: anon, accept: 'application/json' } });
+      if (!earliestResponse.ok) throw Error('AI reset time could not be verified.');
+      const oldestRows = await earliestResponse.json();
+      oldest = Array.isArray(oldestRows) && oldestRows.length ? oldestRows[0] : undefined;
+    }
+    const oldestMs = Date.parse(oldest?.created_at || '');
+    if (Number.isFinite(oldestMs)) resetAt = new Date(oldestMs + AI_WINDOW_MS).toISOString();
   }
-  if (response.status === 204) return {}; // PostgREST returns no JSON for void RPCs.
-  const result = await response.json().catch(() => null);
-  return result && typeof result === 'object' ? result : {};
+  let reason = limitReached ? 'user_limit' : 'ok';
+  let retryAt = limitReached ? resetAt : null;
+  if (currentMessageId && !limitReached && recent.length > 1) {
+    // Second most recent prompt is the previous one. The current prompt is
+    // required to be the newest: callers cannot replay older saved prompts.
+    if (currentIndex !== 0) throw Error('An older AI request cannot be replayed.');
+    const diff = Date.parse(recent[0].created_at) - Date.parse(recent[1].created_at);
+    if (!Number.isFinite(diff) || diff < AI_GAP_MS) {
+      reason = 'slow_down';
+      retryAt = new Date(Date.parse(recent[1].created_at) + AI_GAP_MS).toISOString();
+    }
+  }
+  return {
+    allowed: reason === 'ok', reason,
+    remaining: Math.max(0, AI_MESSAGE_LIMIT - total), limit: AI_MESSAGE_LIMIT,
+    reset_at: resetAt, retry_at: retryAt,
+  };
 }
 
 function quotaResponse(q: AIQuota): { error: string; code: string; retry_at: string | null; usage: AIQuota } {
   const descriptions: Record<string, string> = {
-    user_limit: 'You have used your SkillCredit AI messages for this period. You can continue when your allowance refreshes. Your saved chats are still available.',
+    user_limit: 'You have reached your SkillCredit AI message allowance for now. Your saved chats are still available.',
     slow_down: 'One message at a time, please. You can send another message shortly.',
-    shared_limit: 'SkillCredit AI is taking a temporary break due to high demand. Please come back after the shared allowance refreshes.',
-    provider_cooldown: 'SkillCredit AI is temporarily busy. Please try again once service is available.',
+    provider_cooldown: 'SkillCredit AI is temporarily busy. Please try again later.',
   };
   return { error: descriptions[q.reason] || 'SkillCredit AI is temporarily unavailable. Please try again later.',
     code: q.reason, retry_at: q.retry_at || q.reset_at || null, usage: q };
@@ -608,7 +679,6 @@ Deno.serve(async (request: Request) => {
   const url = Deno.env.get('SUPABASE_URL');
   const anon = Deno.env.get('SUPABASE_ANON_KEY');
   const groqKey = Deno.env.get('GROQ_API_KEY');
-  const quotaKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || Deno.env.get('SERVICE_ROLE_KEY');
   // GPT-OSS 20B was the model that the user confirmed working with their Groq key.
   const model = (Deno.env.get('GROQ_MODEL') || 'openai/gpt-oss-20b').trim();
   if (!url || !anon || !groqKey) return respond({ error: 'AI configuration missing. Check Supabase Secrets.' }, 503);
@@ -632,14 +702,15 @@ Deno.serve(async (request: Request) => {
     if (!payload || typeof payload !== 'object' || Array.isArray(payload)) throw Error('Bad request');
   } catch { return respond({ error: 'Invalid request data' }, 400); }
 
-  // A status request never consumes an AI message. It is authenticated above.
-  if (!quotaKey) return respond({ error: 'AI usage protection is not configured. Check the service-role key in Edge Function Secrets.' }, 503);
+  // Status can be read without consuming an AI message. No privileged key/RPC.
   if (payload.action === 'usage_status') {
     try {
-      const usage = await quotaRpc(url, quotaKey, 'skillcredit_ai_quota_status', { p_user_id: userId });
+      const usage = await readChatUsage(url, anon, jwt, userId);
       return respond({ usage });
-    } catch (e) { console.error('Quota status error', e instanceof Error ? e.message : 'unknown');
-      return respond({ error: 'AI usage status is temporarily unavailable.' }, 503); }
+    } catch (e) {
+      console.error('AI chat usage status failed', e instanceof Error ? e.name : 'unknown');
+      return respond({ error: 'AI message usage is temporarily unavailable.' }, 503);
+    }
   }
 
   const mode = String(payload.mode || 'chat');
@@ -652,14 +723,17 @@ Deno.serve(async (request: Request) => {
       ((item as ChatMessage).role === 'user' || (item as ChatMessage).role === 'assistant') &&
       typeof (item as ChatMessage).content === 'string' && (item as ChatMessage).content.length <= MAX_MESSAGE_CHARS) : [];
 
-  // Atomic database reservation, enforced across tabs/devices and before any Groq call.
-  // If SQL/key setup is missing, fail closed rather than running unmetered AI requests.
+  // A user prompt is saved by the frontend before calling the AI. Verify it,
+  // then count the user's recent saved prompts. This is lightweight best-effort
+  // protection, NOT the former global atomic quota.
   try {
-    currentUsage = await quotaRpc(url, quotaKey, 'skillcredit_ai_consume_quota', { p_user_id: userId }) as AIQuota;
+    const savedPrompt = await readSavedPrompt(url, anon, jwt, userId, payload.message_id, message);
+    if (!savedPrompt) return respond({ error: 'AI message was not saved or is no longer valid. Please retry from the chat.' }, 400);
+    currentUsage = await readChatUsage(url, anon, jwt, userId, savedPrompt.id);
     if (!currentUsage.allowed) return respond(quotaResponse(currentUsage), 429);
   } catch (e) {
-    console.error('Quota enforcement error', e instanceof Error ? e.message : 'unknown');
-    return respond({ error: 'SkillCredit AI is temporarily unavailable while usage protection is being configured.' }, 503);
+    console.error('AI message usage check failed', e instanceof Error ? e.name : 'unknown');
+    return respond({ error: 'Unable to verify AI usage right now. Please try again later.' }, 503);
   }
 
   const MODE_GUIDANCE: Record<string, string> = {
@@ -821,8 +895,6 @@ SKILL CREATOR AUTO-FILL OUTPUT RULES:
     const groqError = error as { providerLimited?: boolean; retrySeconds?: number; httpStatus?: number };
     if (groqError?.providerLimited) {
       const seconds = Number.isFinite(groqError.retrySeconds) ? Math.min(18000, Math.max(5, Number(groqError.retrySeconds))) : 60;
-      try { await quotaRpc(url, quotaKey, 'skillcredit_ai_set_provider_cooldown', { p_seconds: Math.ceil(seconds) }); }
-      catch (e) { console.error('Could not persist provider cooldown', e instanceof Error ? e.message : 'unknown'); }
       const retryAt = new Date(Date.now() + seconds * 1000).toISOString();
       return respond({ error: 'SkillCredit AI is temporarily busy. Your saved conversations are safe. Please try again later.',
         code: 'provider_cooldown', retry_at: retryAt }, 429);

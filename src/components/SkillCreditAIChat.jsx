@@ -128,7 +128,8 @@ export default function SkillCreditAIChat({ userId, onBack }) {
   const quotaResetMs = usage?.reset_at ? Date.parse(usage.reset_at) : NaN;
   const retryMs = usage?.retry_at ? Date.parse(usage.retry_at) : NaN;
   const isWindowOver = Number.isFinite(quotaResetMs) && clock >= quotaResetMs;
-  const effectiveRemaining = isWindowOver ? (Number(usage?.limit) || 15) : usage?.remaining;
+  // Rolling window: expiry returns slots gradually, not the whole 15-message allowance.
+  const effectiveRemaining = usage?.remaining;
   const isQuotaBlocked = Boolean(usage && !isWindowOver && effectiveRemaining === 0) ||
     Boolean(usage?.reason && usage.reason !== 'ok' && Number.isFinite(retryMs) && clock < retryMs);
   const shortPause = lastSentAt && clock - lastSentAt < 5000;
@@ -142,10 +143,22 @@ export default function SkillCreditAIChat({ userId, onBack }) {
     if (!userId) return;
     try {
       const { data, error: e } = await supabase.functions.invoke('skillcredit-ai-chat', { body: { action: 'usage_status' } });
-      if (!e && data?.usage) setUsage(data.usage);
+      if (!e && data?.usage) setUsage((previous) => {
+        const priorRetry = previous?.reason === 'provider_cooldown' ? Date.parse(previous.retry_at || '') : NaN;
+        return Number.isFinite(priorRetry) && priorRetry > Date.now()
+          ? { ...data.usage, reason: 'provider_cooldown', retry_at: previous.retry_at, allowed: false }
+          : data.usage;
+      });
     } catch { /* The server still enforces limits if the status check fails. */ }
   };
   useEffect(() => { void refreshUsage(); }, [userId]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    const until = usage?.reset_at ? Date.parse(usage.reset_at) - Date.now() : NaN;
+    if (!Number.isFinite(until) || until < 0) return;
+    // Refresh the real rolling count when the oldest stored message expires.
+    const timer = setTimeout(() => { void refreshUsage(); }, until + 250);
+    return () => clearTimeout(timer);
+  }, [usage?.reset_at, userId]); // eslint-disable-line react-hooks/exhaustive-deps
 
 
   useEffect(() => {
@@ -231,7 +244,7 @@ export default function SkillCreditAIChat({ userId, onBack }) {
         .select('id, chat_id, role, content, created_at').single();
       if (saveError) throw saveError;
       setAllMessages((prev) => [...prev, saved]);
-      const { data, error: invokeError } = await supabase.functions.invoke('skillcredit-ai-chat', { body: { mode, message: text, history } });
+      const { data, error: invokeError } = await supabase.functions.invoke('skillcredit-ai-chat', { body: { mode, message: text, history, message_id: saved.id } });
       if (invokeError) {
         let reason = 'SkillCredit AI is temporarily unavailable. Please try again later.';
         let issueCode = '';
@@ -430,6 +443,9 @@ export default function SkillCreditAIChat({ userId, onBack }) {
               {category.label}<ChevronDown className={`h-3 w-3 transition-transform ${showCategories ? 'rotate-180' : ''}`} />
             </button>
           </div>
+          {usage && <p className="mt-1 text-center text-[10px] text-gray-400" aria-label="SkillCredit AI message allowance">
+            {isWindowOver ? 'Updating…' : `${Math.max(0, Number(effectiveRemaining) || 0)} of ${usage.limit || 15} AI messages left`} · Last 5 hours
+          </p>}
         </div>
       </section>
 
@@ -454,11 +470,7 @@ export default function SkillCreditAIChat({ userId, onBack }) {
             <p className="flex items-center gap-2"><Sparkles className="h-4 w-4 shrink-0 text-emerald-600" />SkillCredit assistant</p>
             <p className="flex items-center gap-2"><MessageCircle className="h-4 w-4 shrink-0 text-gray-400" />{visibleMessages.length} messages here</p>
             <p className="flex items-start gap-2"><ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-gray-400" />Your account data stays private. Skill drafts require your review.</p>
-            {usage && <div className="mt-2 rounded-lg bg-emerald-50 px-3 py-2">
-              <div className="flex items-center justify-between gap-2 text-[11px] font-semibold text-emerald-800"><span>AI messages left</span><span>{effectiveRemaining ?? '—'} / {usage.limit || 15}</span></div>
-              <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-emerald-100"><div className="h-full rounded-full bg-emerald-600 transition-all" style={{ width: `${Math.min(100, Math.max(0, (Number(effectiveRemaining) / Number(usage.limit || 15)) * 100))}%` }} /></div>
-              <p className="mt-1 text-[10px] text-gray-500">Refreshes every 5 hours from your first message in the period.</p>
-            </div>}
+
           </div>
         </details>
         <div>
