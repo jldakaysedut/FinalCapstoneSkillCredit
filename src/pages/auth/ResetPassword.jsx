@@ -56,25 +56,69 @@ export default function ResetPassword() {
   };
 
   return (
-    <div className="relative isolate flex min-h-screen items-center justify-center overflow-hidden bg-[#f7faf6] px-4 py-16 sm:px-6 lg:px-8" style={{ fontFamily: "'DM Sans', sans-serif" }}>
-      <div aria-hidden="true" className="pointer-events-none absolute -left-24 top-12 h-72 w-72 rounded-full bg-[#dcf2e4]/70 blur-3xl" />
-      <div aria-hidden="true" className="pointer-events-none absolute -right-32 bottom-0 h-96 w-96 rounded-full bg-[#e3efe6]/70 blur-3xl" />
-      <main className="relative w-full max-w-[490px] overflow-hidden rounded-[26px] border border-[#dce9e0] bg-white p-7 shadow-[0_22px_65px_rgba(26,63,40,0.09)] sm:p-11">
-        <div className="mb-8 flex items-center gap-2 text-sm font-extrabold text-[#175b3d]"><img src="/logo.png" alt="" className="h-8 w-8 object-contain" /> SkillCredit</div>
-        <div className="mb-6 flex h-13 w-13 items-center justify-center rounded-2xl bg-[#eaf7ee] text-[#196344]"><Lock className="h-6 w-6" /></div>
-        <h1 className="text-3xl font-bold tracking-tight text-[#16271d]">Choose a new password</h1>
-        <p className="mt-3 mb-7 text-sm leading-6 text-[#68796d]">Set a fresh password to securely access your SkillCredit account.</p>
-        {error && <div role="alert" className="mb-5 flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700"><AlertCircle className="h-5 w-5 shrink-0" />{error}</div>}
+    <div className="flex min-h-screen items-center justify-center bg-[#f8faf9] px-4 sm:px-6 py-12">
+      <div className="w-full max-w-md rounded-2xl border border-gray-200 bg-white p-6 sm:p-9 shadow-[0_8px_30px_rgba(0,0,0,0.035)]">
+        <div className="mb-6 flex flex-col items-center text-center">
+          <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
+            <Lock className="h-6 w-6" />
+          </div>
+          <h2 className="text-[26px] font-semibold tracking-tight text-gray-900">Create New Password</h2>
+          <p className="mt-2 text-sm text-gray-500">Enter your new password below to regain access to your account.</p>
+        </div>
+
+        {error && (
+          <div className="mb-6 flex items-start gap-2.5 rounded-xl border border-rose-100 bg-rose-50 p-4 text-sm text-rose-800">
+            <AlertCircle className="h-5 w-5 shrink-0 text-rose-600" />
+            <p>{error}</p>
+          </div>
+        )}
+
         {success ? (
-          <div role="status" className="rounded-2xl border border-emerald-100 bg-emerald-50 p-6 text-center"><CheckCircle2 className="mx-auto mb-4 h-12 w-12 text-[#196344]" /><h2 className="text-lg font-bold text-[#16271d]">Password Updated!</h2><p className="mt-2 text-sm leading-6 text-[#68796d]">You can now use your new password to log in. Redirecting...</p></div>
+          <div className="text-center">
+            <div className="mb-4 flex items-center justify-center">
+              <CheckCircle2 className="h-12 w-12 text-emerald-600" />
+            </div>
+            <h3 className="mb-2 text-lg font-bold text-gray-900">Password Updated!</h3>
+            <p className="text-sm text-gray-500">You can now use your new password to log in. Redirecting...</p>
+          </div>
         ) : (
           <form onSubmit={handleUpdatePassword} className="space-y-5">
-            <div><label htmlFor="new-password" className="mb-2 block text-[13px] font-semibold text-[#344c3d]">New password</label><input id="new-password" autoComplete="new-password" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Enter a new password" className="w-full rounded-xl border border-[#dbe5df] bg-[#f9fbfa] px-4 py-3.5 text-[14px] text-[#17261e] outline-none transition-[border-color,box-shadow,background-color] duration-200 placeholder:text-[#9aa9a1] hover:border-[#bbcec2] focus:border-[#2c805e] focus:bg-white focus:ring-4 focus:ring-emerald-600/10" /></div>
-            <div><label htmlFor="confirm-password" className="mb-2 block text-[13px] font-semibold text-[#344c3d]">Confirm password</label><input id="confirm-password" autoComplete="new-password" type="password" required value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Repeat your new password" className="w-full rounded-xl border border-[#dbe5df] bg-[#f9fbfa] px-4 py-3.5 text-[14px] text-[#17261e] outline-none transition-[border-color,box-shadow,background-color] duration-200 placeholder:text-[#9aa9a1] hover:border-[#bbcec2] focus:border-[#2c805e] focus:bg-white focus:ring-4 focus:ring-emerald-600/10" /></div>
-            <button type="submit" disabled={loading} className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#196344] px-5 py-3.5 text-sm font-bold text-white shadow-[0_8px_20px_rgba(25,99,68,0.16)] transition-[background-color,transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:bg-[#104c33] hover:shadow-[0_12px_22px_rgba(25,99,68,0.2)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-emerald-500/25 disabled:cursor-not-allowed disabled:opacity-60 disabled:transform-none">{loading ? 'Updating Password...' : 'Save New Password'} <ArrowRight className="h-4 w-4" /></button>
+            <div>
+              <label htmlFor="new-password" className="mb-1.5 block text-sm font-medium text-gray-700">New Password</label>
+              <input
+                id="new-password"
+                type="password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-100 focus-visible:outline-none"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="confirm-password" className="mb-1.5 block text-sm font-medium text-gray-700">Confirm Password</label>
+              <input
+                id="confirm-password"
+                type="password"
+                required
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="••••••••"
+                className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-100 focus-visible:outline-none"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#2d6a4f] py-3 text-sm font-semibold text-white transition-colors duration-150 hover:bg-[#24573f] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-emerald-600/20 disabled:opacity-50"
+            >
+              {loading ? 'Updating Password...' : 'Save New Password'} <ArrowRight className="h-4 w-4" />
+            </button>
           </form>
         )}
-      </main>
+      </div>
     </div>
   );
 }
