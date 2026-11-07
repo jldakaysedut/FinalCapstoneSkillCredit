@@ -9,9 +9,10 @@ import {
   Code2, Dumbbell, FileText, Film, Gamepad2, Hammer, Hand, Heart, ImagePlus,
   PanelRight, Leaf, Lock, MessageCircle, MessageSquare, Monitor, Music2, Palette,
   PenLine, PiggyBank, Reply, Scissors, Search, Send, Shield, Smile, Star,
-  ThumbsUp, UserRound, Wrench, X, Flame, Laugh, Lightbulb, PartyPopper, CalendarDays
+  ThumbsUp, UserRound, Wrench, X, Flame, Laugh, Lightbulb, PartyPopper, CalendarDays, Sparkles
 } from 'lucide-react';
 import supabase from '../../supabaseClient';
+import SkillCreditAIChat from '../../components/SkillCreditAIChat';
 
 const QUICK_EMOJIS = ['👍', '❤', '😊', '😂', '🔥', '🙏', '💡', '🎉'];
 const QUICK_EMOJI_ICONS = {
@@ -131,6 +132,7 @@ export default function Messages() {
   const longPressRef      = useRef(null);
   const replyInputRef     = useRef(null);
 
+  const [aiActive,           setAiActive]           = useState(false);
   const [currentUserId,      setCurrentUserId]      = useState(null);
   const [contacts,           setContacts]           = useState([]);
   const [selectedContact,    setSelectedContact]    = useState(null);
@@ -224,7 +226,7 @@ export default function Messages() {
 
       if (targetId) {
         const found = combinedContacts.find(c => c.id === targetId);
-        if (found) setSelectedContact(found);
+        if (found) { setAiActive(false); setSelectedContact(found); }
       } else if (combinedContacts.length > 0 && !selectedContact) {
         setSelectedContact(combinedContacts[0]);
       }
@@ -877,7 +879,7 @@ export default function Messages() {
 
       {/* ══ LEFT PANEL ══ */}
       <div className={`w-full md:w-[260px] lg:w-[280px] border-r border-gray-100 flex flex-col shrink-0 bg-white ${
-        selectedContact ? 'hidden md:flex' : 'flex'
+        (selectedContact || aiActive) ? 'hidden md:flex' : 'flex'
       }`}>
         <div className="px-5 pt-5 pb-3 flex items-center shrink-0">
           <h1 className="text-2xl font-bold tracking-tight text-gray-900">Chats</h1>
@@ -909,6 +911,18 @@ export default function Messages() {
         </div>
 
         <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden">
+          {/* Virtual pinned AI chat; never inserted into the regular messages table. */}
+          {(!searchQuery || 'skillcredit ai assistant'.includes(searchQuery.toLowerCase())) && (
+            <button type="button" onClick={() => { setAiActive(true); setSelectedContact(null); }}
+              className={`w-[calc(100%-16px)] text-left px-3 py-2 flex items-center gap-3 rounded-xl mx-2 mb-1 transition ${aiActive ? 'bg-emerald-100' : 'hover:bg-gray-50'}`}>
+              <span className="w-10 h-10 shrink-0 rounded-full bg-emerald-600 text-white flex items-center justify-center"><Sparkles className="w-5 h-5" /></span>
+              <span className="flex-1 min-w-0">
+                <span className="flex items-center gap-2 text-[14px] font-bold text-gray-900">SkillCredit AI <span className="text-[10px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">AI</span></span>
+                <span className="block text-[12px] text-gray-500 truncate">Your SkillCredit learning assistant</span>
+              </span>
+              <span className="text-[10px] font-semibold text-emerald-600">Pinned</span>
+            </button>
+          )}
           {filteredContacts.length === 0 ? (
             <div className="p-8 text-center text-gray-400 text-sm font-medium">No conversations found.</div>
           ) : filteredContacts.map(contact => {
@@ -916,7 +930,7 @@ export default function Messages() {
             const closed   = ['completed','resolved','cancelled'].includes(contact.sessionStatus);
             const meta     = liveMeta[contact.id];
             return (
-              <div key={contact.id} onClick={() => setSelectedContact(contact)}
+              <div key={contact.id} onClick={() => { setAiActive(false); setSelectedContact(contact); }}
                 className={`px-3 py-2 flex items-center gap-3 cursor-pointer rounded-xl mx-2 mb-0.5 transition ${
                   isActive ? 'bg-gray-100' : 'hover:bg-gray-50'
                 }`}>
@@ -940,8 +954,10 @@ export default function Messages() {
       </div>
 
       {/* ══ CENTER: Chat ══ */}
-      <div className={`flex-1 min-w-0 flex flex-col bg-white ${ !selectedContact ? 'hidden md:flex' : 'flex' }`}>
-        {selectedContact ? (
+      <div className={`flex-1 min-w-0 flex flex-col bg-white ${ !(selectedContact || aiActive) ? 'hidden md:flex' : 'flex' }`}>
+        {aiActive ? (
+          <SkillCreditAIChat userId={currentUserId} onBack={() => setAiActive(false)} />
+        ) : selectedContact ? (
           <>
             <div className="px-5 py-3.5 border-b border-gray-100 flex items-center justify-between shrink-0 bg-white">
               <div className="flex items-center gap-3">

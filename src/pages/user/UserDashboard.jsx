@@ -1,4 +1,5 @@
 import useRealtimeRefresh from '../../hooks/useRealtimeRefresh';
+import DailyRewardModal from '../../components/DailyRewardModal';
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import supabase from '../../supabaseClient';
@@ -717,54 +718,35 @@ export default function UserDashboard() {
         </main>
       </div>
 
-      {/* ✨ WELCOME BONUS MODAL ✨ */}
+      {/* Daily reward uses the existing profile balance; welcome modal takes priority. */}
+      <DailyRewardModal
+        userId={currentUser?.id}
+        blocked={showWelcomeModal}
+        onClaimed={() => currentUser?.id ? fetchProfile(currentUser.id) : undefined}
+      />
+
+      {/* ✨ WELCOME BONUS MODAL ✨ — compact, same reward behavior */}
       {showWelcomeModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={closeWelcomeModal} />
-          
-          <div className="relative w-full max-w-sm rounded-3xl bg-white shadow-2xl overflow-hidden animate-in zoom-in-95 fade-in duration-300">
-            <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-br from-amber-400 via-amber-500 to-orange-500" />
-            
-            <div className="pointer-events-none absolute -right-4 -top-4 h-24 w-24 rounded-full bg-white/20 blur-xl" />
-            <div className="pointer-events-none absolute -left-4 top-10 h-16 w-16 rounded-full bg-white/20 blur-lg" />
-            
-            <button 
-              onClick={closeWelcomeModal}
-              className="absolute right-4 top-4 z-10 rounded-full bg-black/10 p-1.5 text-white hover:bg-black/20 transition cursor-pointer"
-            >
-              <X className="h-5 w-5" />
-            </button>
-
-            <div className="relative mt-16 flex flex-col items-center px-6 pb-6 text-center">
-              <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-2xl bg-white shadow-lg border-4 border-white rotate-3">
-                <PartyPopper className="h-10 w-10 text-amber-500" />
+        <div className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto bg-black/60 p-3 backdrop-blur-sm">
+          <div role="dialog" aria-modal="true" aria-labelledby="welcome-bonus-title"
+            className="relative my-auto w-full max-w-[350px] overflow-hidden rounded-2xl bg-white shadow-2xl animate-in zoom-in-95 fade-in duration-300">
+            <div className="relative flex h-[78px] items-center justify-center bg-gradient-to-br from-amber-400 via-amber-500 to-orange-500">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl border-2 border-white/75 bg-white shadow-md">
+                <PartyPopper size={25} className="text-amber-500" />
               </div>
-
-              <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-amber-700">
-                Welcome to SkillCredit!
-              </span>
-
-              <h2 className="mt-4 text-2xl font-black tracking-tight text-gray-900">
-                You're all set up!
-              </h2>
-              
-              <p className="mt-2 text-[14px] leading-relaxed text-gray-500">
-                As a starting gift, you have received a bonus of
-              </p>
-              
-              <div className="my-4 flex items-baseline justify-center gap-1.5 rounded-2xl bg-amber-50 px-6 py-3 border border-amber-100">
-                <span className="text-4xl font-black text-amber-500">20</span>
-                <span className="text-lg font-bold text-amber-600">CR</span>
+            </div>
+            <div className="px-4 pb-4 pt-3 text-center">
+              <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-amber-700">Welcome to SkillCredit!</p>
+              <h2 id="welcome-bonus-title" className="mt-1 text-xl font-extrabold tracking-tight text-gray-900">You're all set up!</h2>
+              <p className="mt-1 text-xs text-gray-500">Your starting gift is ready.</p>
+              <div className="mt-3 flex items-center justify-center gap-2 rounded-xl border border-amber-100 bg-amber-50 py-3">
+                <Coins size={21} className="text-amber-500" />
+                <span className="text-3xl font-black leading-none text-amber-500">20</span>
+                <span className="text-sm font-bold text-amber-600">CR</span>
               </div>
-
-              <p className="text-[12px] text-gray-400 mb-6 px-4">
-                Use your credits to book your first skill-sharing session and start learning today.
-              </p>
-
-              <button
-                onClick={closeWelcomeModal}
-                className="w-full rounded-xl bg-amber-500 py-3.5 text-[14px] font-bold text-white shadow-md hover:bg-amber-600 active:scale-[0.98] transition-all cursor-pointer"
-              >
+              <p className="mt-2 text-xs text-gray-500">Use your credits to book your first skill-sharing session.</p>
+              <button type="button" onClick={closeWelcomeModal}
+                className="mt-3 w-full rounded-xl bg-amber-500 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-amber-600">
                 Awesome, let's go!
               </button>
             </div>

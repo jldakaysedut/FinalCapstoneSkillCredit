@@ -74,6 +74,14 @@ export default function Payments() {
         .select('*')
         .eq('user_id', user.id);
  
+      // Daily reward claims share the existing credit balance; this query is display-only.
+      const { data: dailyRewards, error: rewardHistoryError } = await supabase
+        .from('daily_reward_claims')
+        .select('claim_date, streak_day, credits_earned')
+        .eq('user_id', user.id)
+        .order('claim_date', { ascending: false });
+      if (rewardHistoryError) console.warn('Could not fetch daily reward history:', rewardHistoryError);
+
       // 3. Fetch Sessions
       const { data: sessions } = await supabase
         .from('sessions')
@@ -103,6 +111,22 @@ export default function Payments() {
         });
       }
  
+      // Daily claims have a calendar date (no timestamp); noon PH is used only
+      // as a stable ledger sorting key. The display shows the claim DATE, not time.
+      (dailyRewards || []).forEach((reward) => {
+        combinedLedger.push({
+          id: `daily-reward-${reward.claim_date}`,
+          type: 'DAILY_REWARD',
+          title: 'Daily Login Streak Bonus',
+          amount: reward.credits_earned,
+          isPositive: true,
+          date: `${reward.claim_date}T12:00:00+08:00`,
+          status: 'paid',
+          meta: `Day ${reward.streak_day} of 7`,
+        });
+        totalEarned += Number(reward.credits_earned || 0);
+      });
+
       // B. Process Sessions
       if (sessions) {
         sessions.forEach(s => {
@@ -315,7 +339,7 @@ export default function Payments() {
             bgClass = 'bg-rose-50 border-rose-100';
             textClass = 'text-rose-600';
             iconRender = <XCircle className="h-4 w-4" />;
-          } else if (tx.type === 'EARNED' || tx.type === 'TOPUP') {
+          } else if (tx.type === 'EARNED' || tx.type === 'TOPUP' || tx.type === 'DAILY_REWARD') {
             bgClass = 'bg-emerald-50 border-emerald-100';
             textClass = 'text-emerald-600';
             iconRender = <ArrowDownRight className="h-4 w-4" />;

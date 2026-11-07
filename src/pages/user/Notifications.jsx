@@ -12,6 +12,7 @@ const TYPE_META = {
 
   // ── System Admin Notices ──
   admin_role_notice:   { dot: 'bg-indigo-500',  ring: 'ring-indigo-100',  icon: Shield,      chip: 'bg-indigo-50 border-indigo-200 text-indigo-800',   label: 'Role Update',     category: 'System' },
+  daily_reward:       { dot: 'bg-amber-500', ring: 'ring-amber-100', icon: Coins, chip: 'bg-amber-50 border-amber-200 text-amber-800', label: 'Daily Reward', category: 'System' },
   admin_credit_notice: { dot: 'bg-amber-500',   ring: 'ring-amber-100',   icon: Coins,       chip: 'bg-amber-50 border-amber-200 text-amber-800',      label: 'Balance Update',  category: 'System' },
 
   // ── Escrow Disputes & Sessions ──
@@ -301,7 +302,7 @@ export default function Notifications() {
 
     try {
       // ── MODAL TRIGGER FOR ALL REPORTS AND DISPUTES ──
-      const modalNoticeTypes = ['account_warning', 'account_penalized', 'admin_role_notice', 'admin_credit_notice', 'report_updated', 'report', 'dispute_resolved', 'system', 'system_alert'];
+      const modalNoticeTypes = ['account_warning', 'account_penalized', 'admin_role_notice', 'admin_credit_notice', 'report_updated', 'report', 'dispute_resolved', 'system', 'system_alert', 'daily_reward'];
       if (modalNoticeTypes.includes(type)) {
         setActiveNotice(notif);
         return;
@@ -399,7 +400,14 @@ export default function Notifications() {
   }
 
   // ─── DYNAMIC MODAL UI LOGIC ───
-  const parsedNotice = activeNotice ? extractModeratorDetails(activeNotice.content) : null;
+  const parsedNotice = activeNotice
+    ? activeNotice.type === 'daily_reward'
+      ? {
+          summary: 'Your daily login streak reward has been successfully claimed.',
+          remarks: activeNotice.content || 'Your SkillCredits have been added to your balance.',
+        }
+      : extractModeratorDetails(activeNotice.content)
+    : null;
   
   let ModalIcon = AlertTriangle;
   let iconBg = 'bg-amber-100 text-amber-700';
@@ -425,6 +433,15 @@ export default function Notifications() {
         notesLabel = 'Administrator Remarks';
         notesIcon = <Shield className="h-4 w-4 text-indigo-700" />;
         notesBg = 'bg-indigo-50/70 border-indigo-200 text-indigo-950';
+    } else if (activeNotice.type === 'daily_reward') {
+        ModalIcon = Coins;
+        iconBg = 'bg-amber-100 text-amber-700';
+        badgeStyle = 'bg-amber-100 border-amber-200 text-amber-800';
+        badgeText = 'System Reward';
+        modalTitle = 'Daily Login Reward Claimed';
+        notesLabel = 'Reward Details';
+        notesIcon = <Coins className="h-4 w-4 text-amber-700" />;
+        notesBg = 'bg-amber-50/70 border-amber-200 text-amber-950';
     } else if (activeNotice.type === 'admin_credit_notice' || activeNotice.type === 'system_alert') {
         ModalIcon = Coins;
         iconBg = 'bg-amber-100 text-amber-700';
@@ -579,7 +596,7 @@ export default function Notifications() {
                                 {notif.content}
                               </p>
 
-                              {notif.link_url && notif.link_url !== '/notifications' && !['account_warning', 'account_penalized', 'admin_role_notice', 'admin_credit_notice', 'report_updated', 'dispute_resolved', 'system', 'system_alert'].includes(notif.type) && (
+                              {notif.link_url && notif.link_url !== '/notifications' && !['account_warning', 'account_penalized', 'admin_role_notice', 'admin_credit_notice', 'report_updated', 'dispute_resolved', 'system', 'system_alert', 'daily_reward'].includes(notif.type) && (
                                 <div className="mt-3">
                                  
                                 </div>
@@ -649,7 +666,7 @@ export default function Notifications() {
                   </p>
                 </div>
                 <div className={`${notesBg} border rounded-2xl p-4 text-xs font-semibold leading-relaxed whitespace-pre-wrap shadow-inner`}>
-                  "{parsedNotice.remarks}"
+                  {activeNotice.type === 'daily_reward' ? parsedNotice.remarks : `"${parsedNotice.remarks}"`}
                 </div>
               </div>
 
@@ -662,12 +679,14 @@ export default function Notifications() {
             <div className="p-3.5 bg-gray-50 border border-gray-200 rounded-2xl mb-6 flex items-start gap-2.5">
               <Bell className="h-4 w-4 shrink-0 text-gray-500" />
               <p className="text-[11px] text-gray-600 font-medium leading-relaxed">
-                SkillCredit strictly adheres to platform rules. System modifications are tracked and recorded for security purposes.
+                {activeNotice.type === 'daily_reward'
+                  ? 'This reward was issued by the SkillCredit system. Only one daily reward can be claimed per Philippine calendar day.'
+                  : 'SkillCredit strictly adheres to platform rules. System modifications are tracked and recorded for security purposes.'}
               </p>
             </div>
 
             <div className="flex gap-2">
-              {activeNotice.link_url && activeNotice.link_url !== '/notifications' ? (
+              {activeNotice.type !== 'daily_reward' && activeNotice.link_url && activeNotice.link_url !== '/notifications' ? (
                 <button
                   onClick={() => {
                     const link = activeNotice.link_url;
