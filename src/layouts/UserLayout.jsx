@@ -898,7 +898,7 @@ export default function UserLayout() {
 
 
               {isNotifOpen && (
-                <div className="fixed right-3 left-auto top-[4.25rem] w-[calc(100vw-24px)] max-w-[320px] sm:absolute sm:top-auto sm:right-0 mt-0 sm:mt-3 sm:w-[360px] sm:max-w-none max-h-[min(55dvh,380px)] sm:max-h-[min(75dvh,540px)] flex flex-col overflow-hidden rounded-2xl sm:rounded-3xl bg-white shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray-100 z-50">
+                <div className="fixed right-3 left-auto top-[4.25rem] w-[calc(100vw-24px)] max-w-[250px] sm:absolute sm:top-auto sm:right-0 mt-0 sm:mt-3 sm:w-[360px] sm:max-w-none max-h-[min(55dvh,380px)] sm:max-h-[min(75dvh,540px)] flex flex-col overflow-hidden rounded-2xl sm:rounded-3xl bg-white shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray-100 z-50">
 
                   {/* Notif header */}
                   <div className="flex items-center justify-between px-3 py-2.5 sm:px-5 sm:py-4 border-b border-gray-100">

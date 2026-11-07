@@ -430,7 +430,7 @@ export default function Sessions() {
     <div role="status" aria-live="polite" aria-label="Loading sessions" className="min-h-screen bg-[#faf9f6]">
       <div className="mx-auto max-w-[1000px] min-w-0 animate-pulse px-3 py-4 sm:px-6 sm:py-6 md:px-8">
         <div
-          className="relative mb-4 sm:mb-5 overflow-hidden rounded-2xl px-3 py-4 sm:px-6 sm:py-5 shadow-md"
+          className="relative mb-4 sm:mb-5 overflow-hidden rounded-2xl px-3 py-3 sm:px-6 sm:py-5 shadow-md"
           style={{ background: 'linear-gradient(135deg, #064e3b 0%, #065f46 45%, #047857 100%)' }}
         >
           <div
@@ -446,8 +446,8 @@ export default function Sessions() {
               </div>
               <div className="mt-0.5 h-3 w-48 max-w-full rounded bg-emerald-200/40" />
             </div>
-            <div className="flex shrink-0 flex-col gap-2 lg:flex-row lg:items-center">
-              <div className="flex items-center gap-2">
+            <div className="flex w-full min-w-0 flex-col gap-2 sm:w-auto lg:flex-row lg:items-center">
+              <div className="grid w-full grid-cols-3 gap-1.5 sm:flex sm:w-auto sm:items-center sm:gap-2">
                 <div className="flex min-w-[64px] flex-col items-center rounded-xl border border-white/10 bg-white/10 px-4 py-2.5">
                   <div className="h-[17px] w-6 rounded bg-white/25" />
                   <div className="mt-0.5 h-2.5 w-8 rounded bg-emerald-200/50" />
@@ -461,7 +461,7 @@ export default function Sessions() {
                   <div className="mt-0.5 h-2.5 w-8 rounded bg-lime-200/40" />
                 </div>
               </div>
-              <div className="flex w-fit items-center rounded-full border border-white/10 bg-white/10 p-1">
+              <div className="grid w-full grid-cols-3 gap-1 rounded-full border border-white/10 bg-white/10 p-1 sm:flex sm:w-fit sm:items-center">
                 <div className="h-6 w-10 rounded-full bg-white/80" />
                 <div className="h-6 w-14 rounded-full bg-white/15" />
                 <div className="h-6 w-16 rounded-full bg-white/15" />
@@ -533,42 +533,42 @@ export default function Sessions() {
       <div className="max-w-[1000px] mx-auto min-w-0 px-3 py-4 sm:px-6 sm:py-6 md:px-8">
 
         {/* ── HEADER BANNER ── */}
-        <div className="rounded-2xl mb-5 overflow-hidden shadow-md relative"
+        <div className="rounded-2xl mb-4 sm:mb-5 overflow-hidden shadow-md relative"
           style={{ background: 'linear-gradient(135deg, #064e3b 0%, #065f46 45%, #047857 100%)' }}>
           <div className="absolute inset-0 pointer-events-none opacity-20"
             style={{ backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)', backgroundSize: '20px 20px' }} />
 
-          <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 px-3 py-4 sm:px-6 sm:py-5">
+          <div className="relative flex min-w-0 flex-col gap-3 px-3 py-3 min-[360px]:px-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-6 sm:py-5">
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-emerald-400 mb-1">Booking Manager</p>
-              <h1 className="font-bold text-[19px] sm:text-[22px] text-white tracking-tight leading-tight flex items-center gap-2">
-                My Sessions <CalendarDays className="w-5 h-5 text-emerald-200" />
+              <p className="text-[9px] sm:text-[10px] font-semibold uppercase tracking-widest text-emerald-400 mb-1">Booking Manager</p>
+              <h1 className="font-bold text-[18px] sm:text-[22px] text-white tracking-tight leading-tight flex items-center gap-1.5 sm:gap-2">
+                My Sessions <CalendarDays className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-200" />
               </h1>
-              <p className="text-[12px] text-emerald-300 font-medium mt-0.5">
+              <p className="text-[11px] sm:text-[12px] text-emerald-300 font-medium mt-0.5">
                 {totalSessions} total · {activeSessions} active · {pendingCount} pending
               </p>
             </div>
 
-            <div className="flex flex-col gap-2 shrink-0 lg:flex-row lg:items-center">
-              <div className="flex items-center gap-2">
-                <div className="flex flex-col items-center px-2.5 py-2 sm:px-4 sm:py-2.5 rounded-xl bg-white/10 border border-white/10 min-w-[56px] sm:min-w-[64px]">
-                  <p className="text-[17px] font-bold text-white leading-none">{totalSessions}</p>
-                  <p className="text-[10px] font-semibold uppercase tracking-widest text-emerald-300 mt-0.5">Total</p>
+            <div className="flex min-w-0 w-full flex-col gap-2 shrink-0 sm:w-auto lg:flex-row lg:items-center">
+              <div className="grid w-full grid-cols-3 gap-1.5 sm:flex sm:w-auto sm:items-center sm:gap-2">
+                <div className="flex min-w-0 flex-col items-center justify-center px-1.5 py-2 sm:px-4 sm:py-2.5 rounded-xl bg-white/10 border border-white/10 sm:min-w-[64px]">
+                  <p className="text-[16px] sm:text-[17px] font-bold text-white leading-none">{totalSessions}</p>
+                  <p className="text-[9px] sm:text-[10px] font-semibold uppercase tracking-wider sm:tracking-widest text-emerald-300 mt-1">Total</p>
                 </div>
-                <div className="flex flex-col items-center px-2.5 py-2 sm:px-4 sm:py-2.5 rounded-xl bg-white/10 border border-white/10 min-w-[56px] sm:min-w-[64px]">
-                  <p className="text-[17px] font-bold text-white leading-none">{activeSessions}</p>
-                  <p className="text-[10px] font-semibold uppercase tracking-widest text-sky-300 mt-0.5">Active</p>
+                <div className="flex min-w-0 flex-col items-center justify-center px-1.5 py-2 sm:px-4 sm:py-2.5 rounded-xl bg-white/10 border border-white/10 sm:min-w-[64px]">
+                  <p className="text-[16px] sm:text-[17px] font-bold text-white leading-none">{activeSessions}</p>
+                  <p className="text-[9px] sm:text-[10px] font-semibold uppercase tracking-wider sm:tracking-widest text-sky-300 mt-1">Active</p>
                 </div>
-                <div className="flex flex-col items-center px-2.5 py-2 sm:px-4 sm:py-2.5 rounded-xl min-w-[56px] sm:min-w-[64px]"
+                <div className="flex min-w-0 flex-col items-center justify-center px-1.5 py-2 sm:px-4 sm:py-2.5 rounded-xl sm:min-w-[64px]"
                   style={{ background: 'rgba(132,204,22,0.25)', border: '1px solid rgba(132,204,22,0.35)' }}>
-                  <p className="text-[17px] font-bold leading-none" style={{ color: '#d9f99d' }}>{completedCount}</p>
-                  <p className="text-[10px] font-semibold uppercase tracking-widest mt-0.5" style={{ color: '#a3e635' }}>Done</p>
+                  <p className="text-[16px] sm:text-[17px] font-bold leading-none" style={{ color: '#d9f99d' }}>{completedCount}</p>
+                  <p className="text-[9px] sm:text-[10px] font-semibold uppercase tracking-wider sm:tracking-widest mt-1" style={{ color: '#a3e635' }}>Done</p>
                 </div>
               </div>
-              <div className="flex bg-white/10 border border-white/10 rounded-full p-1">
+              <div className="grid w-full grid-cols-3 gap-1 bg-white/10 border border-white/10 rounded-full p-1 sm:flex sm:w-fit">
                 {['All', 'Teaching', 'Learning'].map(role => (
                   <button key={role} onClick={() => setRoleFilter(role)}
-                    className={`px-3 py-1 rounded-full text-[11px] font-bold transition ${
+                    className={`min-w-0 rounded-full px-1.5 py-1.5 text-center text-[10px] font-bold transition sm:px-3 sm:py-1 sm:text-[11px] ${
                       roleFilter === role ? 'bg-white text-gray-900' : 'text-emerald-200 hover:text-white'
                     }`}>{role}</button>
                 ))}
