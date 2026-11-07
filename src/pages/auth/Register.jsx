@@ -16,6 +16,12 @@ export default function Register() {
     e.preventDefault();
     setErrorMsg('');
 
+    if (!fullName.trim() || !email.trim() || !password || !confirmPassword) {
+      return setErrorMsg('Please fill in all fields.');
+    }
+    if (!/^\S+@\S+\.\S+$/.test(email.trim())) {
+      return setErrorMsg('Please enter a valid email address.');
+    }
     if (password !== confirmPassword) {
       return setErrorMsg('Passwords do not match');
     }
@@ -23,36 +29,64 @@ export default function Register() {
     setLoading(true);
 
     try {
-      // 1. Create user in Supabase Auth
+      const normalizedEmail = email.trim().toLowerCase();
+
+      // Supabase Auth is the authoritative uniqueness check. Do not publicly
+      // query user_profiles/auth users to see whether an email exists.
       const { data: authData, error: authError } = await supabase.auth.signUp({
-        email,
+        email: normalizedEmail,
         password,
       });
 
-      if (authError) throw authError;
+      const duplicateEmailError =
+        'An account with this email already exists. Please log in instead.';
 
-      // 2. Save profile and give 20 credits in user_profiles table
-      if (authData?.user) {
-        const { error: profileError } = await supabase
-          .from('user_profiles')
-          .insert([
-            {
-              id: authData.user.id,
-              full_name: fullName,
-              email: email,
-              credits_balance: 20,
-              has_set_interests: false
-            }
-          ]);
-
-        if (profileError) throw profileError;
+      // Depending on Supabase email-confirmation settings, an existing signup
+      // can return an explicit error or an obfuscated user with no identities.
+      if (authError) {
+        if (/already registered|already exists|user already registered|email.*(in use|registered)/i.test(authError.message || '')) {
+          setErrorMsg(duplicateEmailError);
+          return;
+        }
+        throw authError;
       }
 
-      // 3. Redirect to SetupInterests instead of Dashboard for first-timers
+      if (authData?.user && Array.isArray(authData.user.identities) && authData.user.identities.length === 0) {
+        setErrorMsg(duplicateEmailError);
+        return;
+      }
+
+      if (!authData?.user) {
+        throw new Error('Registration was not completed. Please try again.');
+      }
+
+      // With email confirmation enabled, Supabase may create the Auth user
+      // without a session. Never treat this as a signed-in account.
+      if (!authData.session) {
+        setErrorMsg('Please check your email to confirm your account before logging in.');
+        return;
+      }
+
+      // Only authenticated NEW registrations get the existing starter profile.
+      const { error: profileError } = await supabase
+        .from('user_profiles')
+        .insert([
+          {
+            id: authData.user.id,
+            full_name: fullName.trim(),
+            email: normalizedEmail,
+            credits_balance: 20,
+            has_set_interests: false
+          }
+        ]);
+
+      if (profileError) throw profileError;
+
+      // Keep the existing onboarding destination for successful signups.
       navigate('/setup-interests', { replace: true });
 
     } catch (error) {
-      setErrorMsg(error.message);
+      setErrorMsg(error.message || 'Something went wrong. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -79,6 +113,11 @@ export default function Register() {
         {errorMsg && (
           <div className="mb-6 p-4 bg-red-50 text-red-700 rounded-lg text-sm font-medium border border-red-200">
             {errorMsg}
+            {errorMsg.includes('Please log in instead.') && (
+              <Link to="/login" className="block mt-2 font-bold text-[#2d6a4f] hover:underline">
+                Go to Log In
+              </Link>
+            )}
           </div>
         )}
 
