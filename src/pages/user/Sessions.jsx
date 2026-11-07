@@ -428,9 +428,9 @@ export default function Sessions() {
 
   if (loading) return (
     <div role="status" aria-live="polite" aria-label="Loading sessions" className="min-h-screen bg-[#faf9f6]">
-      <div className="mx-auto max-w-[1000px] animate-pulse px-6 py-6 md:px-8">
+      <div className="mx-auto max-w-[1000px] min-w-0 animate-pulse px-3 py-4 sm:px-6 sm:py-6 md:px-8">
         <div
-          className="relative mb-5 overflow-hidden rounded-2xl px-6 py-5 shadow-md"
+          className="relative mb-4 sm:mb-5 overflow-hidden rounded-2xl px-3 py-4 sm:px-6 sm:py-5 shadow-md"
           style={{ background: 'linear-gradient(135deg, #064e3b 0%, #065f46 45%, #047857 100%)' }}
         >
           <div
@@ -470,7 +470,7 @@ export default function Sessions() {
           </div>
         </div>
 
-        <div className="mb-8 flex gap-1 overflow-x-auto pb-1">
+        <div className="mb-5 sm:mb-8 flex min-w-0 gap-1 overflow-x-auto overscroll-x-contain pb-1">
           {['All', 'Pending', 'Upcoming', 'Active', 'Completed', 'Cancelled', 'Disputed'].map((tab, index) => (
             <div
               key={tab}
@@ -530,7 +530,7 @@ export default function Sessions() {
 
   return (
     <div className="min-h-screen bg-[#faf9f6]">
-      <div className="max-w-[1000px] mx-auto px-6 md:px-8 py-6">
+      <div className="max-w-[1000px] mx-auto min-w-0 px-3 py-4 sm:px-6 sm:py-6 md:px-8">
 
         {/* ── HEADER BANNER ── */}
         <div className="rounded-2xl mb-5 overflow-hidden shadow-md relative"
@@ -538,10 +538,10 @@ export default function Sessions() {
           <div className="absolute inset-0 pointer-events-none opacity-20"
             style={{ backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)', backgroundSize: '20px 20px' }} />
 
-          <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-6 py-5">
+          <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 px-3 py-4 sm:px-6 sm:py-5">
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-widest text-emerald-400 mb-1">Booking Manager</p>
-              <h1 className="font-bold text-[22px] text-white tracking-tight leading-tight flex items-center gap-2">
+              <h1 className="font-bold text-[19px] sm:text-[22px] text-white tracking-tight leading-tight flex items-center gap-2">
                 My Sessions <CalendarDays className="w-5 h-5 text-emerald-200" />
               </h1>
               <p className="text-[12px] text-emerald-300 font-medium mt-0.5">
@@ -551,15 +551,15 @@ export default function Sessions() {
 
             <div className="flex flex-col gap-2 shrink-0 lg:flex-row lg:items-center">
               <div className="flex items-center gap-2">
-                <div className="flex flex-col items-center px-4 py-2.5 rounded-xl bg-white/10 border border-white/10 min-w-[64px]">
+                <div className="flex flex-col items-center px-2.5 py-2 sm:px-4 sm:py-2.5 rounded-xl bg-white/10 border border-white/10 min-w-[56px] sm:min-w-[64px]">
                   <p className="text-[17px] font-bold text-white leading-none">{totalSessions}</p>
                   <p className="text-[10px] font-semibold uppercase tracking-widest text-emerald-300 mt-0.5">Total</p>
                 </div>
-                <div className="flex flex-col items-center px-4 py-2.5 rounded-xl bg-white/10 border border-white/10 min-w-[64px]">
+                <div className="flex flex-col items-center px-2.5 py-2 sm:px-4 sm:py-2.5 rounded-xl bg-white/10 border border-white/10 min-w-[56px] sm:min-w-[64px]">
                   <p className="text-[17px] font-bold text-white leading-none">{activeSessions}</p>
                   <p className="text-[10px] font-semibold uppercase tracking-widest text-sky-300 mt-0.5">Active</p>
                 </div>
-                <div className="flex flex-col items-center px-4 py-2.5 rounded-xl min-w-[64px]"
+                <div className="flex flex-col items-center px-2.5 py-2 sm:px-4 sm:py-2.5 rounded-xl min-w-[56px] sm:min-w-[64px]"
                   style={{ background: 'rgba(132,204,22,0.25)', border: '1px solid rgba(132,204,22,0.35)' }}>
                   <p className="text-[17px] font-bold leading-none" style={{ color: '#d9f99d' }}>{completedCount}</p>
                   <p className="text-[10px] font-semibold uppercase tracking-widest mt-0.5" style={{ color: '#a3e635' }}>Done</p>
@@ -578,7 +578,7 @@ export default function Sessions() {
         </div>
 
         {/* ── STATUS TABS ── */}
-        <div className="flex gap-1 overflow-x-auto scrollbar-hide pb-1 mb-8">
+        <div className="flex min-w-0 gap-1 overflow-x-auto overscroll-x-contain scrollbar-hide pb-1 mb-5 sm:mb-8">
           {STATUS_TABS.map(tab => {
             const meta = STATUS_DOT[tab.toLowerCase()];
             const isActive = statusTab === tab;
@@ -616,7 +616,7 @@ export default function Sessions() {
                   <span className="text-[10px] font-bold text-gray-300">{grouped[group].length}</span>
                 </div>
 
-                <div className="relative pl-6">
+                <div className="relative pl-3 min-[360px]:pl-4 sm:pl-6">
                   <div className="absolute left-[9px] top-2 bottom-2 w-px bg-gray-200" />
 
                   <div className="space-y-3">
@@ -659,7 +659,7 @@ export default function Sessions() {
 
                       return (
                         <div id={`session-${session.id}`} key={session.id} className="relative scroll-mt-24">
-                          <div className={`absolute -left-6 top-5 w-[18px] h-[18px] rounded-full border-2 border-white ring-2 ${meta.dot} ${meta.ring} shadow-sm z-10`} />
+                          <div className={`absolute -left-3 min-[360px]:-left-4 sm:-left-6 top-5 w-[18px] h-[18px] rounded-full border-2 border-white ring-2 ${meta.dot} ${meta.ring} shadow-sm z-10`} />
 
                           <div className={`bg-white border rounded-2xl overflow-hidden transition-all duration-500 relative z-20 ${
                             isHighlighted
@@ -669,7 +669,7 @@ export default function Sessions() {
 
                             <div className={`h-1 w-full ${meta.bar}`} />
 
-                            <div className="px-5 py-4 relative z-20">
+                            <div className="px-3 py-3 sm:px-5 sm:py-4 relative z-20">
 
                               <button
                                 onClick={() => setExpandedId(isExpanded ? null : session.id)}
@@ -677,16 +677,16 @@ export default function Sessions() {
                                 <ChevronDown className={`w-5 h-5 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
                               </button>
 
-                              <div className="flex items-start gap-4 mb-3 pr-8 relative z-20">
+                              <div className="flex min-w-0 items-start gap-2 sm:gap-4 mb-3 pr-7 sm:pr-8 relative z-20">
                                 <div onClick={() => partnerId && navigate(`/user/${partnerId}`)}
-                                  className="w-12 h-12 rounded-xl overflow-hidden bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-lg border border-emerald-200 cursor-pointer hover:scale-105 transition shrink-0">
+                                  className="w-9 h-9 sm:w-12 sm:h-12 rounded-xl overflow-hidden bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-lg border border-emerald-200 cursor-pointer hover:scale-105 transition shrink-0">
                                   {displayAvatar ? <img src={displayAvatar} alt={displayName} className="w-full h-full object-cover" /> : displayName.charAt(0).toUpperCase()}
                                 </div>
 
                                 <div className="flex-1 min-w-0">
                                   <div className="flex items-center gap-2 flex-wrap mb-0.5">
                                     <span onClick={() => partnerId && navigate(`/user/${partnerId}`)}
-                                      className="font-bold text-[15px] text-gray-900 cursor-pointer hover:text-emerald-700 transition">{displayName}</span>
+                                      className="min-w-0 max-w-full break-words font-bold text-[13px] sm:text-[15px] text-gray-900 cursor-pointer hover:text-emerald-700 transition">{displayName}</span>
                                     <span className={`text-[10px] font-semibold uppercase tracking-wider border px-2 py-0.5 rounded-full ${
                                       isInstructor ? 'bg-sky-50 text-sky-700 border-sky-100' : 'bg-purple-50 text-purple-700 border-purple-100'
                                     }`}>{isInstructor ? 'Learner' : 'Teacher'}</span>
@@ -697,9 +697,9 @@ export default function Sessions() {
                                     {session.skill?.title || 'Unknown Skill'} · {session.skill?.duration || '?'}
                                   </button>
 
-                                  <div className="mt-2 flex items-center gap-2">
+                                  <div className="mt-2 flex min-w-0 items-start sm:items-center gap-2">
                                     <CalendarDays className="w-4 h-4 text-emerald-600" />
-                                    <span className="text-[13px] font-semibold text-gray-800">{time}</span>
+                                    <span className="min-w-0 break-words text-[12px] sm:text-[13px] font-semibold text-gray-800">{time}</span>
                                   </div>
                                 </div>
                               </div>
@@ -732,7 +732,7 @@ export default function Sessions() {
                                   </div>
 
                                   {/* BUTTONS */}
-                                  <div className="flex items-center gap-1.5 flex-wrap">
+                                  <div className="flex min-w-0 items-center gap-1.5 flex-wrap">
                                     
                                     {/* MESSAGE BUTTON */}
                                     {canMessage && (
@@ -858,7 +858,7 @@ export default function Sessions() {
                                 <div className="mt-4 pt-4 border-t border-gray-100 flex flex-col sm:flex-row gap-6 animate-in slide-in-from-top-2 duration-200 relative z-30">
                                   <div className="flex-1">
                                     <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-3">Details</p>
-                                    <div className="grid grid-cols-[80px_1fr] gap-y-2 text-[13px]">
+                                    <div className="grid min-w-0 grid-cols-[68px_minmax(0,1fr)] sm:grid-cols-[80px_1fr] gap-x-2 gap-y-2 text-[12px] sm:text-[13px] [&>span]:break-words">
                                       <span className="text-gray-400 font-bold">Format</span><span className="text-gray-900 font-medium">{session.skill?.format || 'N/A'}</span>
                                       <span className="text-gray-400 font-bold">Credits</span><span className="text-gray-900 font-medium">{session.credit_amount} cr</span>
                                       <span className="text-gray-400 font-bold">Booked On</span><span className="text-gray-900 font-medium">{bookedDate}</span>
@@ -886,9 +886,9 @@ export default function Sessions() {
 
       {/* ── PROPOSE TIME MODAL ── */}
       {proposeModal.isOpen && proposeModal.session && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-2 sm:p-4">
           <div className="absolute inset-0 bg-gray-900/60 backdrop-blur-sm" onClick={() => !isSubmittingPropose && setProposeModal({ isOpen: false, session: null })} />
-          <div className="bg-white rounded-3xl p-6 md:p-8 w-full max-w-sm relative z-10 shadow-[0_8px_30px_rgb(0,0,0,0.12)] animate-in zoom-in-95 duration-200">
+          <div className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 w-full max-w-sm max-h-[calc(100dvh-1rem)] overflow-y-auto relative z-10 shadow-[0_8px_30px_rgb(0,0,0,0.12)] animate-in zoom-in-95 duration-200">
             <h2 className="text-xl font-bold tracking-tight text-gray-900 mb-1">Propose New Time</h2>
             <p className="text-[12px] text-gray-500 mb-5">Offer a new schedule to <span className="font-bold text-gray-800">{proposeModal.session.student?.full_name}</span>.</p>
             <form onSubmit={handleProposeTime} className="space-y-4">
@@ -911,8 +911,8 @@ export default function Sessions() {
 
       {/* ── DISPUTE & RESOLUTION DETAILS MODAL ── */}
       {disputeModal.isOpen && disputeModal.session && (
-        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-gray-100 relative animate-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-[120] flex items-center justify-center p-2 sm:p-4 bg-gray-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl sm:rounded-3xl max-w-md w-full max-h-[calc(100dvh-1rem)] overflow-y-auto p-4 sm:p-6 shadow-2xl border border-gray-100 relative animate-in zoom-in-95 duration-200">
             <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-100">
               <div className="flex items-center gap-2.5">
                 <div className="w-10 h-10 rounded-xl bg-rose-100 text-rose-700 flex items-center justify-center">
@@ -962,9 +962,9 @@ export default function Sessions() {
 
       {/* ── File Dispute Modal ── */}
       {reportModal.isOpen && reportModal.session && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-2 sm:p-4">
           <div className="absolute inset-0 bg-gray-900/60 backdrop-blur-sm" onClick={() => !isSubmittingReport && setReportModal({ isOpen: false, session: null })} />
-          <div className="bg-white rounded-3xl p-6 md:p-8 w-full max-w-md relative z-10 shadow-[0_8px_30px_rgb(0,0,0,0.12)] animate-in zoom-in-95 duration-200">
+          <div className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 w-full max-w-md max-h-[calc(100dvh-1rem)] overflow-y-auto relative z-10 shadow-[0_8px_30px_rgb(0,0,0,0.12)] animate-in zoom-in-95 duration-200">
             <h2 className="text-xl font-bold tracking-tight text-gray-900 mb-1">File a Dispute</h2>
             <p className="text-[12px] text-gray-400 mb-5">Against <span className="font-bold text-gray-800">{reportModal.session.instructor_id === currentUserId ? reportModal.session.student?.full_name : reportModal.session.instructor?.full_name}</span>.</p>
             <form onSubmit={handleSubmitReport} className="space-y-4">
@@ -991,9 +991,9 @@ export default function Sessions() {
 
       {/* ── Rating Modal ── */}
       {ratingModal.isOpen && ratingModal.session && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4">
           <div className="absolute inset-0 bg-gray-900/60 backdrop-blur-sm" onClick={() => setRatingModal({ isOpen: false, session: null })} />
-          <div className="bg-white rounded-[2rem] p-6 md:p-8 w-full max-w-xl relative z-10 shadow-[0_8px_30px_rgb(0,0,0,0.12)] animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-2xl sm:rounded-[2rem] p-4 sm:p-6 md:p-8 w-full max-w-xl relative z-10 shadow-[0_8px_30px_rgb(0,0,0,0.12)] animate-in zoom-in-95 duration-200 max-h-[calc(100dvh-1rem)] sm:max-h-[90vh] overflow-y-auto">
             <div className="text-center mb-6">
               <h2 className="text-2xl font-bold tracking-tight text-gray-900">Teacher Evaluation</h2>
               <p className="text-gray-400 text-[13px] mt-1">Rank <span className="font-bold text-gray-800">{ratingModal.session.instructor?.full_name}</span> on the leaderboard.</p>

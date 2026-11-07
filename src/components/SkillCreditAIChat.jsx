@@ -280,8 +280,8 @@ export default function SkillCreditAIChat({ userId, onBack }) {
       {/* CENTER — matches the existing person/support chat pane in Messages.jsx. */}
       <section className="flex min-w-0 min-h-0 flex-1 flex-col bg-white">
         {/* Same header/avatar proportions as the user/support conversation header. */}
-        <header className="flex shrink-0 items-center justify-between border-b border-gray-100 bg-white px-4 py-3.5 sm:px-5">
-          <div className="flex min-w-0 items-center gap-3">
+        <header className="flex min-w-0 shrink-0 items-center justify-between gap-2 border-b border-gray-100 bg-white px-3 py-2.5 sm:px-5 sm:py-3.5">
+          <div className="flex min-w-0 items-center gap-2 sm:gap-3">
             <button type="button" onClick={onBack} className="mr-1 text-gray-500 md:hidden" aria-label="Back to conversations">
               <ArrowLeft className="h-4 w-4" />
             </button>
@@ -333,7 +333,7 @@ export default function SkillCreditAIChat({ userId, onBack }) {
         </div>}
 
         {/* Native-style conversation scroll area; chat and AI logic remain unchanged. */}
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain bg-white px-4 py-4 sm:px-5 [&::-webkit-scrollbar]:hidden" aria-live="polite">
+        <div className="min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain bg-white px-3 py-3 sm:px-5 sm:py-4 [&::-webkit-scrollbar]:hidden" aria-live="polite">
           {loading ? (
             <div className="flex items-center justify-center gap-2 py-12 text-sm text-gray-400"><Loader2 className="h-4 w-4 animate-spin" />Loading your AI conversations…</div>
           ) : visibleMessages.length === 0 ? (
@@ -360,7 +360,7 @@ export default function SkillCreditAIChat({ userId, onBack }) {
                   </div>}
                   <div className={`mb-2 flex w-full items-end gap-1.5 ${isUser ? 'justify-end' : 'justify-start'}`}>
                     {!isUser && <span className="mb-4 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-emerald-100 bg-emerald-100 text-emerald-700"><Sparkles className="h-4 w-4" /></span>}
-                    <div className={`flex min-w-0 flex-col gap-1 ${isUser ? 'max-w-[76%] items-end sm:max-w-[68%]' : 'max-w-[calc(100%-40px)] items-start sm:max-w-[85%]'}`}>
+                    <div className={`flex min-w-0 flex-col gap-1 ${isUser ? 'max-w-[88%] items-end sm:max-w-[68%]' : 'max-w-[calc(100%-40px)] items-start sm:max-w-[85%]'}`}>
                       <div className={`min-w-0 max-w-full break-words px-4 py-2.5 text-[14px] leading-snug ${isUser
                         ? 'rounded-2xl rounded-br-sm bg-emerald-600 text-white'
                         : 'rounded-2xl rounded-bl-sm bg-gray-100 text-gray-900'}`}>
@@ -406,7 +406,7 @@ export default function SkillCreditAIChat({ userId, onBack }) {
         </div>}
 
         {/* Same compact input area and green Send button as native Messages. */}
-        <div className="shrink-0 border-t border-gray-100 bg-white px-3 py-3 sm:px-4">
+        <div className="shrink-0 border-t border-gray-100 bg-white px-2.5 py-2.5 sm:px-4 sm:py-3">
           {isQuotaBlocked && <div className="mb-2 flex items-start gap-2 rounded-xl bg-amber-50 px-3 py-2 text-[12px] text-amber-900" role="status">
             <Clock3 className="mt-0.5 h-4 w-4 shrink-0" />
             <span>{(usage?.reason === 'user_limit' || effectiveRemaining === 0) ? 'You have reached your AI message allowance.' : 'Skiro AI is taking a short break.'}
@@ -428,17 +428,17 @@ export default function SkillCreditAIChat({ userId, onBack }) {
               <span className="text-[12px] font-bold text-gray-800">Choose an AI category</span>
               <button type="button" aria-label="Close categories" onClick={() => setShowCategories(false)} className="rounded-full p-1 hover:bg-gray-100"><X className="h-4 w-4 text-gray-500" /></button>
             </div>
-            <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3">
+            <div className="grid grid-cols-1 min-[360px]:grid-cols-2 gap-1.5 sm:grid-cols-3">
               {CATEGORIES.map((opt) => { const Icon = opt.icon; return <button type="button" key={opt.id} onClick={() => pickCategory(opt.id)} className={`flex min-w-0 items-center gap-2 rounded-lg border px-2.5 py-2 text-left transition ${mode === opt.id ? 'border-emerald-200 bg-emerald-100' : 'border-transparent bg-gray-50 hover:bg-gray-100'}`}>
                 <Icon className="h-4 w-4 shrink-0 text-emerald-700" />
                 <span className="truncate text-[11px] font-semibold text-gray-800">{opt.label}</span>
               </button>; })}
             </div>
           </div>}
-          <form onSubmit={send} className="flex items-end gap-2">
-            <div className="flex min-w-0 flex-1 items-center rounded-2xl bg-gray-100 px-4 py-2.5 transition focus-within:bg-gray-50 focus-within:ring-2 focus-within:ring-emerald-400/30">
+          <form onSubmit={send} className="flex min-w-0 items-end gap-2">
+            <div className="flex min-w-0 flex-1 items-center rounded-2xl bg-gray-100 px-3 sm:px-4 py-2.5 transition focus-within:bg-gray-50 focus-within:ring-2 focus-within:ring-emerald-400/30">
               <textarea ref={inputRef} value={draft} onChange={(e) => setDraft(e.target.value)} rows={1} maxLength={MAX_CHARS} placeholder={category.placeholder}
-                className="min-h-[22px] max-h-28 w-full resize-none bg-transparent text-[14px] leading-[22px] text-gray-900 outline-none placeholder:text-gray-400"
+                className="min-h-[22px] max-h-28 w-full resize-none bg-transparent text-[16px] sm:text-[14px] leading-[22px] text-gray-900 outline-none placeholder:text-gray-400"
                 onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); if (maySend && draft.trim()) e.currentTarget.form?.requestSubmit(); } }} />
             </div>
             <button type="submit" disabled={!maySend || !draft.trim()} title="Send to Skiro AI" aria-label="Send message"

@@ -291,7 +291,7 @@ export default function Payments() {
  
   if (loading) return (
     <div role="status" aria-live="polite" aria-label="Loading payments" className="min-h-[calc(100vh-64px)] bg-[#faf9f6] text-[#202522]">
-      <main className="mx-auto max-w-[1000px] animate-pulse space-y-3.5 px-6 py-6 md:px-8">
+      <main className="mx-auto max-w-[1000px] min-w-0 animate-pulse space-y-3.5 px-3 py-4 sm:px-6 sm:py-6 md:px-8">
         <header
           className="relative mx-auto w-full max-w-[920px] overflow-hidden rounded-2xl shadow-md"
           style={{ background: 'linear-gradient(135deg, #064e3b 0%, #065f46 45%, #047857 100%)' }}
@@ -300,7 +300,7 @@ export default function Payments() {
             className="pointer-events-none absolute inset-0 opacity-20"
             style={{ backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)', backgroundSize: '20px 20px' }}
           />
-          <div className="relative flex flex-col gap-4 px-5 py-5 sm:flex-row sm:items-center sm:justify-between">
+          <div className="relative flex flex-col gap-3 px-3 py-4 sm:gap-4 sm:px-5 sm:py-5 sm:flex-row sm:items-center sm:justify-between">
             <div className="min-w-0 space-y-2">
               <div className="h-3 w-28 rounded bg-emerald-300/40" />
               <div className="h-6 w-48 rounded bg-white/20" />
@@ -355,7 +355,7 @@ export default function Payments() {
  
           return (
             <div key={tx.id} className="flex items-center justify-between gap-3 px-4 py-3.5 transition hover:bg-gray-50 sm:px-5">
-              <div className="flex min-w-0 items-center gap-3">
+              <div className="flex min-w-0 items-center gap-2 sm:gap-3">
                 <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border ${bgClass} ${textClass}`}>
                   {iconRender}
                 </span>
@@ -364,8 +364,8 @@ export default function Payments() {
                   <p className="mt-0.5 truncate text-[10px] text-gray-500">{new Date(tx.date).toLocaleDateString()} · {tx.meta}</p>
                 </div>
               </div>
-              <div className="shrink-0 text-right">
-                <p className={`text-[12px] font-bold ${tx.isPositive ? 'text-emerald-600' : 'text-gray-900'}`}>
+              <div className="max-w-[43%] shrink-0 break-words text-right">
+                <p className={`break-words text-[10px] sm:text-[12px] font-bold ${tx.isPositive ? 'text-emerald-600' : 'text-gray-900'}`}>
                   {tx.isPositive ? '+' : '-'}{tx.amount} credits
                 </p>
                 {tx.status === 'pending' && <span className="text-[9px] font-semibold uppercase tracking-wider text-amber-600">Pending</span>}
@@ -387,7 +387,7 @@ export default function Payments() {
  
   return (
     <div className="min-h-[calc(100vh-64px)] bg-[#faf9f6] text-[#202522]">
-      <main className="mx-auto max-w-[1000px] space-y-3.5 px-6 py-6 md:px-8">
+      <main className="mx-auto max-w-[1000px] min-w-0 space-y-3.5 px-3 py-4 sm:px-6 sm:py-6 md:px-8">
         
         <header
           className="relative mx-auto w-full max-w-[920px] overflow-hidden rounded-2xl shadow-md"
@@ -396,17 +396,17 @@ export default function Payments() {
           <div className="absolute inset-0 pointer-events-none opacity-20"
             style={{ backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)', backgroundSize: '20px 20px' }} />
             
-          <div className="relative flex flex-col gap-4 px-5 py-5 sm:flex-row sm:items-center sm:justify-between">
+          <div className="relative flex flex-col gap-3 px-3 py-4 sm:gap-4 sm:px-5 sm:py-5 sm:flex-row sm:items-center sm:justify-between">
             <div className="min-w-0">
               <p className="text-[9px] font-bold uppercase tracking-widest text-emerald-300">ACCOUNT</p>
               <h1 className="mt-0.5 text-[20px] font-bold leading-tight tracking-tight text-white">Wallet &amp; Payments</h1>
               <p className="mt-0.5 text-[11px] font-medium text-emerald-200">Check your balance, add credits, and track transactions.</p>
             </div>
             <div className="flex flex-wrap items-center gap-2 sm:justify-end">
-              <div className="grid grid-cols-3 gap-1.5">
-                <div className="rounded-xl border border-white/10 bg-white/10 px-3 py-2 text-center"><p className="text-[14px] font-bold leading-none text-white">+{stats.earned.toLocaleString()}</p><p className="mt-1 text-[8px] font-bold uppercase tracking-widest text-emerald-200">Earned</p></div>
-                <div className="rounded-xl border border-white/10 bg-white/10 px-3 py-2 text-center"><p className="text-[14px] font-bold leading-none text-white">-{stats.spent.toLocaleString()}</p><p className="mt-1 text-[8px] font-bold uppercase tracking-widest text-emerald-200">Spent</p></div>
-                <div className="rounded-xl border border-white/10 bg-white/10 px-3 py-2 text-center"><p className="text-[14px] font-bold leading-none text-white">{stats.totalTransactions.toLocaleString()}</p><p className="mt-1 text-[8px] font-bold uppercase tracking-widest text-emerald-200">Transactions</p></div>
+              <div className="grid w-full grid-cols-3 gap-1 sm:w-auto sm:gap-1.5">
+                <div className="min-w-0 rounded-xl border border-white/10 bg-white/10 px-1.5 py-2 text-center sm:px-3"><p className="break-words text-[12px] min-[360px]:text-[14px] font-bold leading-none text-white">+{stats.earned.toLocaleString()}</p><p className="mt-1 text-[8px] font-bold uppercase tracking-widest text-emerald-200">Earned</p></div>
+                <div className="min-w-0 rounded-xl border border-white/10 bg-white/10 px-1.5 py-2 text-center sm:px-3"><p className="break-words text-[12px] min-[360px]:text-[14px] font-bold leading-none text-white">-{stats.spent.toLocaleString()}</p><p className="mt-1 text-[8px] font-bold uppercase tracking-widest text-emerald-200">Spent</p></div>
+                <div className="min-w-0 rounded-xl border border-white/10 bg-white/10 px-1.5 py-2 text-center sm:px-3"><p className="break-words text-[12px] min-[360px]:text-[14px] font-bold leading-none text-white">{stats.totalTransactions.toLocaleString()}</p><p className="mt-1 text-[8px] font-bold uppercase tracking-widest text-emerald-200">Transactions</p></div>
               </div>
             </div>
           </div>
@@ -418,7 +418,7 @@ export default function Payments() {
           </div>
         )}
  
-        <nav aria-label="Payments sections" className="flex w-fit max-w-full flex-wrap gap-1 rounded-xl border border-gray-100 bg-gray-100/80 p-1">
+        <nav aria-label="Payments sections" className="flex w-full min-w-0 max-w-full flex-nowrap gap-1 overflow-x-auto overscroll-x-contain rounded-xl border border-gray-100 bg-gray-100/80 p-1 sm:w-fit sm:flex-wrap">
           {tabs.map(({ key, label, icon: Icon }) => {
             const isActive = activePaymentTab === key;
             return (
@@ -427,7 +427,7 @@ export default function Payments() {
                 type="button"
                 onClick={() => setActivePaymentTab(key)}
                 aria-current={isActive ? 'page' : undefined}
-                className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 text-[12px] font-bold transition ${isActive ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:bg-white/70 hover:text-gray-900'}`}
+                className={`inline-flex shrink-0 items-center gap-1.5 sm:gap-2 rounded-lg px-2.5 sm:px-4 py-2 text-[11px] sm:text-[12px] font-bold transition ${isActive ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:bg-white/70 hover:text-gray-900'}`}
               >
                 <Icon className={`h-3.5 w-3.5 ${isActive ? 'text-emerald-700' : ''}`} />{label}
                 {key === 'history' && <span className={`rounded-full px-1.5 py-0.5 text-[9px] ${isActive ? 'bg-emerald-50 text-emerald-700' : 'bg-white/80 text-gray-500'}`}>{stats.totalTransactions}</span>}
@@ -439,7 +439,7 @@ export default function Payments() {
         {activePaymentTab === 'overview' && (
           <section className="grid items-start gap-4 lg:grid-cols-[0.82fr_1.18fr]">
             <div className={`${cardClass} overflow-hidden`}>
-              <div className="border-b border-gray-100 px-5 py-4">
+              <div className="border-b border-gray-100 px-3 py-3 sm:px-5 sm:py-4">
                 <div className="flex items-center gap-3">
                   <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700"><Wallet className="h-4 w-4" /></span>
                   <div>
@@ -448,10 +448,10 @@ export default function Payments() {
                   </div>
                 </div>
               </div>
-              <div className="p-5">
-                <div className="rounded-xl bg-emerald-50/80 p-4">
+              <div className="p-3 sm:p-5">
+                <div className="min-w-0 rounded-xl bg-emerald-50/80 p-3 sm:p-4">
                   <p className="text-[9px] font-bold uppercase tracking-widest text-emerald-800/65">Available</p>
-                  <p className="mt-1 text-[27px] font-bold leading-none tracking-tight text-emerald-800">{balance.toLocaleString()} <span className="text-[13px]">credits</span></p>
+                  <p className="mt-1 break-words text-[22px] min-[360px]:text-[27px] font-bold leading-tight tracking-tight text-emerald-800">{balance.toLocaleString()} <span className="text-[13px]">credits</span></p>
                   <p className="mt-2 text-[10px] text-emerald-800/65">Equivalent to approximately ₱{(balance * 10).toLocaleString()}.</p>
                 </div>
                 <div className="mt-4 flex items-start gap-2.5 rounded-xl border border-gray-100 p-3.5">
@@ -462,7 +462,7 @@ export default function Payments() {
             </div>
  
             <section className={`${cardClass} overflow-hidden`}>
-              <div className="flex items-center justify-between border-b border-gray-100 px-4 py-4 sm:px-5">
+              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 px-3 py-3 sm:px-5 sm:py-4">
                 <div className="flex items-center gap-3">
                   <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gray-50 text-gray-500"><History className="h-4 w-4" /></span>
                   <div><h2 className="text-[15px] font-bold text-gray-900">Recent transactions</h2><p className="mt-0.5 text-[10px] text-gray-400">Latest 5</p></div>
@@ -478,7 +478,7 @@ export default function Payments() {
  
         {activePaymentTab === 'topup' && (
           <section className="grid items-start gap-4 lg:grid-cols-[1.15fr_0.85fr]">
-            <div className={`${cardClass} p-5 sm:p-6`}>
+            <div className={`${cardClass} min-w-0 p-3 sm:p-6`}>
               <div className="mb-5 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700"><CreditCard className="h-4 w-4" /></span>
@@ -487,12 +487,12 @@ export default function Payments() {
                 <ShieldCheck className="h-4 w-4 text-emerald-600" />
               </div>
               <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-gray-500">Select a package</p>
-              <div className="mb-5 grid grid-cols-2 gap-2.5">
+              <div className="mb-5 grid grid-cols-2 gap-2 sm:gap-2.5">
                 {TOPUP_PACKAGES.map((pkg, idx) => {
                   const isSelected = selectedPackage === pkg && !customAmount;
                   const baseCredits = Math.floor(pkg.phpAmount / 10);
                   return (
-                    <button key={idx} type="button" onClick={() => { setSelectedPackage(pkg); setCustomAmount(''); }} className={`relative flex min-h-[82px] flex-col items-center justify-center rounded-xl border p-3 transition ${isSelected ? 'border-emerald-500 bg-emerald-50 ring-2 ring-emerald-500/15' : 'border-gray-200 bg-gray-50 hover:border-emerald-300 hover:bg-emerald-50/40'}`}>
+                    <button key={idx} type="button" onClick={() => { setSelectedPackage(pkg); setCustomAmount(''); }} className={`relative flex min-h-[76px] sm:min-h-[82px] min-w-0 flex-col items-center justify-center rounded-xl border p-2 sm:p-3 transition ${isSelected ? 'border-emerald-500 bg-emerald-50 ring-2 ring-emerald-500/15' : 'border-gray-200 bg-gray-50 hover:border-emerald-300 hover:bg-emerald-50/40'}`}>
                       {pkg.bonusCredits > 0 && <span className="absolute -top-2 rounded-full bg-orange-500 px-2 py-0.5 text-[9px] font-bold text-white">+{pkg.bonusCredits} bonus</span>}
                       <span className={`text-[15px] font-bold ${isSelected ? 'text-emerald-800' : 'text-gray-800'}`}>₱{pkg.phpAmount.toLocaleString()}</span>
                       <span className="mt-1 text-[9px] font-bold uppercase tracking-widest text-gray-400">{baseCredits} credits</span>
@@ -505,7 +505,7 @@ export default function Payments() {
               <p className="flex items-center gap-1.5 text-[10px] text-gray-500"><ShieldCheck className="h-3.5 w-3.5 text-emerald-600" /> Payments are securely prepared through PayMongo.</p>
             </div>
  
-            <aside className={`${cardClass} p-5 sm:p-6`}>
+            <aside className={`${cardClass} min-w-0 p-3 sm:p-6`}>
               <h2 className="text-[15px] font-bold text-gray-900">Payment summary</h2>
               <p className="mt-1 text-[10px] text-gray-500">Review your payment and credits before continuing.</p>
               <div className="mt-5 space-y-3 rounded-xl bg-gray-50 p-4">

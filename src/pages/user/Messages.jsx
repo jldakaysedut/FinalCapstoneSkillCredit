@@ -739,13 +739,13 @@ export default function Messages() {
   const otherCompleted = selectedContact ? (isContactInstructor ? selectedContact.studentCompleted : selectedContact.instructorCompleted) : false;
 
   if (loadingContacts) return (
-    <div role="status" aria-live="polite" aria-label="Loading messages" className="flex h-[calc(100vh-70px)] bg-white overflow-hidden text-gray-900">
+    <div role="status" aria-live="polite" aria-label="Loading messages" className="flex h-[calc(100dvh-64px)] min-h-0 min-w-0 md:h-[calc(100vh-70px)] bg-white overflow-hidden text-gray-900">
       
       <div className="w-full md:w-[260px] lg:w-[280px] border-r border-gray-100 flex flex-col shrink-0 bg-white">
-        <div className="px-5 pt-5 pb-3 flex items-center shrink-0">
+        <div className="px-3 pt-3 pb-2 sm:px-5 sm:pt-5 sm:pb-3 flex items-center shrink-0">
           <div className="h-8 w-24 bg-gray-200 rounded-lg animate-pulse" />
         </div>
-        <div className="px-4 pb-3 shrink-0">
+        <div className="px-3 pb-2 sm:px-4 sm:pb-3 shrink-0">
           <div className="h-[40px] w-full bg-gray-100 rounded-full animate-pulse" />
         </div>
         <div className="px-4 pb-3 flex gap-2 overflow-hidden shrink-0">
@@ -771,7 +771,7 @@ export default function Messages() {
       </div>
 
       <div className="hidden md:flex flex-1 min-w-0 flex-col bg-white">
-        <div className="px-5 py-3.5 border-b border-gray-100 flex items-center justify-between shrink-0 bg-white">
+        <div className="px-3 py-2.5 sm:px-5 sm:py-3.5 border-b border-gray-100 flex min-w-0 items-center justify-between gap-2 shrink-0 bg-white">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-gray-200 animate-pulse" />
             <div className="space-y-2">
@@ -897,17 +897,17 @@ export default function Messages() {
   );
 
   return (
-    <div className="flex h-[calc(100vh-70px)] bg-white overflow-hidden text-gray-900">
+    <div className="flex h-[calc(100dvh-64px)] min-h-0 min-w-0 md:h-[calc(100vh-70px)] bg-white overflow-hidden text-gray-900">
 
       {/* ══ LEFT PANEL ══ */}
       <div className={`w-full md:w-[260px] lg:w-[280px] border-r border-gray-100 flex flex-col shrink-0 bg-white ${
         (selectedContact || aiActive) ? 'hidden md:flex' : 'flex'
       }`}>
-        <div className="px-5 pt-5 pb-3 flex items-center shrink-0">
-          <h1 className="text-2xl font-bold tracking-tight text-gray-900">Chats</h1>
+        <div className="px-3 pt-3 pb-2 sm:px-5 sm:pt-5 sm:pb-3 flex items-center shrink-0">
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-gray-900">Chats</h1>
         </div>
 
-        <div className="px-4 pb-3 shrink-0">
+        <div className="px-3 pb-2 sm:px-4 sm:pb-3 shrink-0">
           <div className="bg-gray-100 rounded-full flex items-center gap-2 px-4 py-2.5 focus-within:ring-2 focus-within:ring-emerald-500/20 transition">
             <Search className="w-4 h-4 text-gray-400 shrink-0" />
             <input
@@ -921,7 +921,7 @@ export default function Messages() {
           </div>
         </div>
 
-        <div className="px-4 pb-3 flex gap-2 overflow-x-auto scrollbar-hide shrink-0">
+        <div className="px-3 pb-2 sm:px-4 sm:pb-3 flex min-w-0 gap-2 overflow-x-auto overscroll-x-contain scrollbar-hide shrink-0">
           {['All', 'Unread', 'Teachers', 'Students', 'Support', 'Completed'].map(tab => (
             <button key={tab} onClick={() => setActiveTab(tab)}
               className={`px-4 py-1.5 rounded-full text-[13px] font-bold whitespace-nowrap transition cursor-pointer ${
@@ -981,15 +981,15 @@ export default function Messages() {
           <SkillCreditAIChat userId={currentUserId} onBack={() => setAiActive(false)} />
         ) : selectedContact ? (
           <>
-            <div className="px-5 py-3.5 border-b border-gray-100 flex items-center justify-between shrink-0 bg-white">
-              <div className="flex items-center gap-3">
+            <div className="px-3 py-2.5 sm:px-5 sm:py-3.5 border-b border-gray-100 flex min-w-0 items-center justify-between gap-2 shrink-0 bg-white">
+              <div className="flex min-w-0 items-center gap-2 sm:gap-3">
                 <button onClick={() => setSelectedContact(null)} aria-label="Back to conversations" className="md:hidden text-gray-500 mr-1"><ArrowLeft className="w-4 h-4" /></button>
                 <div className="relative">
                   <Avatar contact={selectedContact} size="md" />
                   {!isClosed && <div className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full" />}
                 </div>
-                <div>
-                  <h2 className="font-bold text-[15px] text-gray-900 leading-tight">
+                <div className="min-w-0">
+                  <h2 className="truncate font-bold text-[14px] sm:text-[15px] text-gray-900 leading-tight">
                     {selectedContact.name}
                     {isMuted && <span className="text-[11px] text-gray-400 font-normal ml-1.5">(Muted)</span>}
                   </h2>
@@ -1013,7 +1013,7 @@ export default function Messages() {
               ['pending', 'reschedule_proposed'].includes(selectedContact.sessionStatus) || 
               (selectedContact.sessionStatus === 'active' && (myCompleted || otherCompleted))
             ) && (
-              <div className={`border-b px-5 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0 relative z-10 ${
+              <div className={`border-b px-3 py-2 sm:px-5 sm:py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3 shrink-0 relative z-10 ${
                 selectedContact.sessionStatus === 'active' ? 'bg-sky-50 border-sky-100 text-sky-800' : 'bg-indigo-50 border-indigo-100 text-indigo-800'
               }`}>
                 <div className="flex items-center gap-2 text-[12px]">
@@ -1059,7 +1059,7 @@ export default function Messages() {
 
             <div
               ref={messagesAreaRef}
-              className="flex-1 overflow-y-auto overscroll-contain px-5 py-4 flex flex-col bg-white [&::-webkit-scrollbar]:hidden"
+              className="flex-1 min-h-0 min-w-0 overflow-y-auto overscroll-contain px-3 py-3 sm:px-5 sm:py-4 flex flex-col bg-white [&::-webkit-scrollbar]:hidden"
             >
               {loadingMessages ? (
                 <div className="flex justify-center py-10">
@@ -1102,7 +1102,7 @@ export default function Messages() {
                       className={`flex w-full mb-2 transition-all ${ isMe ? 'justify-end' : 'justify-start' }`}
                     >
                       <div
-                        className={`flex w-fit items-end gap-1.5 max-w-[68%] ${ isMe ? 'flex-row-reverse' : 'flex-row' } group/msg`}
+                        className={`flex w-fit min-w-0 items-end gap-1 max-w-[88%] sm:gap-1.5 sm:max-w-[68%] ${ isMe ? 'flex-row-reverse' : 'flex-row' } group/msg`}
                         onTouchStart={() => !msg.is_deleted && startLongPress(msg)}
                         onTouchEnd={cancelLongPress}
                         onTouchMove={cancelLongPress}
@@ -1121,7 +1121,7 @@ export default function Messages() {
                           {isImage && !msg.is_deleted && (
                             <a href={msg.file_url} target="_blank" rel="noopener noreferrer">
                               <img src={msg.file_url} alt="Attached"
-                                className="rounded-2xl max-w-[240px] max-h-60 object-cover" />
+                                className="rounded-2xl max-w-[min(240px,calc(100vw-76px))] max-h-60 object-cover" />
                             </a>
                           )}
 
@@ -1137,7 +1137,7 @@ export default function Messages() {
                           {/* ✨ BOOKING REQUEST CARD UI ✨ */}
                           {bookingData && !msg.is_deleted && (
                             <>
-                              <div className={`w-full min-w-[220px] max-w-[250px] rounded-xl overflow-hidden border shadow-sm ${isMe ? 'bg-amber-50 border-amber-200' : 'bg-white border-gray-200'}`}>
+                              <div className={`w-[min(250px,calc(100vw-58px))] min-w-0 sm:min-w-[220px] sm:max-w-[250px] rounded-xl overflow-hidden border shadow-sm ${isMe ? 'bg-amber-50 border-amber-200' : 'bg-white border-gray-200'}`}>
                                 <div className={`px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-white flex items-center gap-1.5 ${isMe ? 'bg-amber-500' : 'bg-gray-800'}`}>
                                   <CalendarDays className="w-3.5 h-3.5" />
                                   Booking Request
@@ -1248,7 +1248,7 @@ export default function Messages() {
             </div>
 
             {isClosed ? (
-              <div className="px-5 py-4 border-t border-gray-100 flex flex-col items-center justify-center min-h-[80px] shrink-0">
+              <div className="px-3 py-3 sm:px-5 sm:py-4 border-t border-gray-100 flex flex-col items-center justify-center min-h-[64px] sm:min-h-[80px] shrink-0">
                 {selectedContact.type === 'ticket' && selectedContact.sessionStatus === 'resolved' ? (
                   selectedContact.rating ? (
                     <div className="text-center">
@@ -1333,14 +1333,14 @@ export default function Messages() {
                     </div>
                   )}
 
-                  <div className="flex-1 bg-gray-100 rounded-full flex items-center px-4 py-2.5 focus-within:bg-gray-50 focus-within:ring-2 focus-within:ring-emerald-400/30 transition">
+                  <div className="min-w-0 flex-1 bg-gray-100 rounded-full flex items-center px-3 sm:px-4 py-2.5 focus-within:bg-gray-50 focus-within:ring-2 focus-within:ring-emerald-400/30 transition">
                     <input
                       ref={replyInputRef}
                       type="text"
                       placeholder={replyingTo ? `Reply to ${replyingTo.senderName}…` : 'Aa'}
                       value={newMessage}
                       onChange={handleTyping}
-                      className="w-full bg-transparent outline-none text-[14px] text-gray-900 placeholder-gray-400"
+                      className="min-w-0 w-full bg-transparent outline-none text-[16px] sm:text-[14px] text-gray-900 placeholder-gray-400"
                     />
                   </div>
 

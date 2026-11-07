@@ -163,7 +163,7 @@ export default function SkillDetails() {
 
   if (loading) return (
     <div role="status" aria-live="polite" aria-label="Loading skill details" className="min-h-[80vh] bg-[#faf9f6]">
-      <div className="mx-auto max-w-[1000px] animate-pulse px-6 py-6 md:px-8">
+      <div className="mx-auto max-w-[1000px] min-w-0 animate-pulse px-3 py-4 sm:px-6 sm:py-6 md:px-8">
         <div className="mb-4 flex items-center justify-between"><div className="h-3 w-24 rounded bg-emerald-100" /><div className="h-4 w-16 rounded bg-gray-100" /></div>
         <div className="flex flex-col items-start gap-6 lg:flex-row">
           <aside className="w-full shrink-0 space-y-4 lg:sticky lg:top-8 lg:w-[260px]"><div className="flex flex-col items-center rounded-2xl border border-gray-200 bg-emerald-50 p-4 shadow-sm"><div className="mb-3 h-20 w-20 rounded-2xl bg-emerald-100" /><div className="mb-2 h-5 w-24 rounded-full bg-white" /><div className="mb-2 h-4 w-32 rounded bg-gray-200" /><div className="mb-4 h-3 w-full rounded bg-gray-100" /><div className="mb-3 h-16 w-full rounded-xl bg-white" /><div className="h-9 w-full rounded-xl bg-gray-100" /></div>
@@ -212,17 +212,17 @@ export default function SkillDetails() {
 
   return (
     <div className="w-full">
-      <div className="max-w-[1000px] mx-auto px-6 md:px-8 py-6">
+      <div className="max-w-[1000px] mx-auto min-w-0 px-3 py-4 sm:px-6 sm:py-6 md:px-8">
         <div className="flex items-center justify-between mb-4">
           <p className="text-[12px] font-semibold uppercase tracking-widest text-emerald-700">Skill Listing</p>
           <button onClick={() => navigate(-1)} className="flex items-center gap-1 text-[11px] font-semibold text-gray-400 hover:text-emerald-700 transition"><ArrowLeft className="w-3.5 h-3.5" /> Back</button>
         </div>
 
-        <div className="flex flex-col lg:flex-row gap-6 items-start">
-          <div className="w-full lg:w-[260px] shrink-0 lg:sticky lg:top-8 flex flex-col gap-4">
-            <div className="bg-emerald-50 border border-gray-200 rounded-2xl p-4 flex flex-col items-center text-center shadow-sm">
+        <div className="flex min-w-0 flex-col lg:flex-row gap-3 sm:gap-6 items-start">
+          <div className="w-full min-w-0 lg:w-[260px] shrink-0 lg:sticky lg:top-8 flex flex-col gap-3 sm:gap-4">
+            <div className="bg-emerald-50 border border-gray-200 rounded-2xl p-3 sm:p-4 flex flex-col items-center text-center shadow-sm">
               <div onClick={() => navigate(`/user/${instructorId}`)}
-                className="relative w-20 h-20 rounded-2xl bg-emerald-100 border-4 border-white shadow-md overflow-hidden flex items-center justify-center mb-2 cursor-pointer hover:scale-105 transition">
+                className="relative w-14 h-14 sm:w-20 sm:h-20 rounded-2xl bg-emerald-100 border-4 border-white shadow-md overflow-hidden flex items-center justify-center mb-2 cursor-pointer hover:scale-105 transition">
                 {instructorAvatar
                   ? <img src={instructorAvatar} alt={instructorName} className="w-full h-full object-cover" />
                   : <span className="text-4xl font-bold text-emerald-800">{instructorName.charAt(0)}</span>}
@@ -337,12 +337,12 @@ export default function SkillDetails() {
 
           <div className="flex-1 min-w-0 space-y-4">
             {skill.cover_image_url && (
-              <div className="w-full h-64 bg-white rounded-2xl overflow-hidden border border-gray-200 shadow-sm">
+              <div className="w-full h-40 min-[360px]:h-48 sm:h-64 bg-white rounded-2xl overflow-hidden border border-gray-200 shadow-sm">
                 <img src={skill.cover_image_url} alt={skill.title} className="w-full h-full object-cover" />
               </div>
             )}
 
-            <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm">
+            <div className="bg-white border border-gray-200 rounded-2xl p-3 sm:p-5 shadow-sm">
               <div className="flex flex-wrap gap-1.5 mb-3">
                 {skill.format   && <span className="text-[10px] font-semibold uppercase tracking-widest bg-emerald-50 text-emerald-700 border border-emerald-100 px-2.5 py-0.5 rounded-full">{skill.format}</span>}
                 {skill.category && <span className="text-[10px] font-semibold uppercase tracking-widest bg-gray-50 text-gray-500 border border-gray-200 px-2.5 py-0.5 rounded-full">{skill.category}</span>}
@@ -365,20 +365,20 @@ export default function SkillDetails() {
               )}
             </div>
 
-            <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm">
+            <div className="bg-white border border-gray-200 rounded-2xl p-3 sm:p-5 shadow-sm">
               <p className="text-sm font-bold tracking-tight text-gray-900 mb-3">About This Session</p>
               <p className="text-[13px] text-gray-600 leading-relaxed whitespace-pre-wrap">{skill.description}</p>
             </div>
 
             {skill.outcomes && (
-              <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm">
+              <div className="bg-white border border-gray-200 rounded-2xl p-3 sm:p-5 shadow-sm">
                 <p className="flex items-center gap-1.5 text-sm font-bold tracking-tight text-gray-900 mb-3"><Target className="w-4 h-4 text-emerald-600" /> What You Will Walk Away With</p>
                 <p className="text-[13px] text-gray-600 leading-relaxed whitespace-pre-wrap">{skill.outcomes}</p>
               </div>
             )}
 
             {skill.reviewsList && skill.reviewsList.length > 0 && (
-              <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm">
+              <div className="bg-white border border-gray-200 rounded-2xl p-3 sm:p-5 shadow-sm">
                 <p className="flex items-center gap-1.5 text-sm font-bold tracking-tight text-gray-900 mb-4"><MessageSquare className="w-4 h-4 text-sky-600" /> Student Feedback ({skill.totalReviews})</p>
                 
                 <div className="space-y-4">
@@ -416,12 +416,12 @@ export default function SkillDetails() {
       </div>
 
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={closeBookingModal} />
           <div className={`relative w-full rounded-3xl bg-white shadow-2xl border border-gray-100 ${
             bookingSuccess
-              ? 'max-w-md overflow-hidden'
-              : 'max-h-[calc(100dvh-2rem)] max-w-lg overflow-y-auto scrollbar-hide p-5 sm:p-6'
+              ? 'max-w-md max-h-[calc(100dvh-1rem)] overflow-y-auto'
+              : 'max-h-[calc(100dvh-1rem)] sm:max-h-[calc(100dvh-2rem)] max-w-lg overflow-y-auto scrollbar-hide p-3 min-[360px]:p-4 sm:p-6'
           }`}>
             {!bookingSuccess ? (
               <>
@@ -431,10 +431,10 @@ export default function SkillDetails() {
                 </div>
                 <p className="text-[11px] text-gray-400 mb-4">Credits are deducted and held securely in escrow.</p>
 
-                <div className="bg-emerald-50 border border-emerald-100 rounded-xl px-4 py-2.5 mb-4 flex items-center justify-between">
+                <div className="bg-emerald-50 border border-emerald-100 rounded-xl px-3 sm:px-4 py-2.5 mb-4 flex min-w-0 items-center justify-between gap-2">
                   <div>
                     <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400">Session</p>
-                    <p className="text-[12px] font-bold text-gray-900 truncate max-w-[200px]">{skill.title}</p>
+                    <p className="min-w-0 max-w-[155px] min-[360px]:max-w-[200px] truncate text-[12px] font-bold text-gray-900">{skill.title}</p>
                   </div>
                   <div className="text-right">
                     <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400">Cost</p>
@@ -474,7 +474,7 @@ export default function SkillDetails() {
                   <span>{currentUserCredits} / {skill.credit_cost} CR</span>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3 border-t border-gray-100 pt-3">
+                <div className="grid grid-cols-2 gap-2 sm:gap-3 border-t border-gray-100 pt-3">
                   <button onClick={closeBookingModal} disabled={bookingLoading}
                     className="inline-flex h-11 w-full items-center justify-center rounded-xl bg-gray-100 px-2 text-center text-[11px] font-bold leading-tight text-gray-600 transition hover:bg-gray-200 cursor-pointer">Cancel</button>
                   <button onClick={handleConfirmBooking} disabled={bookingLoading || !hasEnoughCredits}
