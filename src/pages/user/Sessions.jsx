@@ -538,7 +538,7 @@ export default function Sessions() {
           <div className="absolute inset-0 pointer-events-none opacity-20"
             style={{ backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)', backgroundSize: '20px 20px' }} />
 
-          <div className="relative flex min-w-0 flex-col gap-3 px-3 py-3 min-[360px]:px-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-6 sm:py-5">
+          <div className="relative flex min-w-0 flex-col 	gap-2 px-3 py-2 min-[360px]:px-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-6 sm:py-5">
             <div>
               <p className="text-[9px] sm:text-[10px] font-semibold uppercase tracking-widest text-emerald-400 mb-1">Booking Manager</p>
               <h1 className="font-bold text-[18px] sm:text-[22px] text-white tracking-tight leading-tight flex items-center gap-1.5 sm:gap-2">
