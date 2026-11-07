@@ -898,7 +898,7 @@ export default function UserLayout() {
 
 
               {isNotifOpen && (
-                <div className="fixed inset-x-2 top-[4.25rem] sm:absolute sm:inset-x-auto sm:top-auto sm:right-0 mt-0 sm:mt-3 w-auto sm:w-[360px] max-h-[min(65dvh,480px)] sm:max-h-[min(75dvh,540px)] flex flex-col overflow-hidden rounded-2xl sm:rounded-3xl bg-white shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray-100 z-50">
+                <div className="fixed right-3 left-auto top-[4.25rem] w-[calc(100vw-24px)] max-w-[320px] sm:absolute sm:top-auto sm:right-0 mt-0 sm:mt-3 sm:w-[360px] sm:max-w-none max-h-[min(55dvh,380px)] sm:max-h-[min(75dvh,540px)] flex flex-col overflow-hidden rounded-2xl sm:rounded-3xl bg-white shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray-100 z-50">
 
                   {/* Notif header */}
                   <div className="flex items-center justify-between px-3 py-2.5 sm:px-5 sm:py-4 border-b border-gray-100">
@@ -919,7 +919,7 @@ export default function UserLayout() {
                   </div>
 
                   {/* Notif list */}
-                  <div className="min-h-0 flex-1 max-h-[min(45dvh,300px)] sm:max-h-[340px] overflow-y-auto overscroll-contain divide-y divide-gray-50">
+                  <div className="min-h-0 flex-1 max-h-[min(33dvh,235px)] sm:max-h-[340px] overflow-y-auto overscroll-contain divide-y divide-gray-50">
                     {notifications.length === 0 ? (
                       <div className="py-12 flex flex-col items-center gap-2">
                         <div className="w-12 h-12 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center">
