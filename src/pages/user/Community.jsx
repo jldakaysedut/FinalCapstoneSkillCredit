@@ -1139,12 +1139,16 @@ export default function Community() {
         </aside>
         <main className="min-w-0 flex-1 px-3 py-4 sm:px-6 lg:h-full lg:overflow-hidden lg:px-7 lg:py-6">
           <div className="mx-auto w-full max-w-[760px] animate-pulse">
-            <div className="mb-3 space-y-2 rounded-2xl border border-[#e9ece8] bg-white p-3 lg:hidden">
-              <div className="h-6 w-32 rounded bg-[#e9ece8]" />
-              <div className="h-10 w-full rounded-xl bg-[#eef0ec]" />
-              <div className="h-10 w-full rounded-xl bg-[#eef0ec]" />
+            <div className="mb-3 lg:hidden">
+              <div className="mb-3 h-7 w-32 rounded bg-[#e9ece8]" />
+              <div className="flex h-[58px] items-center gap-2 rounded-2xl border border-[#e9ece8] bg-white p-2.5">
+                <div className="h-9 w-9 shrink-0 rounded-full bg-[#e9ece8]" />
+                <div className="h-9 min-w-0 flex-1 rounded-xl bg-[#eef0ec]" />
+                <div className="h-9 w-[100px] shrink-0 rounded-xl bg-[#eef0ec]" />
+                <div className="h-9 w-9 shrink-0 rounded-xl bg-emerald-700/20" />
+              </div>
             </div>
-            <div className="mb-4 flex min-h-[64px] items-center gap-3 rounded-2xl border border-[#e9ece8] bg-white p-3"><div className="h-10 w-10 rounded-full bg-[#e9ece8]" /><div className="h-10 flex-1 rounded-xl bg-[#f0f2ee]" /><div className="h-10 w-10 rounded-xl bg-emerald-700/20" /></div>
+            <div className="mb-4 hidden min-h-[64px] items-center gap-3 rounded-2xl border border-[#e9ece8] bg-white p-3 lg:flex"><div className="h-10 w-10 rounded-full bg-[#e9ece8]" /><div className="h-10 flex-1 rounded-xl bg-[#f0f2ee]" /><div className="h-10 w-10 rounded-xl bg-emerald-700/20" /></div>
             <div className="mb-4 flex gap-2 overflow-hidden lg:justify-center"><div className="h-10 w-16 rounded-full bg-[#dfe4dd]" /><div className="h-10 w-24 rounded-full bg-[#e9ece8]" /><div className="h-10 w-20 rounded-full bg-[#e9ece8]" /><div className="h-10 w-24 rounded-full bg-[#e9ece8]" /></div>
             <div className="flex flex-col gap-4">
               {[0, 1, 2].map(item => <article key={item} className="rounded-[20px] border border-[#e9ece8] bg-white p-4 sm:p-5">
@@ -1256,52 +1260,45 @@ export default function Community() {
         {/* CENTER: only desktop panel that scrolls */}
         <main className="min-w-0 flex-1 px-2.5 py-3 min-[360px]:px-3 sm:px-6 sm:py-5 lg:h-full lg:overflow-y-auto lg:overscroll-contain lg:px-7 lg:py-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <div className="mx-auto w-full max-w-[760px]">
-            {/* Mobile: the original desktop sidebars are replaced by compact feed controls.
-                These use the same search/category state and event handlers as desktop. */}
-            <section aria-label="Community search and topics" className="mb-3 rounded-2xl border border-[#e9ece8] bg-white p-3 lg:hidden">
-              <div className="mb-3">
-                <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-emerald-700">The Commons</p>
-                <h1 className="mt-0.5 text-[20px] font-bold leading-7 tracking-tight text-[#202522]">Community</h1>
-              </div>
-              <label className="flex min-h-10 min-w-0 items-center gap-2 rounded-xl border border-[#e7e9e5] bg-[#fafbf9] px-3 transition focus-within:border-emerald-300 focus-within:ring-2 focus-within:ring-emerald-100">
-                <Search className="h-4 w-4 shrink-0 text-[#858b86]" aria-hidden="true" />
-                <input
-                  type="text"
-                  role="searchbox"
-                  inputMode="search"
-                  value={searchQuery}
-                  onChange={e => setSearchQuery(e.target.value)}
-                  placeholder="Search posts"
-                  aria-label="Search community posts"
-                  className="min-w-0 flex-1 bg-transparent text-[13px] text-[#303833] outline-none placeholder:text-[#989e99]"
-                />
-                {searchQuery && (
-                  <button
-                    type="button"
-                    onClick={() => setSearchQuery('')}
-                    aria-label="Clear search"
-                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-[#777d78] hover:bg-white hover:text-[#202522] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
-                  ><X className="h-4 w-4" /></button>
-                )}
-              </label>
-              <div className="mt-2 flex min-w-0 items-center gap-2">
-                <label htmlFor="community-topic-filter-mobile" className="shrink-0 text-[12px] font-semibold text-[#69716b]">Topic</label>
-                <select
-                  id="community-topic-filter-mobile"
-                  value={selectedCategory}
-                  onChange={e => setSelectedCategory(e.target.value)}
-                  aria-label="Filter community posts by topic"
-                  className="min-h-10 min-w-0 flex-1 rounded-xl border border-[#e7eae5] bg-white px-3 text-[13px] font-medium text-[#465149] outline-none focus:border-emerald-300 focus:ring-2 focus:ring-emerald-100"
+            {/* Mobile only: compact title and composer. Desktop sidebar and composer stay unchanged. */}
+            <div className="mb-3 lg:hidden">
+              <h1 className="mb-3 px-1 text-[20px] font-bold leading-7 tracking-tight text-[#202522] min-[360px]:text-[22px]">Community</h1>
+              <div className="flex min-w-0 items-center gap-1.5 rounded-2xl border border-[#e9ece8] bg-white p-2 shadow-[0_1px_2px_rgba(20,30,20,0.03)] min-[360px]:gap-2 min-[360px]:p-2.5">
+                <Avatar src={currentUserProfile?.avatar_url} name={currentUserProfile?.full_name} size="sm" isMe />
+                <button
+                  type="button"
+                  onClick={() => { if (!checkRestriction()) setIsCreateModalOpen(true); }}
+                  className="flex h-9 min-w-0 flex-1 items-center rounded-xl bg-[#f5f7f4] px-2.5 text-left text-[11px] text-[#7d857f] transition hover:bg-[#eef3eb] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 min-[360px]:px-3 min-[360px]:text-[12px]"
+                  aria-label="Create a community post"
                 >
-                  <option value="All">All topics</option>
-                  {MACRO_CATEGORIES.map(category => <option key={category} value={category}>{category}</option>)}
-                </select>
+                  <span className="truncate">Share something...</span>
+                </button>
+                <div className="relative w-[83px] shrink-0 min-[360px]:w-[106px] min-[400px]:w-[118px]">
+                  <label htmlFor="community-topic-filter-mobile" className="sr-only">Filter posts by topic</label>
+                  <select
+                    id="community-topic-filter-mobile"
+                    value={selectedCategory}
+                    onChange={e => setSelectedCategory(e.target.value)}
+                    aria-label="Filter community posts by topic"
+                    className="h-9 w-full min-w-0 appearance-none truncate rounded-xl border border-[#e7eae5] bg-[#fbfdfb] pl-2 pr-5 text-[10px] font-semibold text-[#465149] outline-none focus:border-emerald-300 focus:ring-2 focus:ring-emerald-100 min-[360px]:pl-2.5 min-[360px]:text-[11px]"
+                  >
+                    <option value="All">All topics</option>
+                    {MACRO_CATEGORIES.map(category => <option key={category} value={category}>{category}</option>)}
+                  </select>
+                  <ChevronDown className="pointer-events-none absolute right-1.5 top-1/2 h-3 w-3 -translate-y-1/2 text-[#64746a]" aria-hidden="true" />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => { if (!checkRestriction()) setIsCreateModalOpen(true); }}
+                  aria-label="Create post"
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-700 text-white transition hover:bg-emerald-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+                ><Plus className="h-4 w-4" /></button>
               </div>
-            </section>
+            </div>
             <button
               type="button"
               onClick={() => { if (!checkRestriction()) setIsCreateModalOpen(true); }}
-              className="mb-3 flex min-h-[56px] w-full items-center gap-2 rounded-2xl border border-[#e9ece8] bg-white p-2.5 text-left shadow-[0_1px_2px_rgba(20,30,20,0.03)] transition hover:border-emerald-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 sm:mb-4 sm:min-h-[64px] sm:gap-3 sm:p-3"
+              className="mb-3 hidden min-h-[56px] w-full items-center gap-2 rounded-2xl border border-[#e9ece8] bg-white p-2.5 text-left shadow-[0_1px_2px_rgba(20,30,20,0.03)] transition hover:border-emerald-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 sm:mb-4 sm:min-h-[64px] sm:gap-3 sm:p-3 lg:flex"
             >
               <Avatar src={currentUserProfile?.avatar_url} name={currentUserProfile?.full_name} size="md" isMe />
               <span className="flex min-h-9 min-w-0 flex-1 items-center rounded-xl bg-[#f5f7f4] px-3 text-[12px] text-[#7d857f] min-[360px]:text-[13px] sm:min-h-10 sm:px-4 sm:text-[14px]">What would you like to share?</span>
