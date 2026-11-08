@@ -119,7 +119,7 @@ export default function PublicProfile() {
         <div className="flex flex-col items-start gap-6 lg:flex-row">
           <aside className="flex w-full shrink-0 flex-col gap-4 lg:sticky lg:top-8 lg:w-[260px]">
             <div className="flex flex-col items-center rounded-2xl border border-gray-200 bg-emerald-50 p-4 shadow-sm"><div className="mb-3 h-20 w-20 rounded-2xl bg-emerald-100" /><div className="mb-2 h-4 w-32 rounded bg-gray-200" /><div className="mb-2 h-5 w-20 rounded-full bg-white" /><div className="mb-4 h-3 w-28 rounded bg-gray-100" /><div className="mb-4 h-16 w-full rounded-xl bg-gray-100" /><div className="h-10 w-full rounded-xl bg-emerald-100" /></div>
-            <div className="grid grid-cols-2 gap-2">{[0,1,2,3].map(item => <div key={item} className="flex h-28 flex-col items-center justify-center rounded-2xl border border-gray-100 bg-white p-4"><div className="mb-2 h-5 w-5 rounded bg-gray-100" /><div className="mb-2 h-7 w-12 rounded bg-gray-200" /><div className="h-2.5 w-16 rounded bg-gray-100" /></div>)}</div>
+            <div className="grid grid-cols-2 gap-1.5 min-[360px]:gap-2">{[0,1,2,3].map(item => <div key={item} className="flex h-28 flex-col items-center justify-center rounded-2xl border border-gray-100 bg-white p-4"><div className="mb-2 h-5 w-5 rounded bg-gray-100" /><div className="mb-2 h-7 w-12 rounded bg-gray-200" /><div className="h-2.5 w-16 rounded bg-gray-100" /></div>)}</div>
             <div className="space-y-3 rounded-2xl border border-gray-200 bg-white p-4"><div className="h-3 w-28 rounded bg-gray-200" />{[0,1,2,3].map(item => <div key={item} className="flex items-center gap-2"><div className="h-3 w-20 rounded bg-gray-100" /><div className="h-1.5 flex-1 rounded bg-gray-100" /></div>)}</div>
           </aside>
           <section className="min-w-0 flex-1"><div className="mb-5 rounded-2xl border border-gray-200 bg-white p-5"><div className="mb-3 h-3 w-12 rounded bg-gray-200" /><div className="space-y-2"><div className="h-3 w-full rounded bg-gray-100" /><div className="h-3 w-5/6 rounded bg-gray-100" /></div></div><div className="mb-5 flex gap-2"><div className="h-9 w-24 rounded-xl bg-gray-200" /><div className="h-9 w-24 rounded-xl bg-gray-100" /><div className="h-9 w-24 rounded-xl bg-gray-100" /></div><div className="mb-5 space-y-2"><div className="h-3 w-28 rounded bg-gray-200" /><div className="h-3 w-64 max-w-full rounded bg-gray-100" /></div>{[0,1,2].map(item => <div key={item} className="mb-3 flex items-center gap-4 rounded-2xl border border-gray-200 bg-white p-4"><div className="h-16 w-16 rounded-xl bg-gray-100" /><div className="flex-1 space-y-2"><div className="h-3 w-24 rounded-full bg-emerald-50" /><div className="h-4 w-40 rounded bg-gray-200" /><div className="h-3 w-28 rounded bg-gray-100" /></div><div className="h-8 w-20 rounded-xl bg-gray-100" /></div>)}</section>
@@ -131,7 +131,7 @@ export default function PublicProfile() {
   if (!profile.full_name) return (
     <div className="min-h-[80vh] flex flex-col items-center justify-center text-center p-6 bg-[#faf9f6]">
       <SearchX className="h-10 w-10 text-gray-300 mb-3" strokeWidth={1.7} />
-      <h2 className="text-2xl font-bold text-gray-900 mb-1">User Not Found</h2>
+      <h2 className="text-lg lg:text-2xl font-bold text-gray-900 mb-1 break-words">User Not Found</h2>
       <p className="text-xs text-gray-500 mb-6">This profile does not exist or has been deactivated.</p>
       <button onClick={() => navigate(-1)} className="inline-flex items-center gap-2 px-6 py-2.5 bg-emerald-700 text-white rounded-xl text-xs font-bold hover:bg-emerald-800 transition shadow-sm"><ArrowLeft className="h-4 w-4" />Go Back</button>
     </div>
@@ -139,41 +139,41 @@ export default function PublicProfile() {
 
   return (
     <div className="min-h-screen" style={{ background: '#faf9f6' }}>
-      <div className="max-w-[1000px] mx-auto px-6 md:px-8 py-6">
-        <div className="flex items-center justify-between mb-4">
+      <div className="max-w-[1000px] mx-auto min-w-0 px-3 min-[360px]:px-4 py-3 sm:py-5 lg:px-8 lg:py-6">
+        <div className="flex items-center justify-between gap-2 mb-3 lg:mb-4">
           <p className="text-[12px] font-bold uppercase tracking-widest text-emerald-700">Member Profile</p>
           <button onClick={() => navigate(-1)} className="flex items-center gap-1.5 text-[11px] font-bold text-gray-400 hover:text-emerald-700 transition"><ArrowLeft className="h-3.5 w-3.5" />Back</button>
         </div>
 
-        <div className="flex flex-col lg:flex-row gap-6 items-start">
-          <div className="w-full lg:w-[260px] shrink-0 lg:sticky lg:top-8 flex flex-col gap-4">
-            <div className="bg-emerald-50 border border-gray-200 rounded-2xl p-4 flex flex-col items-center text-center shadow-sm">
-              <div className="relative w-20 h-20 rounded-2xl bg-emerald-100 border-4 border-white shadow-md overflow-hidden flex items-center justify-center mb-2">
+        <div className="flex min-w-0 flex-col items-start gap-3 lg:flex-row lg:gap-6">
+          <div className="w-full min-w-0 shrink-0 flex flex-col gap-3 lg:sticky lg:top-8 lg:w-[260px] lg:gap-4">
+            <div className="bg-emerald-50 border border-gray-200 rounded-2xl p-3 lg:p-4 flex flex-col items-center text-center shadow-sm">
+              <div className="relative w-16 h-16 lg:w-20 lg:h-20 rounded-2xl bg-emerald-100 border-4 border-white shadow-md overflow-hidden flex items-center justify-center mb-2">
                 {profile.avatar_url
                   ? <img src={profile.avatar_url} alt={profile.full_name} className="w-full h-full object-cover" />
                   : <span className="text-4xl font-bold text-emerald-800 uppercase">{profile.full_name.charAt(0)}</span>}
               </div>
-              <h2 className="font-bold text-[15px] text-gray-900 mb-1">{profile.full_name}</h2>
+              <h2 className="font-bold text-[14px] lg:text-[15px] text-gray-900 mb-1 max-w-full break-words">{profile.full_name}</h2>
               <span className="text-[10px] font-bold uppercase tracking-widest bg-white text-emerald-700 border border-emerald-200 px-3 py-0.5 rounded-full mb-2">{profile.role}</span>
-              <div className="flex flex-wrap gap-1 justify-center text-[10px] text-gray-400 font-medium mb-3">
+              <div className="flex flex-wrap gap-1 justify-center text-[10px] text-gray-400 font-medium mb-2 lg:mb-3">
                 <span className="inline-flex items-center gap-1"><CalendarDays className="h-3.5 w-3.5" />Joined {new Date(profile.created_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}</span>
               </div>
-              <div className="w-full space-y-2 mb-4">
+              <div className="w-full space-y-2 mb-2 lg:mb-4">
                 {profile.availability_schedule && (
-                  <div className="flex items-center gap-2 text-left bg-gray-50 border border-gray-100 rounded-xl px-3 py-2">
+                  <div className="flex min-w-0 items-center gap-2 text-left bg-gray-50 border border-gray-100 rounded-xl px-2.5 py-1.5 lg:px-3 lg:py-2">
                     <Clock3 className="h-4 w-4 shrink-0 text-gray-400" />
                     <div>
                       <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Availability</p>
-                      <p className="text-[11px] font-bold text-gray-800">{profile.availability_schedule}</p>
+                      <p className="text-[11px] font-bold text-gray-800 break-words [overflow-wrap:anywhere]">{profile.availability_schedule}</p>
                     </div>
                   </div>
                 )}
                 {profile.contact_info && (
-                  <div className="flex items-center gap-2 text-left bg-gray-50 border border-gray-100 rounded-xl px-3 py-2">
+                  <div className="flex min-w-0 items-center gap-2 text-left bg-gray-50 border border-gray-100 rounded-xl px-2.5 py-1.5 lg:px-3 lg:py-2">
                     <Mail className="h-4 w-4 shrink-0 text-gray-400" />
                     <div>
                       <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Contact</p>
-                      <p className="text-[11px] font-bold text-gray-800">{profile.contact_info}</p>
+                      <p className="text-[11px] font-bold text-gray-800 break-words [overflow-wrap:anywhere]">{profile.contact_info}</p>
                     </div>
                   </div>
                 )}
@@ -181,18 +181,18 @@ export default function PublicProfile() {
              
             </div>
 
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 gap-1.5 min-[360px]:gap-2">
               {STAT_CONFIG.map(sc => (
-                <div key={sc.key} className={`${sc.bg} border ${sc.border} rounded-2xl p-4 flex flex-col items-center justify-center text-center hover:shadow-sm transition`}>
-                  <sc.icon className={`h-5 w-5 mb-1 ${sc.color}`} strokeWidth={1.8} />
-                  <span className={`text-2xl font-bold ${sc.color}`}>{statValues[sc.key]}</span>
+                <div key={sc.key} className={`${sc.bg} border ${sc.border} rounded-2xl p-2.5 min-[360px]:p-3 lg:p-4 flex flex-col items-center justify-center text-center hover:shadow-sm transition`}>
+                  <sc.icon className={`h-4 w-4 lg:h-5 lg:w-5 mb-0.5 lg:mb-1 ${sc.color}`} strokeWidth={1.8} />
+                  <span className={`text-lg lg:text-2xl font-bold ${sc.color}`}>{statValues[sc.key]}</span>
                   <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mt-1 leading-tight">{sc.label}</span>
                 </div>
               ))}
             </div>
 
             {stats.totalReviews > 0 && (
-              <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
+              <div className="bg-white border border-gray-200 rounded-2xl p-3 lg:p-4 shadow-sm">
                 <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-3">Rating Breakdown</p>
                 {RATING_DIMS.map(d => (
                   <div key={d.key} className="flex items-center gap-2 mb-2">
@@ -213,19 +213,19 @@ export default function PublicProfile() {
           </div>
 
           <div className="flex-1 min-w-0">
-            <div className="bg-white border border-gray-200 rounded-2xl p-5 mb-5 shadow-sm">
+            <div className="bg-white border border-gray-200 rounded-2xl p-3 lg:p-5 mb-3 lg:mb-5 shadow-sm">
               <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2">About</p>
               <p className="text-[13px] text-gray-600 leading-relaxed whitespace-pre-wrap">
                 {profile.bio || 'This member has not added a bio yet.'}
               </p>
             </div>
 
-            <div className="flex gap-1 overflow-x-auto scrollbar-hide pb-1 mb-5">
+            <div className="flex min-w-0 gap-1 overflow-x-auto scrollbar-hide pb-1 mb-3 lg:mb-5">
               {TABS.map(tab => {
                 const isActive = activeTab === tab.id;
                 return (
                   <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[12px] font-bold whitespace-nowrap border transition-all ${
+                    className={`flex shrink-0 items-center gap-1.5 px-2.5 py-2 lg:gap-2 lg:px-4 rounded-xl text-[11px] lg:text-[12px] font-bold whitespace-nowrap border transition-all ${
                       isActive ? 'bg-gray-900 text-white border-gray-900 shadow-sm' : 'bg-white text-gray-500 border-gray-200 hover:border-emerald-300 hover:text-emerald-700'
                     }`}>
                     <span className={`w-2 h-2 rounded-full ${isActive ? 'bg-white' : tab.dot}`} />
@@ -245,20 +245,20 @@ export default function PublicProfile() {
                   <p className="text-[12px] text-gray-500">Explore the topics and lessons offered by {profile.full_name}.</p>
                 </div>
                 {userSkills.length === 0 ? (
-                  <div className="bg-white border border-dashed border-gray-200 rounded-2xl flex flex-col items-center justify-center py-16 text-center">
+                  <div className="bg-white border border-dashed border-gray-200 rounded-2xl flex flex-col items-center justify-center px-3 py-9 lg:px-0 lg:py-16 text-center">
                     <div className="w-12 h-12 bg-orange-50 border border-orange-100 rounded-2xl flex items-center justify-center text-2xl mb-3"><ClipboardList className="h-6 w-6 text-orange-500" /></div>
                     <p className="font-bold text-gray-900 mb-1">No listings yet</p>
                     <p className="text-[12px] text-gray-400">This member has not shared any skills yet.</p>
                   </div>
                 ) : (
-                  <div className="relative pl-6">
-                    <div className="absolute left-[9px] top-2 bottom-2 w-px bg-gray-200" />
+                  <div className="relative pl-3 lg:pl-6">
+                    <div className="absolute left-[6px] lg:left-[9px] top-2 bottom-2 w-px bg-gray-200" />
                     <div className="space-y-3">
                       {userSkills.map(skill => (
                         <div key={skill.id} className="relative">
-                          <div className="absolute -left-6 top-5 w-[18px] h-[18px] rounded-full border-2 border-white ring-2 ring-gray-100 bg-orange-400 shadow-sm z-10" />
-                          <div className="bg-white border border-gray-200 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center gap-4 hover:shadow-[0_4px_16px_rgba(16,185,129,0.08)] hover:border-emerald-200 transition-all">
-                            <div onClick={() => navigate(`/skill/${skill.id}`)} className="w-full sm:w-16 h-16 bg-gray-100 rounded-xl overflow-hidden shrink-0 cursor-pointer border border-gray-100">
+                          <div className="absolute -left-3 lg:-left-6 top-5 w-[12px] h-[12px] lg:w-[18px] lg:h-[18px] rounded-full border-2 border-white ring-2 ring-gray-100 bg-orange-400 shadow-sm z-10" />
+                          <div className="bg-white border border-gray-200 rounded-2xl p-2.5 min-[360px]:p-3 lg:p-4 flex flex-wrap lg:flex-nowrap items-start sm:items-center gap-2 lg:gap-4 hover:shadow-[0_4px_16px_rgba(16,185,129,0.08)] hover:border-emerald-200 transition-all">
+                            <div onClick={() => navigate(`/skill/${skill.id}`)} className="w-14 h-14 sm:w-16 sm:h-16 bg-gray-100 rounded-xl overflow-hidden shrink-0 cursor-pointer border border-gray-100">
                               {skill.cover_image_url
                                 ? <img src={skill.cover_image_url} alt={skill.title} className="w-full h-full object-cover hover:scale-105 transition" />
                                 : <div className="w-full h-full flex items-center justify-center bg-emerald-50 text-emerald-800 text-[10px] font-bold uppercase">No Cover</div>}
@@ -268,10 +268,10 @@ export default function PublicProfile() {
                                 {skill.category && <span className="text-[10px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-100 px-2 py-0.5 rounded-full">{skill.category}</span>}
                                 {skill.format   && <span className="text-[10px] font-bold uppercase tracking-wider bg-gray-50 text-gray-500 border border-gray-100 px-2 py-0.5 rounded-full">{skill.format}</span>}
                               </div>
-                              <h4 onClick={() => navigate(`/skill/${skill.id}`)} className="font-bold text-[14px] text-gray-900 cursor-pointer hover:text-emerald-700 transition truncate">{skill.title}</h4>
+                              <h4 onClick={() => navigate(`/skill/${skill.id}`)} className="font-bold text-[13px] lg:text-[14px] text-gray-900 cursor-pointer hover:text-emerald-700 transition line-clamp-2 lg:truncate break-words">{skill.title}</h4>
                               <p className="text-[12px] text-gray-500 mt-0.5">{skill.credit_cost} CR · {skill.mode || 'Online'}</p>
                             </div>
-                            <div className="flex gap-2 shrink-0">
+                            <div className="flex w-full justify-end gap-2 shrink-0 sm:w-auto">
                               <button onClick={() => navigate(`/skill/${skill.id}`)} className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-[11px] font-bold transition shadow-sm">View & Book <ArrowRight className="h-3.5 w-3.5" /></button>
                             </div>
                           </div>
@@ -290,17 +290,17 @@ export default function PublicProfile() {
                   <p className="text-[12px] text-gray-500">Past projects and accomplishments by {profile.full_name}.</p>
                 </div>
                 {portfolioItems.length === 0 ? (
-                  <div className="bg-white border border-dashed border-gray-200 rounded-2xl flex flex-col items-center justify-center py-16 text-center">
+                  <div className="bg-white border border-dashed border-gray-200 rounded-2xl flex flex-col items-center justify-center px-3 py-9 lg:px-0 lg:py-16 text-center">
                     <div className="w-12 h-12 bg-purple-50 border border-purple-100 rounded-2xl flex items-center justify-center text-2xl mb-3"><FolderOpen className="h-6 w-6 text-purple-500" /></div>
                     <p className="font-bold text-gray-900 mb-1">No portfolio items yet</p>
                     <p className="text-[12px] text-gray-400">This member has not showcased any work yet.</p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 min-[480px]:grid-cols-2 gap-2.5 lg:gap-4">
                     {portfolioItems.map(item => (
                       <div key={item.id} onClick={() => setSelectedProject(item)}
                         className="bg-white border border-gray-200 rounded-2xl overflow-hidden cursor-pointer hover:shadow-[0_4px_20px_rgba(16,185,129,0.1)] hover:border-emerald-200 transition-all group">
-                        <div className="h-40 bg-gray-100 overflow-hidden relative">
+                        <div className="h-32 lg:h-40 bg-gray-100 overflow-hidden relative">
                           {item.image_url
                             ? <img src={item.image_url} alt={item.project_title} className="w-full h-full object-cover group-hover:scale-105 transition duration-300" />
                             : <div className="w-full h-full flex items-center justify-center gap-2 bg-emerald-50 text-emerald-800 text-[11px] font-bold"><FolderOpen className="h-5 w-5 shrink-0" />{item.project_title}</div>}
@@ -327,7 +327,7 @@ export default function PublicProfile() {
                   <p className="text-[12px] text-gray-500">Feedback from learners who studied with {profile.full_name}.</p>
                 </div>
                 {reviews.length === 0 ? (
-                  <div className="bg-white border border-dashed border-gray-200 rounded-2xl flex flex-col items-center justify-center py-16 text-center">
+                  <div className="bg-white border border-dashed border-gray-200 rounded-2xl flex flex-col items-center justify-center px-3 py-9 lg:px-0 lg:py-16 text-center">
                     <div className="w-12 h-12 bg-amber-50 border border-amber-100 rounded-2xl flex items-center justify-center text-2xl mb-3"><Star className="h-6 w-6 fill-amber-400 text-amber-400" /></div>
                     <p className="font-bold text-gray-900 mb-1">No reviews yet</p>
                     <p className="text-[12px] text-gray-400">Be the first to book a session with this member!</p>
@@ -335,7 +335,7 @@ export default function PublicProfile() {
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {reviews.map(review => (
-                      <div key={review.id} className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm hover:shadow-[0_4px_16px_rgba(16,185,129,0.08)] hover:border-emerald-200 transition-all">
+                      <div key={review.id} className="bg-white border border-gray-200 rounded-2xl p-3 lg:p-4 shadow-sm hover:shadow-[0_4px_16px_rgba(16,185,129,0.08)] hover:border-emerald-200 transition-all">
                         <div className="flex justify-between items-start mb-3">
                           <div className="flex items-center gap-3">
                             <div className="w-9 h-9 rounded-full bg-emerald-100 text-emerald-800 font-bold flex items-center justify-center overflow-hidden shrink-0">
@@ -367,18 +367,18 @@ export default function PublicProfile() {
       </div>
 
       {selectedProject && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-3xl max-w-2xl w-full p-6 md:p-8 shadow-2xl max-h-[90vh] overflow-y-auto border border-gray-100">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-2 min-[360px]:p-3 lg:p-4">
+          <div className="bg-white rounded-3xl max-w-2xl w-full min-w-0 p-3 min-[360px]:p-4 lg:p-8 shadow-2xl max-h-[calc(100dvh-16px)] lg:max-h-[90vh] overflow-y-auto border border-gray-100">
             <div className="flex justify-between items-center mb-4">
               <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-800 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-100">Showcase Project</span>
               <button onClick={() => setSelectedProject(null)} className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 font-bold transition"><X className="h-4 w-4" /></button>
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-1">{selectedProject.project_title}</h2>
+            <h2 className="text-lg lg:text-2xl font-bold text-gray-900 mb-1 break-words">{selectedProject.project_title}</h2>
             <p className="text-[10px] text-gray-400 font-bold mb-5">
               {new Date(selectedProject.created_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
             </p>
             {selectedProject.image_url && (
-              <div className="h-64 rounded-2xl overflow-hidden mb-5 bg-gray-100 border border-gray-100">
+              <div className="h-40 lg:h-64 rounded-2xl overflow-hidden mb-3 lg:mb-5 bg-gray-100 border border-gray-100">
                 <img src={selectedProject.image_url} alt={selectedProject.project_title} className="w-full h-full object-cover" />
               </div>
             )}
