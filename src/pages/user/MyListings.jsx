@@ -99,8 +99,8 @@ function ListingRow({ skill, expanded, onToggle, onView, onDelete, currentFilter
 
       {needsAct && <div className="absolute left-0 top-0 bottom-0 w-1 bg-amber-400 rounded-l-2xl" />}
 
-      <div className="flex flex-wrap items-center gap-2 px-3 py-3 sm:gap-3 lg:flex-nowrap lg:gap-4 lg:px-5 lg:py-4 cursor-pointer" onClick={() => onToggle(skill.id)}>
-        <div className="shrink-0 w-11 h-11 sm:w-12 sm:h-12 lg:w-14 lg:h-14 rounded-xl overflow-hidden relative" style={{ background: cat.color + '15' }}>
+      <div className="flex flex-wrap items-start gap-2.5 px-2.5 py-3 min-[360px]:px-3 sm:gap-3 lg:flex-nowrap lg:items-center lg:gap-4 lg:px-5 lg:py-4 cursor-pointer" onClick={() => onToggle(skill.id)}>
+        <div className="shrink-0 w-12 h-12 min-[360px]:w-14 min-[360px]:h-14 lg:w-14 lg:h-14 rounded-xl overflow-hidden relative" style={{ background: cat.color + '15' }}>
           {skill.cover_image_url
             ? <img src={skill.cover_image_url} alt={skill.title} className="w-full h-full object-cover" />
             : <div className="w-full h-full flex items-center justify-center"><CategoryIcon className={`h-7 w-7 ${cat.iconColor}`} strokeWidth={1.8} /></div>}
@@ -112,8 +112,8 @@ function ListingRow({ skill, expanded, onToggle, onView, onDelete, currentFilter
         </div>
 
         <div className="flex-1 min-w-0">
-          <div className="flex flex-wrap items-center gap-1 mb-1 lg:flex-nowrap lg:gap-2 lg:mb-0.5">
-            <h3 className="font-bold text-[13px] lg:text-[14px] text-gray-900 line-clamp-2 lg:line-clamp-none lg:truncate hover:text-emerald-700 transition-colors"
+          <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1 mb-1 lg:flex-nowrap lg:gap-2 lg:mb-0.5">
+            <h3 className="min-w-0 basis-full lg:basis-auto font-bold text-[14px] leading-snug lg:leading-normal text-gray-900 line-clamp-3 lg:line-clamp-none lg:truncate hover:text-emerald-700 transition-colors"
               onClick={e => { e.stopPropagation(); onView(skill.id); }}>
               {skill.title}
             </h3>
@@ -122,7 +122,7 @@ function ListingRow({ skill, expanded, onToggle, onView, onDelete, currentFilter
             {skill.status === 'pending' && <span className="shrink-0 text-[10px] font-bold uppercase tracking-widest text-amber-600 bg-amber-50 border border-amber-100 px-2 py-0.5 rounded-full">⏳ IN REVIEW</span>}
             {skill.status === 'rejected' && <span className="shrink-0 text-[10px] font-bold uppercase tracking-widest text-rose-600 bg-rose-50 border border-rose-100 px-2 py-0.5 rounded-full">❌ REJECTED</span>}
           </div>
-          <div className="flex items-center gap-x-1.5 gap-y-0.5 lg:gap-2 flex-wrap">
+          <div className="flex items-center gap-x-1.5 gap-y-0.5 lg:gap-2 flex-wrap leading-relaxed lg:leading-normal">
             <span className={`inline-flex items-center gap-1.5 text-[11px] font-semibold ${cat.iconColor}`}><CategoryIcon className="h-3.5 w-3.5" strokeWidth={2} />{skill.category}</span>
             <span className="text-gray-300">·</span>
             <span className="text-[11px] text-gray-400">{skill.format}</span>
@@ -131,26 +131,29 @@ function ListingRow({ skill, expanded, onToggle, onView, onDelete, currentFilter
           </div>
         </div>
 
-        <div className="order-3 flex w-full items-center justify-between gap-1 border-t border-gray-100 pt-2 lg:order-none lg:w-auto lg:justify-start lg:gap-2 lg:border-0 lg:pt-0 lg:shrink-0">
-          <div className="flex flex-col items-center px-2 py-1 lg:px-3 lg:py-1.5 bg-amber-50 border border-amber-100 rounded-xl">
-            <span className="text-[13px] font-bold text-amber-700">{skill.credit_cost}</span>
-            <span className="text-[10px] font-bold uppercase text-amber-500">CR/HR</span>
+        <div className="order-3 grid w-full grid-cols-4 items-stretch gap-1.5 pt-1 lg:order-none lg:flex lg:w-auto lg:items-center lg:justify-start lg:gap-2 lg:border-0 lg:pt-0 lg:shrink-0">
+          <div className="flex min-w-0 flex-col items-center justify-center px-0.5 py-1.5 min-h-[55px] lg:min-h-0 lg:px-3 lg:py-1.5 bg-amber-50 border border-amber-100 rounded-xl">
+            <span className="text-[13px] font-bold leading-tight text-amber-700">{skill.credit_cost}</span>
+            <span className="text-[9px] min-[360px]:text-[10px] lg:text-[10px] font-bold uppercase text-amber-500">CR/HR</span>
           </div>
-          <div className="flex flex-col items-center px-2 py-1 lg:px-3 lg:py-1.5 bg-sky-50 border border-sky-100 rounded-xl">
-            <span className="text-[13px] font-bold text-sky-600">{skill.totalSessions}</span>
-            <span className="text-[10px] font-bold uppercase text-sky-400">SESS.</span>
+          <div className="flex min-w-0 flex-col items-center justify-center px-0.5 py-1.5 min-h-[55px] lg:min-h-0 lg:px-3 lg:py-1.5 bg-sky-50 border border-sky-100 rounded-xl">
+            <span className="text-[13px] font-bold leading-tight text-sky-600">{skill.totalSessions}</span>
+            <span className="text-[9px] min-[360px]:text-[10px] lg:text-[10px] font-bold uppercase text-sky-400">SESS.</span>
           </div>
-          <div className="flex flex-col items-center px-2 py-1 lg:px-3 lg:py-1.5 bg-orange-50 border border-orange-100 rounded-xl">
+          <div className="flex min-w-0 flex-col items-center justify-center px-0.5 py-1.5 min-h-[55px] lg:min-h-0 lg:px-3 lg:py-1.5 bg-orange-50 border border-orange-100 rounded-xl">
             <div className="flex items-center gap-0.5">
               <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
-              <span className="text-[13px] font-bold text-orange-600">{isNew ? '—' : skill.avgRating}</span>
+              <span className="text-[13px] font-bold leading-tight text-orange-600">{isNew ? '—' : skill.avgRating}</span>
             </div>
-            <span className="text-[10px] font-bold uppercase text-orange-400">RATING</span>
+            <span className="text-[9px] min-[360px]:text-[10px] lg:text-[10px] font-bold uppercase text-orange-400">RATING</span>
           </div>
-          <RadialProgress pct={compPct} size={44} stroke={4} />
+          <div className="flex min-w-0 flex-col items-center justify-center rounded-xl border border-gray-100 bg-gray-50 py-1 lg:contents lg:rounded-none lg:border-0 lg:bg-transparent lg:py-0">
+            <RadialProgress pct={compPct} size={44} stroke={4} />
+            <span className="text-[9px] font-bold uppercase text-gray-400 lg:hidden">Done</span>
+          </div>
         </div>
 
-        <div className="order-4 flex w-full items-center justify-end gap-1 border-t border-gray-100 pt-1.5 lg:order-none lg:w-auto lg:shrink-0 lg:border-0 lg:pt-0">
+        <div className="order-4 grid w-full grid-cols-3 gap-1.5 border-t border-gray-100 pt-2 lg:order-none lg:flex lg:w-auto lg:items-center lg:justify-end lg:gap-1 lg:shrink-0 lg:border-0 lg:pt-0">
           {/* 🚨 CONDITION UPDATED: HIDDEN IF FILTER IS 'all' AND ONLY UNRATED EXISTS TO FIX ALIGNMENT */}
           {needsAct && !(currentFilter === 'all' && skill.unratedSessions > 0 && skill.pendingSessions === 0) && (
             <span className="hidden lg:flex items-center gap-1 text-[10px] font-bold text-amber-600 bg-amber-50 border border-amber-100 px-2.5 py-1 rounded-full">
@@ -158,18 +161,21 @@ function ListingRow({ skill, expanded, onToggle, onView, onDelete, currentFilter
             </span>
           )}
           <button onClick={e => { e.stopPropagation(); onView(skill.id); }}
-            className="p-2 rounded-xl text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 transition cursor-pointer" title="View">
-            <ExternalLink className="w-4 h-4" />
+            className="flex min-w-0 items-center justify-center gap-1 rounded-xl border border-gray-200 bg-gray-50 px-1 py-2 text-[11px] font-semibold text-gray-600 transition hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-600 cursor-pointer lg:border-0 lg:bg-transparent lg:p-2 lg:text-gray-400" title="View">
+            <ExternalLink className="w-3.5 h-3.5 lg:w-4 lg:h-4" />
+            <span className="lg:hidden">View</span>
           </button>
           <button onClick={e => { e.stopPropagation(); onDelete(skill.id); }}
-            className="p-2 rounded-xl text-gray-300 hover:text-rose-500 hover:bg-rose-50 transition cursor-pointer" title="Delete">
-            <Trash2 className="w-4 h-4" />
+            className="flex min-w-0 items-center justify-center gap-1 rounded-xl border border-gray-200 bg-gray-50 px-1 py-2 text-[11px] font-semibold text-gray-600 transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-500 cursor-pointer lg:border-0 lg:bg-transparent lg:p-2 lg:text-gray-300" title="Delete">
+            <Trash2 className="w-3.5 h-3.5 lg:w-4 lg:h-4" />
+            <span className="lg:hidden">Delete</span>
           </button>
           <button onClick={e => { e.stopPropagation(); onToggle(skill.id); }}
-            className={`p-2 rounded-xl transition cursor-pointer ${
+            className={`flex min-w-0 items-center justify-center gap-1 rounded-xl border border-gray-200 px-1 py-2 text-[11px] font-semibold transition cursor-pointer lg:border-0 lg:p-2 ${
               expanded ? 'text-emerald-600 bg-emerald-50' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'
             }`}>
-            <ChevronDown className={`w-4 h-4 transition-transform ${expanded ? 'rotate-180' : ''}`} />
+            <ChevronDown className={`w-3.5 h-3.5 lg:w-4 lg:h-4 transition-transform ${expanded ? 'rotate-180' : ''}`} />
+            <span className="lg:hidden">Details</span>
           </button>
         </div>
       </div>
