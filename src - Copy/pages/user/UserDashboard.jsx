@@ -131,7 +131,7 @@ function SkillCard({ skill, isSaved, onSave, onView, width = 260 }) {
       </div>
 
       <div className="p-4 flex flex-col flex-1">
-        <div className="flex items-center justify-between mb-2">
+        className="flex items-center justify-between mb-1"
           <div className="flex items-center gap-1.5 min-w-0">
             <span className="text-[12px] text-gray-500 font-medium truncate">{name}</span>
             {skill.totalSessions > 0 && (

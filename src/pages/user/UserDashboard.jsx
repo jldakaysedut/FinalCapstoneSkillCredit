@@ -100,7 +100,7 @@ function SkillCard({ skill, isSaved, onSave, onView, width = 260 }) {
       className="group shrink-0 min-w-0 w-[min(222px,calc(100vw-64px))] sm:w-[260px] bg-white rounded-2xl overflow-hidden flex flex-col border border-gray-200/70
         hover:shadow-[0_10px_32px_rgba(16,185,129,0.10)] hover:border-emerald-200 transition-all duration-300 cursor-pointer snap-start"
     >
-      <div className="relative h-[105px] sm:h-[150px] overflow-hidden bg-emerald-900">
+      <div className="relative h-[122px] sm:h-[158px] overflow-hidden bg-emerald-900">
         {skill.cover_image_url ? (
           <img src={skill.cover_image_url} alt={skill.title}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
@@ -128,10 +128,15 @@ function SkillCard({ skill, isSaved, onSave, onView, width = 260 }) {
             ? <BookmarkCheck className="w-4 h-4 text-emerald-600" />
             : <Bookmark className="w-4 h-4 text-white" />}
         </button>
+
+        {/* Skill price stays visible even when the category label is long. */}
+        <span className="pointer-events-none absolute bottom-2 right-2 z-10 flex items-center gap-1 rounded-lg border border-amber-200/80 bg-amber-50/95 px-2.5 py-1 text-[11px] font-semibold text-amber-800 shadow-sm backdrop-blur-sm sm:bottom-3 sm:right-3">
+          <Coins className="h-3 w-3 shrink-0 text-amber-600" /> {skill.credit_cost} CR
+        </span>
       </div>
 
-      <div className="p-2 sm:p-2 flex flex-col flex-1">
-        <div className="flex items-center justify-between mb-2">
+      <div className="p-2.5 sm:p-4 flex flex-col flex-1">
+        <div className="flex items-center justify-between mb-1">
           <div className="flex items-center gap-1.5 min-w-0">
             <span className="text-[12px] text-gray-500 font-medium truncate">{name}</span>
             {skill.totalSessions > 0 && (
@@ -149,16 +154,13 @@ function SkillCard({ skill, isSaved, onSave, onView, width = 260 }) {
           )}
         </div>
 
-        <h3 className="font-bold text-[13px] sm:text-[15px] text-gray-900 leading-snug tracking-tight line-clamp-2 mb-2 sm:mb-3 group-hover:text-emerald-700 transition-colors">
+        <h3 className="font-bold text-[13px] sm:text-[15px] text-gray-900 leading-snug tracking-tight line-clamp-2 mb-1 sm:mb-1.5 group-hover:text-emerald-700 transition-colors">
           {skill.title}
         </h3>
 
-        <div className="flex flex-wrap gap-1 mt-auto mb-1.5 sm:gap-1 sm:mb-2">
-          <span className="flex min-w-0 max-w-full items-center gap-1 bg-gray-100 text-gray-600 text-[11px] font-medium px-2.5 py-1 rounded-lg">
-            <CatIcon name={skill.category} className="w-3 h-3 shrink-0" /> <span className="min-w-0 truncate">{skill.category}</span>
-          </span>
-          <span className="flex items-center gap-1 bg-amber-50 text-amber-700 border border-amber-100 text-[11px] font-semibold px-2.5 py-1 rounded-lg">
-            <Coins className="w-3 h-3 text-amber-500" /> {skill.credit_cost} CR
+        <div className="flex flex-wrap gap-1 mt-auto mb-2 sm:gap-1.5 sm:mb-3">
+          <span className="flex w-full min-w-0 items-start gap-1 bg-transparent text-gray-600 text-[11px] font-medium p-0">
+            <CatIcon name={skill.category} className="w-3 h-3 shrink-0 mt-0.5" /> <span className="min-w-0 break-words leading-tight">{skill.category}</span>
           </span>
         </div>
 
@@ -275,7 +277,7 @@ function HeroBanner({ skill, isSaved, onSave, onView }) {
       </button>
 
       <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-6">
-        <h2 className="text-white font-bold text-[15px] sm:text-[22px] leading-snug tracking-tight line-clamp-2 mb-2 sm:mb-3 max-w-full sm:max-w-[65%]">
+        <h2 className="text-white font-bold text-[15px] sm:text-[22px] leading-snug tracking-tight line-clamp-2 mb-1 sm:mb-1.5 max-w-full sm:max-w-[65%]">
           {skill.title}
         </h2>
         <div className="flex items-center flex-wrap gap-2 sm:gap-3">
