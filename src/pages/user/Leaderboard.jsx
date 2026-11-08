@@ -86,27 +86,27 @@ export default function Leaderboard() {
 
   if (loading) return (
     <div role="status" aria-live="polite" aria-label="Loading leaderboard" className="min-h-screen bg-[#faf9f6]">
-      <div className="mx-auto max-w-[1000px] animate-pulse px-6 py-5 md:px-8">
-        <div className="mb-5 flex items-end justify-between gap-4">
+      <div className="mx-auto max-w-[1000px] animate-pulse px-3 py-4 min-[360px]:px-4 lg:px-8 lg:py-5">
+        <div className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between lg:gap-4">
           <div className="space-y-2"><div className="h-3 w-32 rounded bg-emerald-100" /><div className="h-7 w-48 rounded bg-gray-200" /></div>
-          <div className="flex gap-1 rounded-full border border-gray-200 bg-white p-1"><div className="h-8 w-24 rounded-full bg-gray-200" /><div className="h-8 w-24 rounded-full bg-gray-100" /><div className="h-8 w-20 rounded-full bg-gray-100" /></div>
+          <div className="flex max-w-full gap-1 overflow-hidden rounded-full border border-gray-200 bg-white p-1"><div className="h-8 w-24 rounded-full bg-gray-200" /><div className="h-8 w-24 rounded-full bg-gray-100" /><div className="h-8 w-20 rounded-full bg-gray-100" /></div>
         </div>
-        <div className="mb-8 grid grid-cols-2 gap-3 rounded-xl border border-gray-100 bg-gray-50 p-3 sm:grid-cols-4">
+        <div className="mb-6 grid grid-cols-2 gap-2 rounded-xl border border-gray-100 bg-gray-50 p-2 lg:mb-8 lg:grid-cols-4 lg:gap-3 lg:p-3">
           {[0, 1, 2, 3].map(item => <div key={item} className="flex items-center gap-2 px-3 py-2"><div className="h-4 w-4 rounded bg-gray-200" /><div className="space-y-1.5"><div className="h-2.5 w-20 rounded bg-gray-200" /><div className="h-4 w-12 rounded bg-gray-300" /></div></div>)}
         </div>
-        <div className="mb-10">
+        <div className="mb-6 lg:mb-10">
           <div className="mb-4 flex items-center gap-3"><div className="h-4 w-4 rounded bg-amber-100" /><div className="h-3 w-24 rounded bg-gray-200" /><div className="h-px flex-1 bg-gray-200" /></div>
-          <div className="flex flex-col items-start gap-5 rounded-3xl border border-gray-200 bg-white px-7 py-7 sm:flex-row sm:items-center">
-            <div className="h-20 w-20 shrink-0 rounded-2xl bg-emerald-100" />
+          <div className="flex flex-col items-start gap-3 rounded-2xl border border-gray-200 bg-white px-3 py-4 lg:flex-row lg:items-center lg:gap-5 lg:rounded-3xl lg:px-7 lg:py-7">
+            <div className="h-14 w-14 shrink-0 rounded-xl bg-emerald-100 lg:h-20 lg:w-20 lg:rounded-2xl" />
             <div className="min-w-0 flex-1 space-y-3"><div className="flex gap-2"><div className="h-5 w-20 rounded-full bg-amber-100" /><div className="h-5 w-16 rounded-full bg-emerald-100" /></div><div className="h-5 w-44 rounded bg-gray-200" /><div className="h-3 w-full max-w-md rounded bg-gray-100" /><div className="flex flex-wrap gap-2"><div className="h-8 w-24 rounded-xl bg-amber-50" /><div className="h-8 w-28 rounded-xl bg-sky-50" /><div className="h-8 w-24 rounded-xl bg-emerald-50" /></div></div>
             <div className="space-y-2 sm:text-right"><div className="h-9 w-16 rounded bg-gray-200" /><div className="h-3 w-20 rounded bg-gray-100" /></div>
           </div>
         </div>
-        <div className="mb-10">
+        <div className="mb-6 lg:mb-10">
           <div className="mb-4 flex items-center gap-3"><div className="h-4 w-4 rounded bg-gray-200" /><div className="h-3 w-24 rounded bg-gray-200" /><div className="h-px flex-1 bg-gray-200" /></div>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">{[0, 1].map(item => <div key={item} className="space-y-3 rounded-2xl border border-gray-200 bg-white p-5"><div className="flex items-center gap-3"><div className="h-12 w-12 rounded-xl bg-emerald-100" /><div className="space-y-2"><div className="h-4 w-28 rounded bg-gray-200" /><div className="h-3 w-20 rounded bg-gray-100" /></div></div><div className="h-3 w-full rounded bg-gray-100" /><div className="flex gap-2 border-t border-gray-100 pt-3"><div className="h-5 w-12 rounded bg-amber-50" /><div className="h-5 w-12 rounded bg-sky-50" /><div className="h-5 w-12 rounded bg-emerald-50" /></div></div>)}</div>
+          <div className="grid grid-cols-1 gap-2 lg:grid-cols-2 lg:gap-4">{[0, 1].map(item => <div key={item} className="space-y-3 rounded-2xl border border-gray-200 bg-white p-5"><div className="flex items-center gap-3"><div className="h-12 w-12 rounded-xl bg-emerald-100" /><div className="space-y-2"><div className="h-4 w-28 rounded bg-gray-200" /><div className="h-3 w-20 rounded bg-gray-100" /></div></div><div className="h-3 w-full rounded bg-gray-100" /><div className="flex gap-2 border-t border-gray-100 pt-3"><div className="h-5 w-12 rounded bg-amber-50" /><div className="h-5 w-12 rounded bg-sky-50" /><div className="h-5 w-12 rounded bg-emerald-50" /></div></div>)}</div>
         </div>
-        <div className="mb-10 grid grid-cols-1 gap-3 sm:grid-cols-2">{[0, 1, 2, 3].map(item => <div key={item} className="flex items-center gap-3 rounded-2xl border border-gray-200 bg-white p-4"><div className="h-10 w-10 rounded-full bg-emerald-100" /><div className="flex-1 space-y-2"><div className="h-3.5 w-32 rounded bg-gray-200" /><div className="h-3 w-20 rounded bg-gray-100" /><div className="h-2.5 w-36 rounded bg-gray-100" /></div><div className="h-6 w-12 rounded bg-gray-100" /></div>)}</div>
+        <div className="mb-6 grid grid-cols-1 gap-2 lg:mb-10 lg:grid-cols-2 lg:gap-3">{[0, 1, 2, 3].map(item => <div key={item} className="flex items-center gap-3 rounded-2xl border border-gray-200 bg-white p-4"><div className="h-10 w-10 rounded-full bg-emerald-100" /><div className="flex-1 space-y-2"><div className="h-3.5 w-32 rounded bg-gray-200" /><div className="h-3 w-20 rounded bg-gray-100" /><div className="h-2.5 w-36 rounded bg-gray-100" /></div><div className="h-6 w-12 rounded bg-gray-100" /></div>)}</div>
         <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white">{[0, 1, 2, 3].map(item => <div key={item} className="flex items-center gap-3 border-b border-gray-100 px-4 py-3"><div className="h-3 w-6 rounded bg-gray-100" /><div className="h-8 w-8 rounded-full bg-emerald-100" /><div className="h-3.5 w-36 rounded bg-gray-200" /><div className="ml-auto h-3 w-20 rounded bg-gray-100" /></div>)}</div>
       </div>
     </div>
@@ -118,18 +118,18 @@ export default function Leaderboard() {
 
   return (
     <div className="min-h-screen" style={{ background: '#faf9f6' }}>
-      <div className="max-w-[1000px] mx-auto px-6 md:px-8 py-5">
+      <div className="max-w-[1000px] mx-auto min-w-0 px-3 py-3 min-[360px]:px-4 lg:px-8 lg:py-5">
 
         {/* ══ PAGE HEADER — Sessions style ══ */}
-        <div className="mb-5">
+        <div className="mb-4 lg:mb-5">
           <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-700 mb-1">Community Rankings</p>
-          <div className="flex items-end justify-between">
-            <h1 className="text-[22px] font-bold text-gray-900 tracking-tight">Hall of Fame 🏆</h1>
+          <div className="flex min-w-0 flex-col items-stretch gap-2 lg:flex-row lg:items-end lg:justify-between lg:gap-0">
+            <h1 className="text-[20px] font-bold text-gray-900 tracking-tight lg:text-[22px]">Hall of Fame 🏆</h1>
             {/* Category pill toggle — same pattern as Sessions role filter */}
-            <div className="flex bg-white border border-gray-200 rounded-full p-1 shadow-sm">
+            <div className="flex w-full min-w-0 bg-white border border-gray-200 rounded-full p-1 shadow-sm lg:w-auto">
               {CATEGORY_TABS.map(tab => (
                 <button key={tab.key} onClick={() => setCategoryTab(tab.key)}
-                  className={`px-4 py-1.5 rounded-full text-[11px] font-bold transition ${
+                  className={`min-w-0 flex-1 whitespace-nowrap px-2 py-1.5 rounded-full text-[10px] font-bold transition lg:flex-none lg:px-4 lg:text-[11px] ${
                     categoryTab === tab.key ? 'bg-gray-900 text-white' : 'text-gray-400 hover:text-gray-900'
                   }`}>{tab.label}
                 </button>
@@ -139,29 +139,29 @@ export default function Leaderboard() {
         </div>
 
         {/* ══ STAT STRIP — same kanban-pill style, sits below header ══ */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 bg-gray-50 p-3 rounded-xl border border-gray-100 gap-2">
+        <div className="mb-6 grid grid-cols-2 gap-2 rounded-xl border border-gray-100 bg-gray-50 p-2 lg:mb-8 lg:flex lg:flex-row lg:items-center lg:justify-between lg:gap-2 lg:p-3">
           {[
             { icon: Users,         label: 'Members',         value: statsSummary.totalUsers,                color: 'text-gray-700'    },
             { icon: Star,          label: 'Top Rating',      value: statsSummary.topRating,                 color: 'text-amber-600'   },
             { icon: GraduationCap, label: 'Sessions Done',   value: statsSummary.totalSessionsCompleted,    color: 'text-sky-600'     },
             { icon: Coins,         label: 'Credits in Flow', value: statsSummary.totalCreditsCirculating,   color: 'text-emerald-600' },
           ].map(({ icon: Icon, label, value, color }) => (
-            <div key={label} className="flex items-center gap-2 px-3 py-1">
+            <div key={label} className="grid min-w-0 grid-cols-[auto_minmax(0,1fr)] items-center gap-x-1.5 gap-y-0.5 rounded-lg bg-white px-2 py-2 lg:flex lg:items-center lg:gap-2 lg:rounded-none lg:bg-transparent lg:px-3 lg:py-1">
               <Icon className={`w-4 h-4 shrink-0 ${color}`} />
-              <span className="text-[10px] font-semibold uppercase tracking-widest text-gray-400">{label}</span>
-              <span className={`text-[17px] font-bold ml-1 ${color}`}>{value}</span>
+              <span className="min-w-0 truncate text-[9px] font-semibold uppercase tracking-wide text-gray-400 lg:text-[10px] lg:tracking-widest">{label}</span>
+              <span className={`col-span-2 min-w-0 break-words text-[16px] font-bold lg:ml-1 lg:text-[17px] ${color}`}>{value}</span>
             </div>
           ))}
         </div>
 
         {sorted.length === 0 ? (
-          <div className="flex flex-col items-center py-20 bg-white border border-gray-200 rounded-2xl text-center shadow-sm">
+          <div className="flex flex-col items-center rounded-2xl border border-gray-200 bg-white px-3 py-12 text-center shadow-sm lg:py-20">
             <Trophy className="w-10 h-10 text-gray-300 mb-4" />
             <p className="text-[18px] font-bold text-gray-900 mb-1">No members yet</p>
             <p className="text-[12px] text-gray-400">Check back after some sessions are completed.</p>
           </div>
         ) : (
-          <div className="space-y-10">
+          <div className="space-y-6 lg:space-y-10">
 
             {/* ══ #1 CHAMPION SPOTLIGHT ══ */}
             {champion && (() => {
@@ -169,17 +169,17 @@ export default function Leaderboard() {
               const medal = MEDALS[rank];
               return (
                 <div>
-                  <div className="flex items-center gap-3 mb-4">
+                  <div className="mb-2 flex min-w-0 items-center gap-2 lg:mb-4 lg:gap-3">
                     <Trophy className="w-4 h-4 text-amber-500" />
                     <p className="text-[11px] font-bold uppercase tracking-widest text-gray-400">Champion</p>
                     <div className="flex-1 h-px bg-gray-200" />
                   </div>
-                  <div className="relative bg-white border border-gray-200 rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer"
+                  <div className="relative bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer lg:rounded-3xl"
                     onClick={() => navigate(`/user/${user.id}`)}>
                     <div className={`absolute inset-0 bg-gradient-to-br ${medal.bg} opacity-[0.08] pointer-events-none`} />
-                    <div className="absolute top-4 right-6 text-[72px] font-bold text-gray-900/[0.04] leading-none select-none pointer-events-none">#1</div>
-                    <div className="relative px-7 py-7 flex flex-col sm:flex-row items-start sm:items-center gap-6">
-                      <div className={`w-20 h-20 rounded-2xl overflow-hidden bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-2xl border-4 border-white ring-4 ${medal.ring} shadow-lg shrink-0`}>
+                    <div className="pointer-events-none absolute right-4 top-3 select-none text-[46px] font-bold leading-none text-gray-900/[0.04] lg:right-6 lg:top-4 lg:text-[72px]">#1</div>
+                    <div className="relative grid min-w-0 grid-cols-[auto_minmax(0,1fr)] items-start gap-x-3 gap-y-2 px-3 py-3 lg:flex lg:flex-row lg:items-center lg:gap-6 lg:px-7 lg:py-7">
+                      <div className={`h-14 w-14 overflow-hidden rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-lg border-2 border-white ring-2 shrink-0 lg:h-20 lg:w-20 lg:rounded-2xl lg:text-2xl lg:border-4 lg:ring-4 ${medal.ring} shadow-lg shrink-0`}>
                         {user.avatar_url ? <img src={user.avatar_url} alt={user.full_name} className="w-full h-full object-cover" /> : user.full_name?.charAt(0).toUpperCase()}
                       </div>
                       <div className="flex-1 min-w-0">
@@ -187,25 +187,25 @@ export default function Leaderboard() {
                           <span className={`text-[10px] font-bold uppercase tracking-wider border px-2.5 py-1 rounded-full ${medal.badge}`}>{medal.label}</span>
                           <span className="text-[10px] font-bold uppercase tracking-wider border px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border-emerald-100">{user.role || 'Member'}</span>
                         </div>
-                        <h2 className="text-[20px] font-bold text-gray-900 leading-tight">{user.full_name || 'Anonymous'}</h2>
-                        <p className="text-[12px] text-gray-400 mt-1 line-clamp-2">{user.bio || 'Platform contributor ready to share skills.'}</p>
-                        <div className="flex flex-wrap gap-2 mt-4">
-                          <span className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 border border-amber-100 text-amber-700 font-bold rounded-xl text-[12px]">
+                        <h2 className="break-words text-[15px] font-bold leading-tight text-gray-900 lg:text-[20px]">{user.full_name || 'Anonymous'}</h2>
+                        <p className="mt-1 line-clamp-1 break-words text-[11px] text-gray-400 lg:line-clamp-2 lg:text-[12px]">{user.bio || 'Platform contributor ready to share skills.'}</p>
+                        <div className="mt-2 flex max-w-full flex-nowrap gap-1.5 overflow-x-auto pb-1 lg:mt-4 lg:flex-wrap lg:gap-2 lg:overflow-visible lg:pb-0">
+                          <span className="flex shrink-0 items-center gap-1 rounded-lg border border-amber-100 bg-amber-50 px-2 py-1 text-[10px] font-bold text-amber-700 lg:shrink lg:gap-1.5 lg:rounded-xl lg:px-3 lg:py-1.5 lg:text-[12px]">
                             <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />{user.avgRating > 0 ? user.avgRating : '—'}
                             <span className="text-[10px] text-amber-500 font-medium">· {user.totalReviews} reviews</span>
                           </span>
-                          <span className="flex items-center gap-1.5 px-3 py-1.5 bg-sky-50 border border-sky-100 text-sky-700 font-bold rounded-xl text-[12px]">
+                          <span className="flex shrink-0 items-center gap-1 rounded-lg border border-sky-100 bg-sky-50 px-2 py-1 text-[10px] font-bold text-sky-700 lg:shrink lg:gap-1.5 lg:rounded-xl lg:px-3 lg:py-1.5 lg:text-[12px]">
                             <GraduationCap className="w-3.5 h-3.5" />{user.sessionsCompleted} sessions
                           </span>
-                          <span className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 border border-emerald-100 text-emerald-700 font-bold rounded-xl text-[12px]">
+                          <span className="flex shrink-0 items-center gap-1 rounded-lg border border-emerald-100 bg-emerald-50 px-2 py-1 text-[10px] font-bold text-emerald-700 lg:shrink lg:gap-1.5 lg:rounded-xl lg:px-3 lg:py-1.5 lg:text-[12px]">
                             <Coins className="w-3.5 h-3.5" />{user.creditsBalance} CR
                           </span>
                         </div>
                       </div>
-                      <div className="flex flex-col items-end shrink-0">
-                        <p className={`text-[32px] font-bold leading-none ${medal.text}`}>{getPrimaryScore(user)}</p>
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mt-1">{getPrimarySub()}</p>
-                        <span className="mt-3 flex items-center gap-1 text-[11px] font-bold text-emerald-600 hover:text-emerald-700">View Profile <ChevronRight className="w-3.5 h-3.5" /></span>
+                      <div className="col-span-2 flex min-w-0 items-center justify-between gap-2 border-t border-gray-100 pt-2 lg:col-auto lg:shrink-0 lg:flex-col lg:items-end lg:justify-start lg:gap-0 lg:border-0 lg:pt-0">
+                        <p className={`text-[23px] font-bold leading-none lg:text-[32px] ${medal.text}`}>{getPrimaryScore(user)}</p>
+                        <p className="text-[9px] font-bold uppercase tracking-wide text-gray-400 lg:mt-1 lg:text-[10px] lg:tracking-widest">{getPrimarySub()}</p>
+                        <span className="ml-auto flex shrink-0 items-center gap-0.5 text-[10px] font-bold text-emerald-600 hover:text-emerald-700 lg:ml-0 lg:mt-3 lg:gap-1 lg:text-[11px]">View Profile <ChevronRight className="w-3.5 h-3.5" /></span>
                       </div>
                     </div>
                   </div>
@@ -216,21 +216,21 @@ export default function Leaderboard() {
             {/* ══ #2 & #3 SIDE BY SIDE ══ */}
             {top2to3.length > 0 && (
               <div>
-                <div className="flex items-center gap-3 mb-4">
+                <div className="mb-2 flex min-w-0 items-center gap-2 lg:mb-4 lg:gap-3">
                   <Award className="w-4 h-4 text-gray-400" />
                   <p className="text-[11px] font-bold uppercase tracking-widest text-gray-400">Runners-up</p>
                   <div className="flex-1 h-px bg-gray-200" />
                   <span className="text-[10px] font-bold text-gray-300">{top2to3.length}</span>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-2 lg:grid-cols-2 lg:gap-4">
                   {top2to3.map(({ user, rank }) => {
                     const medal = MEDALS[rank];
                     return (
-                      <div key={user.id} className="relative bg-white border border-gray-200 rounded-2xl px-5 py-5 hover:shadow-md hover:border-gray-300 transition-all duration-200 overflow-hidden cursor-pointer" onClick={() => navigate(`/user/${user.id}`)}>
+                      <div key={user.id} className="relative bg-white border border-gray-200 rounded-2xl px-3 py-3 lg:px-5 lg:py-5 hover:shadow-md hover:border-gray-300 transition-all duration-200 overflow-hidden cursor-pointer" onClick={() => navigate(`/user/${user.id}`)}>
                         <div className="absolute top-3 right-4 text-[48px] font-bold text-gray-900/[0.04] leading-none select-none">#{rank}</div>
                         <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${medal.bg}`} />
-                        <div className="flex items-center gap-3 mb-3">
-                          <div className={`w-12 h-12 rounded-xl overflow-hidden bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-lg border-2 border-white ring-2 ${medal.ring} shadow-sm shrink-0`}>
+                        <div className="mb-2 flex min-w-0 items-center gap-2 lg:mb-3 lg:gap-3">
+                          <div className={`h-10 w-10 overflow-hidden rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-base border-2 border-white ring-2 lg:h-12 lg:w-12 lg:text-lg ${medal.ring} shadow-sm shrink-0`}>
                             {user.avatar_url ? <img src={user.avatar_url} alt={user.full_name} className="w-full h-full object-cover" /> : user.full_name?.charAt(0).toUpperCase()}
                           </div>
                           <div className="min-w-0">
@@ -241,8 +241,8 @@ export default function Leaderboard() {
                             <p className="text-[12px] text-gray-400 truncate">{user.role || 'Member'}</p>
                           </div>
                         </div>
-                        <p className="text-[12px] text-gray-500 line-clamp-1 mb-4">{user.bio || 'Platform contributor.'}</p>
-                        <div className="flex flex-wrap gap-1.5 pt-3 border-t border-gray-100">
+                        <p className="mb-2 line-clamp-1 text-[11px] text-gray-500 lg:mb-4 lg:text-[12px]">{user.bio || 'Platform contributor.'}</p>
+                        <div className="flex flex-wrap gap-1 pt-2 border-t border-gray-100 lg:gap-1.5 lg:pt-3">
                           <span className="flex items-center gap-1 px-2.5 py-1 bg-amber-50 border border-amber-100 text-amber-700 font-bold rounded-lg text-[10px]"><Star className="w-3 h-3 fill-amber-400 text-amber-400" />{user.avgRating > 0 ? user.avgRating : '—'}</span>
                           <span className="flex items-center gap-1 px-2.5 py-1 bg-sky-50 border border-sky-100 text-sky-700 font-bold rounded-lg text-[10px]"><GraduationCap className="w-3 h-3" />{user.sessionsCompleted}</span>
                           <span className="flex items-center gap-1 px-2.5 py-1 bg-emerald-50 border border-emerald-100 text-emerald-700 font-bold rounded-lg text-[10px]"><Coins className="w-3 h-3" />{user.creditsBalance} CR</span>
@@ -258,22 +258,22 @@ export default function Leaderboard() {
             {/* ══ TOP 10 GRID (#4–#10) ══ */}
             {top4to10.length > 0 && (
               <div>
-                <div className="flex items-center gap-3 mb-4">
+                <div className="mb-2 flex min-w-0 items-center gap-2 lg:mb-4 lg:gap-3">
                   <TrendingUp className="w-4 h-4 text-sky-400" />
                   <p className="text-[11px] font-bold uppercase tracking-widest text-gray-400">Top 10</p>
                   <div className="flex-1 h-px bg-gray-200" />
                   <span className="text-[10px] font-bold text-gray-300">{top4to10.length}</span>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 gap-2 lg:grid-cols-2 lg:gap-3">
                   {top4to10.map(({ user, rank }) => (
-                    <div key={user.id} className="bg-white border border-gray-200 rounded-2xl px-4 py-4 flex items-center gap-3 hover:shadow-sm hover:border-sky-200 transition-all duration-200 cursor-pointer relative overflow-hidden" onClick={() => navigate(`/user/${user.id}`)}>
+                    <div key={user.id} className="relative flex min-w-0 items-center gap-2 overflow-hidden rounded-2xl border border-gray-200 bg-white px-3 py-3 cursor-pointer transition-all duration-200 hover:border-sky-200 hover:shadow-sm lg:gap-3 lg:px-4 lg:py-4" onClick={() => navigate(`/user/${user.id}`)}>
                       <div className="absolute left-0 top-0 bottom-0 w-1 bg-sky-300 rounded-l-2xl" />
                       <div className="absolute top-2 right-3 text-[32px] font-bold text-gray-900/[0.04] leading-none select-none">#{rank}</div>
-                      <div className="w-10 h-10 rounded-full overflow-hidden bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-sm border border-emerald-200 shrink-0 ml-1">
+                      <div className="ml-1 flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full border border-emerald-200 bg-emerald-100 text-sm font-bold text-emerald-800 lg:h-10 lg:w-10">
                         {user.avatar_url ? <img src={user.avatar_url} alt={user.full_name} className="w-full h-full object-cover" /> : user.full_name?.charAt(0).toUpperCase()}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-bold text-[14px] text-gray-900 truncate">{user.full_name || 'Anonymous'}</p>
+                        <p className="truncate text-[13px] font-bold text-gray-900 lg:text-[14px]">{user.full_name || 'Anonymous'}</p>
                         <p className="text-[11px] text-gray-400 truncate">{user.role || 'Member'}</p>
                         <div className="flex gap-1.5 mt-1.5 flex-wrap">
                           <span className="flex items-center gap-1 text-[10px] font-bold text-amber-600"><Star className="w-2.5 h-2.5 fill-amber-400 text-amber-400" />{user.avgRating > 0 ? user.avgRating : '—'}</span>
@@ -284,8 +284,8 @@ export default function Leaderboard() {
                         </div>
                       </div>
                       <div className="flex flex-col items-end shrink-0">
-                        <p className="text-[17px] font-bold text-gray-800">{getPrimaryScore(user)}</p>
-                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{getPrimarySub()}</p>
+                        <p className="text-right text-[15px] font-bold text-gray-800 lg:text-[17px]">{getPrimaryScore(user)}</p>
+                        <p className="hidden text-[10px] font-bold text-gray-400 uppercase tracking-widest lg:block">{getPrimarySub()}</p>
                       </div>
                     </div>
                   ))}
@@ -296,7 +296,7 @@ export default function Leaderboard() {
             {/* ══ COMMUNITY (11+) COMPACT LIST ══ */}
             {community.length > 0 && (
               <div>
-                <div className="flex items-center gap-3 mb-4">
+                <div className="mb-2 flex min-w-0 items-center gap-2 lg:mb-4 lg:gap-3">
                   <Users className="w-4 h-4 text-gray-400" />
                   <p className="text-[11px] font-bold uppercase tracking-widest text-gray-400">Community</p>
                   <div className="flex-1 h-px bg-gray-200" />
@@ -304,8 +304,8 @@ export default function Leaderboard() {
                 </div>
                 <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
                   {community.map(({ user, rank }, i) => (
-                    <div key={user.id} className={`flex items-center gap-3 px-4 py-3 hover:bg-gray-50 cursor-pointer transition ${i < community.length - 1 ? 'border-b border-gray-100' : ''}`} onClick={() => navigate(`/user/${user.id}`)}>
-                      <span className="text-[11px] font-bold text-gray-300 w-6 text-right shrink-0">#{rank}</span>
+                    <div key={user.id} className={`flex min-w-0 items-center gap-2 px-2.5 py-2.5 hover:bg-gray-50 cursor-pointer transition lg:gap-3 lg:px-4 lg:py-3 ${i < community.length - 1 ? 'border-b border-gray-100' : ''}`} onClick={() => navigate(`/user/${user.id}`)}>
+                      <span className="w-5 shrink-0 text-right text-[10px] font-bold text-gray-300 lg:w-6 lg:text-[11px]">#{rank}</span>
                       <div className="w-8 h-8 rounded-full overflow-hidden bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-xs border border-gray-200 shrink-0">
                         {user.avatar_url ? <img src={user.avatar_url} alt={user.full_name} className="w-full h-full object-cover" /> : user.full_name?.charAt(0).toUpperCase()}
                       </div>
