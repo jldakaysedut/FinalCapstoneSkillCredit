@@ -56,7 +56,7 @@ function QBar({ label, value }) {
   const col = pct >= 80 ? 'bg-emerald-400' : pct >= 50 ? 'bg-amber-400' : value ? 'bg-rose-400' : 'bg-gray-100';
   return (
     <div className="flex items-center gap-2">
-      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest w-20 shrink-0">{label}</span>
+      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest w-[74px] lg:w-20 shrink-0">{label}</span>
       <div className="flex-1 h-[4px] bg-gray-100 rounded-full overflow-hidden">
         {value && <div className={`h-full rounded-full ${col}`} style={{ width: `${pct}%` }} />}
       </div>
@@ -68,14 +68,14 @@ function QBar({ label, value }) {
 function SkeletonRow() {
   return (
     <div className="relative">
-      <div className="absolute -left-6 top-5 w-[18px] h-[18px] rounded-full bg-gray-200 border-2 border-white z-10" />
-      <div className="animate-pulse flex items-center gap-4 bg-white rounded-2xl px-5 py-4 border border-gray-100">
-        <div className="w-14 h-14 bg-gray-100 rounded-xl shrink-0" />
+      <div className="absolute -left-4 lg:-left-6 top-4 lg:top-5 w-[18px] h-[18px] rounded-full bg-gray-200 border-2 border-white z-10" />
+      <div className="animate-pulse flex items-center gap-2 lg:gap-4 bg-white rounded-2xl px-3 py-3 lg:px-5 lg:py-4 border border-gray-100">
+        <div className="w-11 h-11 lg:w-14 lg:h-14 bg-gray-100 rounded-xl shrink-0" />
         <div className="flex-1 space-y-2">
-          <div className="h-4 w-48 bg-gray-100 rounded-full" />
-          <div className="h-3 w-32 bg-gray-100 rounded-full" />
+          <div className="h-4 w-32 sm:w-48 max-w-full bg-gray-100 rounded-full" />
+          <div className="h-3 w-24 sm:w-32 bg-gray-100 rounded-full" />
         </div>
-        <div className="flex gap-3">{[1,2,3,4].map(i => <div key={i} className="h-8 w-14 bg-gray-100 rounded-xl" />)}</div>
+        <div className="hidden lg:flex gap-3">{[1,2,3,4].map(i => <div key={i} className="h-8 w-14 bg-gray-100 rounded-xl" />)}</div>
       </div>
     </div>
   );
@@ -99,8 +99,8 @@ function ListingRow({ skill, expanded, onToggle, onView, onDelete, currentFilter
 
       {needsAct && <div className="absolute left-0 top-0 bottom-0 w-1 bg-amber-400 rounded-l-2xl" />}
 
-      <div className="flex items-center gap-4 px-5 py-4 cursor-pointer" onClick={() => onToggle(skill.id)}>
-        <div className="shrink-0 w-14 h-14 rounded-xl overflow-hidden relative" style={{ background: cat.color + '15' }}>
+      <div className="flex flex-wrap items-center gap-2 px-3 py-3 sm:gap-3 lg:flex-nowrap lg:gap-4 lg:px-5 lg:py-4 cursor-pointer" onClick={() => onToggle(skill.id)}>
+        <div className="shrink-0 w-11 h-11 sm:w-12 sm:h-12 lg:w-14 lg:h-14 rounded-xl overflow-hidden relative" style={{ background: cat.color + '15' }}>
           {skill.cover_image_url
             ? <img src={skill.cover_image_url} alt={skill.title} className="w-full h-full object-cover" />
             : <div className="w-full h-full flex items-center justify-center"><CategoryIcon className={`h-7 w-7 ${cat.iconColor}`} strokeWidth={1.8} /></div>}
@@ -112,8 +112,8 @@ function ListingRow({ skill, expanded, onToggle, onView, onDelete, currentFilter
         </div>
 
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-0.5">
-            <h3 className="font-bold text-[14px] text-gray-900 truncate hover:text-emerald-700 transition-colors"
+          <div className="flex flex-wrap items-center gap-1 mb-1 lg:flex-nowrap lg:gap-2 lg:mb-0.5">
+            <h3 className="font-bold text-[13px] lg:text-[14px] text-gray-900 line-clamp-2 lg:line-clamp-none lg:truncate hover:text-emerald-700 transition-colors"
               onClick={e => { e.stopPropagation(); onView(skill.id); }}>
               {skill.title}
             </h3>
@@ -122,7 +122,7 @@ function ListingRow({ skill, expanded, onToggle, onView, onDelete, currentFilter
             {skill.status === 'pending' && <span className="shrink-0 text-[10px] font-bold uppercase tracking-widest text-amber-600 bg-amber-50 border border-amber-100 px-2 py-0.5 rounded-full">⏳ IN REVIEW</span>}
             {skill.status === 'rejected' && <span className="shrink-0 text-[10px] font-bold uppercase tracking-widest text-rose-600 bg-rose-50 border border-rose-100 px-2 py-0.5 rounded-full">❌ REJECTED</span>}
           </div>
-          <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-x-1.5 gap-y-0.5 lg:gap-2 flex-wrap">
             <span className={`inline-flex items-center gap-1.5 text-[11px] font-semibold ${cat.iconColor}`}><CategoryIcon className="h-3.5 w-3.5" strokeWidth={2} />{skill.category}</span>
             <span className="text-gray-300">·</span>
             <span className="text-[11px] text-gray-400">{skill.format}</span>
@@ -131,16 +131,16 @@ function ListingRow({ skill, expanded, onToggle, onView, onDelete, currentFilter
           </div>
         </div>
 
-        <div className="hidden md:flex items-center gap-2 shrink-0">
-          <div className="flex flex-col items-center px-3 py-1.5 bg-amber-50 border border-amber-100 rounded-xl">
+        <div className="order-3 flex w-full items-center justify-between gap-1 border-t border-gray-100 pt-2 lg:order-none lg:w-auto lg:justify-start lg:gap-2 lg:border-0 lg:pt-0 lg:shrink-0">
+          <div className="flex flex-col items-center px-2 py-1 lg:px-3 lg:py-1.5 bg-amber-50 border border-amber-100 rounded-xl">
             <span className="text-[13px] font-bold text-amber-700">{skill.credit_cost}</span>
             <span className="text-[10px] font-bold uppercase text-amber-500">CR/HR</span>
           </div>
-          <div className="flex flex-col items-center px-3 py-1.5 bg-sky-50 border border-sky-100 rounded-xl">
+          <div className="flex flex-col items-center px-2 py-1 lg:px-3 lg:py-1.5 bg-sky-50 border border-sky-100 rounded-xl">
             <span className="text-[13px] font-bold text-sky-600">{skill.totalSessions}</span>
             <span className="text-[10px] font-bold uppercase text-sky-400">SESS.</span>
           </div>
-          <div className="flex flex-col items-center px-3 py-1.5 bg-orange-50 border border-orange-100 rounded-xl">
+          <div className="flex flex-col items-center px-2 py-1 lg:px-3 lg:py-1.5 bg-orange-50 border border-orange-100 rounded-xl">
             <div className="flex items-center gap-0.5">
               <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
               <span className="text-[13px] font-bold text-orange-600">{isNew ? '—' : skill.avgRating}</span>
@@ -150,7 +150,7 @@ function ListingRow({ skill, expanded, onToggle, onView, onDelete, currentFilter
           <RadialProgress pct={compPct} size={44} stroke={4} />
         </div>
 
-        <div className="flex items-center gap-1 shrink-0">
+        <div className="order-4 flex w-full items-center justify-end gap-1 border-t border-gray-100 pt-1.5 lg:order-none lg:w-auto lg:shrink-0 lg:border-0 lg:pt-0">
           {/* 🚨 CONDITION UPDATED: HIDDEN IF FILTER IS 'all' AND ONLY UNRATED EXISTS TO FIX ALIGNMENT */}
           {needsAct && !(currentFilter === 'all' && skill.unratedSessions > 0 && skill.pendingSessions === 0) && (
             <span className="hidden lg:flex items-center gap-1 text-[10px] font-bold text-amber-600 bg-amber-50 border border-amber-100 px-2.5 py-1 rounded-full">
@@ -175,7 +175,7 @@ function ListingRow({ skill, expanded, onToggle, onView, onDelete, currentFilter
       </div>
 
       {expanded && (
-        <div className="border-t border-gray-100 mx-4 py-4 grid grid-cols-1 md:grid-cols-3 gap-5">
+        <div className="border-t border-gray-100 mx-3 py-3 lg:mx-4 lg:py-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-5">
           <div>
             <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2">Session Breakdown</p>
             <div className="space-y-1.5">
@@ -219,7 +219,7 @@ function ListingRow({ skill, expanded, onToggle, onView, onDelete, currentFilter
             <div>
               <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2">Earnings</p>
               <div className="flex items-baseline gap-1.5">
-                <span className="text-[26px] font-bold text-orange-600 leading-none">{skill.totalEarned}</span>
+                <span className="text-[22px] lg:text-[26px] font-bold text-orange-600 leading-none">{skill.totalEarned}</span>
                 <span className="text-[11px] font-bold text-orange-400">credits earned</span>
               </div>
               {skill.unratedSessions > 0 && (
@@ -374,52 +374,52 @@ export default function MyListings() {
 
   if (loading) return (
     <div role="status" aria-live="polite" aria-label="Loading listings" className="min-h-screen bg-[#faf9f6]">
-      <div className="mx-auto max-w-[1000px] animate-pulse px-6 py-6 md:px-8">
-        <div className="relative mb-5 overflow-hidden rounded-2xl bg-emerald-900 px-6 py-5 shadow-md">
-          <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center"><div className="space-y-2"><div className="h-3 w-28 rounded bg-emerald-700" /><div className="h-6 w-44 rounded bg-emerald-700" /><div className="h-3 w-56 rounded bg-emerald-800" /></div><div className="flex gap-2"><div className="h-14 w-20 rounded-xl bg-white/10" /><div className="h-14 w-20 rounded-xl bg-white/10" /><div className="h-14 w-20 rounded-xl bg-white/10" /></div></div>
+      <div className="mx-auto max-w-[1000px] animate-pulse px-3 py-4 sm:px-5 lg:px-8 lg:py-6">
+        <div className="relative mb-4 lg:mb-5 overflow-hidden rounded-2xl bg-emerald-900 px-3 py-4 sm:px-5 lg:px-6 lg:py-5 shadow-md">
+          <div className="flex flex-col justify-between gap-3 lg:gap-4 lg:flex-row lg:items-center"><div className="space-y-2"><div className="h-3 w-28 rounded bg-emerald-700" /><div className="h-6 w-44 rounded bg-emerald-700" /><div className="h-3 w-56 rounded bg-emerald-800" /></div><div className="flex w-full gap-1.5 lg:w-auto lg:gap-2"><div className="h-12 flex-1 rounded-xl bg-white/10 lg:h-14 lg:w-20 lg:flex-none" /><div className="h-12 flex-1 rounded-xl bg-white/10 lg:h-14 lg:w-20 lg:flex-none" /><div className="h-12 flex-1 rounded-xl bg-white/10 lg:h-14 lg:w-20 lg:flex-none" /></div></div>
         </div>
-        <div className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-4">{[0,1,2,3].map(item => <div key={item} className="flex items-center gap-3 rounded-2xl border border-gray-100 bg-white p-4"><div className="h-10 w-10 rounded-xl bg-emerald-50" /><div className="space-y-2"><div className="h-2.5 w-16 rounded bg-gray-100" /><div className="h-5 w-12 rounded bg-gray-200" /></div></div>)}</div>
-        <div className="mb-5 flex flex-wrap gap-2">{[0,1,2,3].map(item => <div key={item} className="h-10 w-24 rounded-xl border border-gray-200 bg-white" />)}</div>
-        <div className="relative space-y-3 pl-6"><div className="absolute bottom-2 left-[9px] top-2 w-px bg-orange-200" />{[0,1,2].map(item => <div key={item} className="relative flex animate-pulse items-center gap-4 rounded-2xl border border-gray-100 bg-white px-5 py-4"><div className="absolute -left-6 top-5 h-[18px] w-[18px] rounded-full border-2 border-white bg-gray-200" /><div className="h-14 w-14 shrink-0 rounded-xl bg-gray-100" /><div className="flex-1 space-y-2"><div className="h-4 w-48 max-w-full rounded-full bg-gray-200" /><div className="h-3 w-32 rounded-full bg-gray-100" /></div><div className="hidden gap-3 sm:flex">{[0,1,2,3].map(chip => <div key={chip} className="h-8 w-14 rounded-xl bg-gray-100" />)}</div></div>)}</div>
+        <div className="mb-4 grid grid-cols-2 gap-2 sm:grid-cols-4 lg:mb-5 lg:gap-3">{[0,1,2,3].map(item => <div key={item} className="flex items-center gap-3 rounded-2xl border border-gray-100 bg-white p-4"><div className="h-10 w-10 rounded-xl bg-emerald-50" /><div className="space-y-2"><div className="h-2.5 w-16 rounded bg-gray-100" /><div className="h-5 w-12 rounded bg-gray-200" /></div></div>)}</div>
+        <div className="mb-4 flex gap-2 overflow-hidden lg:mb-5 lg:flex-wrap">{[0,1,2,3].map(item => <div key={item} className="h-9 w-20 lg:h-10 lg:w-24 rounded-xl border border-gray-200 bg-white" />)}</div>
+        <div className="relative space-y-2.5 pl-4 lg:space-y-3 lg:pl-6"><div className="absolute bottom-2 left-[9px] top-2 w-px bg-orange-200" />{[0,1,2].map(item => <div key={item} className="relative flex animate-pulse items-center gap-2 lg:gap-4 rounded-2xl border border-gray-100 bg-white px-3 py-3 lg:px-5 lg:py-4"><div className="absolute -left-4 lg:-left-6 top-4 lg:top-5 h-[18px] w-[18px] rounded-full border-2 border-white bg-gray-200" /><div className="h-11 w-11 lg:h-14 lg:w-14 shrink-0 rounded-xl bg-gray-100" /><div className="flex-1 space-y-2"><div className="h-4 w-48 max-w-full rounded-full bg-gray-200" /><div className="h-3 w-32 rounded-full bg-gray-100" /></div><div className="hidden gap-3 lg:flex">{[0,1,2,3].map(chip => <div key={chip} className="h-8 w-14 rounded-xl bg-gray-100" />)}</div></div>)}</div>
       </div>
     </div>
   );
   return (
     <div className="min-h-screen bg-[#faf9f6]">
-      <div className="max-w-[1000px] mx-auto px-6 md:px-8 py-6">
+      <div className="max-w-[1000px] mx-auto px-3 sm:px-5 lg:px-8 py-4 lg:py-6">
 
-        <div className="rounded-2xl mb-5 overflow-hidden shadow-md"
+        <div className="rounded-2xl mb-4 lg:mb-5 overflow-hidden shadow-md"
           style={{ background: 'linear-gradient(135deg, #064e3b 0%, #065f46 45%, #047857 100%)' }}>
 
           <div className="absolute inset-0 pointer-events-none opacity-20"
             style={{ backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)', backgroundSize: '20px 20px' }} />
 
-          <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-6 py-5">
+          <div className="relative flex flex-col lg:flex-row lg:items-center justify-between gap-3 lg:gap-4 px-3 py-4 sm:px-5 lg:px-6 lg:py-5">
             <div>
               <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-400 mb-1">Instructor Studio</p>
-              <h1 className="font-bold text-[22px] text-white leading-tight flex items-center gap-2">
+              <h1 className="font-bold text-[19px] lg:text-[22px] text-white leading-tight flex items-center gap-2">
                 {loading ? 'Loading…' : (
                   <>{profile?.full_name ? `${profile.full_name.split(' ')[0]}'s Listings` : 'My Listings'} <ClipboardList className="h-5 w-5 text-emerald-200" /></>
                 )}
               </h1>
-              <p className="text-[12px] text-emerald-300 font-medium mt-0.5">
+              <p className="text-[11px] lg:text-[12px] text-emerald-300 font-medium mt-0.5">
                 {!loading && `${stats.totalListings} published · ${stats.totalSessions} sessions · ${stats.totalEarned} CR earned`}
               </p>
             </div>
 
             {!loading && (
-              <div className="flex items-center gap-2 shrink-0">
-                <div className="flex flex-col items-center px-5 py-3 rounded-xl bg-white/10 border border-white/10 min-w-[80px]">
-                  <p className="text-[20px] font-bold text-white leading-none">{stats.totalSessions}</p>
+              <div className="grid w-full grid-cols-3 gap-1.5 sm:gap-2 lg:flex lg:w-auto lg:items-center lg:shrink-0">
+                <div className="flex min-w-0 flex-col items-center rounded-xl bg-white/10 border border-white/10 px-1 py-2 sm:px-2 lg:min-w-[80px] lg:px-5 lg:py-3">
+                  <p className="text-[16px] sm:text-[18px] lg:text-[20px] font-bold text-white leading-none">{stats.totalSessions}</p>
                   <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-300 mt-1">Sessions</p>
                 </div>
-                <div className="flex flex-col items-center px-5 py-3 rounded-xl min-w-[90px]"
+                <div className="flex min-w-0 flex-col items-center rounded-xl px-1 py-2 sm:px-2 lg:min-w-[90px] lg:px-5 lg:py-3"
                   style={{ background: 'rgba(132,204,22,0.25)', border: '1px solid rgba(132,204,22,0.35)' }}>
-                  <p className="text-[20px] font-bold leading-none" style={{ color: '#d9f99d' }}>{stats.totalEarned} CR</p>
+                  <p className="max-w-full truncate text-[14px] sm:text-[17px] lg:text-[20px] font-bold leading-none" style={{ color: '#d9f99d' }}>{stats.totalEarned} CR</p>
                   <p className="text-[10px] font-bold uppercase tracking-widest mt-1" style={{ color: '#a3e635' }}>Earned</p>
                 </div>
-                <div className="flex flex-col items-center px-5 py-3 rounded-xl bg-white/10 border border-white/10 min-w-[80px]">
-                  <p className="flex items-center gap-1 text-[20px] font-bold text-white leading-none"><Star className="h-4 w-4 fill-amber-400 text-amber-400" />{stats.avgRating > 0 ? stats.avgRating : '—'}</p>
+                <div className="flex min-w-0 flex-col items-center rounded-xl bg-white/10 border border-white/10 px-1 py-2 sm:px-2 lg:min-w-[80px] lg:px-5 lg:py-3">
+                  <p className="flex items-center gap-1 text-[16px] sm:text-[18px] lg:text-[20px] font-bold text-white leading-none"><Star className="h-4 w-4 fill-amber-400 text-amber-400" />{stats.avgRating > 0 ? stats.avgRating : '—'}</p>
                   <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-300 mt-1">{stats.totalReviews} Reviews</p>
                 </div>
               </div>
@@ -427,12 +427,12 @@ export default function MyListings() {
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-1 mb-5">
+        <div className="flex flex-nowrap gap-1.5 mb-4 overflow-x-auto pb-1 lg:flex-wrap lg:gap-1 lg:mb-5 lg:overflow-visible lg:pb-0">
           {FILTERS.map(f => {
             const isActive = filter === f.key;
             return (
               <button key={f.key} onClick={() => setFilter(f.key)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[12px] font-bold whitespace-nowrap border transition-all cursor-pointer ${
+                className={`flex shrink-0 lg:shrink items-center gap-1.5 px-3 py-2 lg:gap-2 lg:px-4 rounded-xl text-[11px] lg:text-[12px] font-bold whitespace-nowrap border transition-all cursor-pointer ${
                   isActive ? `${f.activePill} shadow-md` : 'bg-white text-gray-500 border-gray-200 hover:border-emerald-200 hover:text-emerald-700'
                 }`}>
                 <span className={`w-2 h-2 rounded-full ${isActive ? 'bg-white/80' : f.dot}`} />
@@ -450,12 +450,12 @@ export default function MyListings() {
         </div>
 
         {loading ? (
-          <div className="relative pl-6">
+          <div className="relative pl-4 lg:pl-6">
             <div className={`absolute left-[9px] top-2 bottom-2 w-px ${activeFilter.railColor}`} />
             <div className="space-y-3">{[1,2,3].map(i => <SkeletonRow key={i} />)}</div>
           </div>
         ) : filtered.length === 0 ? (
-          <div className="bg-white border border-dashed border-gray-200 rounded-2xl flex flex-col items-center justify-center py-20 text-center">
+          <div className="bg-white border border-dashed border-gray-200 rounded-2xl flex flex-col items-center justify-center py-12 lg:py-20 text-center">
             <div className="w-14 h-14 bg-orange-50 border border-orange-100 rounded-2xl flex items-center justify-center text-orange-500 mb-3"><ClipboardList className="h-6 w-6" /></div>
             <p className="font-bold text-gray-900 mb-1">{filter === 'all' ? 'No listings yet' : 'No listings match this filter'}</p>
             <p className="text-[12px] text-gray-400 mb-4">{filter === 'all' ? 'Share your expertise with the community' : 'Try switching to a different filter'}</p>
@@ -464,20 +464,20 @@ export default function MyListings() {
               : <button onClick={() => setFilter('all')} className="inline-flex items-center gap-1.5 px-5 py-2.5 bg-gray-100 text-gray-700 rounded-xl text-[12px] font-bold cursor-pointer"><ArrowLeft className="h-3.5 w-3.5" />Back to All</button>}
           </div>
         ) : (
-          <div className="relative pl-6">
+          <div className="relative pl-4 lg:pl-6">
             <div className={`absolute left-[9px] top-2 bottom-2 w-px ${activeFilter.railColor}`} />
-            <div className="space-y-3">
+            <div className="space-y-2.5 lg:space-y-3">
               {filtered.map(skill => (
                 <div 
                   key={skill.id} 
                   id={`skill-${skill.id}`} // 🚨 ADDED ID PARA SA SCROLL TARGET
                   className={`relative transition-all duration-1000 ease-out rounded-2xl ${
                     highlightId === skill.id 
-                      ? 'ring-4 ring-emerald-400 bg-emerald-50/50 scale-[1.02] shadow-[0_0_20px_rgba(16,185,129,0.3)] z-20' 
+                      ? 'ring-4 ring-emerald-400 bg-emerald-50/50 scale-100 lg:scale-[1.02] shadow-[0_0_20px_rgba(16,185,129,0.3)] z-20' 
                       : ''
                   }`}
                 >
-                  <div className={`absolute -left-6 top-5 w-[18px] h-[18px] rounded-full border-2 border-white shadow-sm z-10 ${activeFilter.dotColor(skill)}`} />
+                  <div className={`absolute -left-4 lg:-left-6 top-4 lg:top-5 w-[18px] h-[18px] rounded-full border-2 border-white shadow-sm z-10 ${activeFilter.dotColor(skill)}`} />
                   
                   {/* 🚨 currentFilter PASSED HERE */}
                   <ListingRow
