@@ -100,7 +100,7 @@ function SkillCard({ skill, isSaved, onSave, onView, width = 260 }) {
       className="group shrink-0 min-w-0 w-[min(222px,calc(100vw-64px))] sm:w-[260px] bg-white rounded-2xl overflow-hidden flex flex-col border border-gray-200/70
         hover:shadow-[0_10px_32px_rgba(16,185,129,0.10)] hover:border-emerald-200 transition-all duration-300 cursor-pointer snap-start"
     >
-      <div className="relative h-[122px] sm:h-[158px] overflow-hidden bg-emerald-900">
+      <div className="relative h-[105px] sm:h-[110px] overflow-hidden bg-emerald-900">
         {skill.cover_image_url ? (
           <img src={skill.cover_image_url} alt={skill.title}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
