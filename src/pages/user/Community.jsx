@@ -380,12 +380,12 @@ function CommentModal({
   return (
     <div
       onClick={e => e.target === e.currentTarget && onClose()}
-      className="fixed inset-0 z-[200] bg-black/50 flex items-center justify-center p-4"
+      className="fixed inset-0 z-[200] bg-black/50 flex items-center justify-center p-2 sm:p-4"
     >
-      <div className="bg-white rounded-2xl w-full max-w-[560px] max-h-[90vh] flex flex-col shadow-2xl">
+      <div className="bg-white rounded-2xl w-full max-w-[560px] max-h-[calc(100dvh-16px)] sm:max-h-[90vh] flex flex-col shadow-2xl">
 
         {/* Header — mirrors Messages chat header */}
-        <div className="px-5 py-3.5 border-b border-gray-100 flex items-center justify-between shrink-0">
+        <div className="px-3 py-3 sm:px-5 sm:py-3.5 border-b border-gray-100 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
             <button type="button" onClick={() => onProfileClick && onProfileClick(post.user_id)} className="shrink-0 transition hover:opacity-80">
               <Avatar src={post.author?.avatar_url} name={post.author?.full_name} size="md" />
@@ -408,7 +408,7 @@ function CommentModal({
 
         {/* Post and comments share one scroll area; header and composer stay fixed */}
         <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          <div className="border-b border-gray-100 px-5 py-4">
+          <div className="border-b border-gray-100 px-3 py-3 sm:px-5 sm:py-4">
             <p className="text-[14px] leading-relaxed text-gray-900 whitespace-pre-wrap">{post.content}</p>
             {post.media_urls?.length > 0 && (
               <div className="mt-3 overflow-hidden rounded-xl">
@@ -417,7 +417,7 @@ function CommentModal({
             )}
           </div>
 
-          <div className="flex flex-col px-5 py-4">
+          <div className="flex flex-col px-3 py-3 sm:px-5 sm:py-4">
             {post.comments.length === 0 ? (
               <div className="py-8 text-center">
                 <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-gray-100"><MessageSquare className="h-7 w-7 text-gray-400" /></div>
@@ -444,7 +444,7 @@ function CommentModal({
         {/* Input bar — mirrors Messages input bar */}
         <form
           onSubmit={e => { e.preventDefault(); onAddComment(post.id); }}
-          className="px-4 py-3 border-t border-gray-100 flex items-center gap-2 shrink-0"
+          className="px-2.5 py-2.5 sm:px-4 sm:py-3 border-t border-gray-100 flex items-center gap-2 shrink-0"
         >
           <Avatar src={currentUserProfile?.avatar_url} name={currentUserProfile?.full_name} size="sm" isMe />
           <div className="flex-1 bg-gray-100 rounded-full flex items-center px-4 py-2.5 focus-within:bg-gray-50 focus-within:ring-2 focus-within:ring-emerald-400/30 transition">
@@ -492,14 +492,14 @@ function CreatePostModal({
   return (
     <div
       onClick={e => e.target === e.currentTarget && onClose()}
-      className="fixed inset-0 z-[500] flex items-center justify-center p-3 sm:p-6"
+      className="fixed inset-0 z-[500] flex items-center justify-center p-2 sm:p-6"
     >
       <div className="absolute inset-0 bg-gray-950/60 backdrop-blur-sm" onClick={onClose} />
       <section
         role="dialog"
         aria-modal="true"
         aria-labelledby="create-post-title"
-        className="relative z-10 flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-[0_24px_80px_rgba(15,23,42,0.28)] animate-in zoom-in-95 duration-200"
+        className="relative z-10 flex max-h-[calc(100dvh-16px)] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-[0_24px_80px_rgba(15,23,42,0.28)] animate-in zoom-in-95 duration-200 sm:max-h-[90vh] sm:rounded-3xl"
       >
         {/* Header — matches the UserLayout support dialog */}
         <div className="flex items-center gap-3 border-b border-gray-100 bg-white px-5 py-4 sm:px-6">
@@ -521,7 +521,7 @@ function CreatePostModal({
         </div>
 
         <form onSubmit={onSubmit} className="flex min-h-0 flex-1 flex-col">
-          <div className="min-h-0 flex-1 space-y-5 overflow-y-auto px-5 py-5 sm:px-6">
+          <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-3 py-4 sm:space-y-5 sm:px-6 sm:py-5">
             {/* Author and post settings */}
             <div className="flex items-start gap-3">
               <Avatar src={currentUserProfile?.avatar_url} name={currentUserProfile?.full_name} size="md" isMe />
@@ -1128,7 +1128,7 @@ export default function Community() {
   if (loading) return (
     <div role="status" aria-live="polite" aria-label="Loading community" className="min-h-[calc(100vh-64px)] bg-[#f7f8f6] text-[#202522]">
       <div className="mx-auto flex w-full max-w-[1600px] flex-col lg:h-[calc(100vh-64px)] lg:flex-row lg:overflow-hidden">
-        <aside className="flex w-full flex-col gap-4 border-b border-[#e9e9e5] bg-white px-5 py-5 lg:h-full lg:w-[280px] lg:shrink-0 lg:border-b-0 lg:border-r">
+        <aside className="hidden w-full flex-col gap-4 border-b border-[#e9e9e5] bg-white px-5 py-5 lg:flex lg:h-full lg:w-[280px] lg:shrink-0 lg:border-b-0 lg:border-r">
           <div className="animate-pulse space-y-2"><div className="h-3 w-24 rounded bg-[#e9ece8]" /><div className="h-7 w-36 rounded bg-[#e9ece8]" /></div>
           <div className="h-11 w-full animate-pulse rounded-xl bg-[#eef0ec]" />
           <div className="animate-pulse space-y-2"><div className="h-3 w-16 rounded bg-[#e9ece8]" /><div className="h-11 w-full rounded-xl bg-[#eef0ec]" /></div>
@@ -1137,8 +1137,13 @@ export default function Community() {
           </div>
           <div className="mt-auto flex animate-pulse items-center gap-3 rounded-xl border border-[#e9ece8] p-3"><div className="h-10 w-10 rounded-full bg-[#e9ece8]" /><div className="flex-1 space-y-2"><div className="h-3 w-28 rounded bg-[#e9ece8]" /><div className="h-3 w-36 rounded bg-[#eef0ec]" /></div></div>
         </aside>
-        <main className="min-w-0 flex-1 px-4 py-5 sm:px-6 lg:h-full lg:overflow-hidden lg:px-7 lg:py-6">
+        <main className="min-w-0 flex-1 px-3 py-4 sm:px-6 lg:h-full lg:overflow-hidden lg:px-7 lg:py-6">
           <div className="mx-auto w-full max-w-[760px] animate-pulse">
+            <div className="mb-3 space-y-2 rounded-2xl border border-[#e9ece8] bg-white p-3 lg:hidden">
+              <div className="h-6 w-32 rounded bg-[#e9ece8]" />
+              <div className="h-10 w-full rounded-xl bg-[#eef0ec]" />
+              <div className="h-10 w-full rounded-xl bg-[#eef0ec]" />
+            </div>
             <div className="mb-4 flex min-h-[64px] items-center gap-3 rounded-2xl border border-[#e9ece8] bg-white p-3"><div className="h-10 w-10 rounded-full bg-[#e9ece8]" /><div className="h-10 flex-1 rounded-xl bg-[#f0f2ee]" /><div className="h-10 w-10 rounded-xl bg-emerald-700/20" /></div>
             <div className="mb-4 flex gap-2 overflow-hidden lg:justify-center"><div className="h-10 w-16 rounded-full bg-[#dfe4dd]" /><div className="h-10 w-24 rounded-full bg-[#e9ece8]" /><div className="h-10 w-20 rounded-full bg-[#e9ece8]" /><div className="h-10 w-24 rounded-full bg-[#e9ece8]" /></div>
             <div className="flex flex-col gap-4">
@@ -1151,7 +1156,7 @@ export default function Community() {
             </div>
           </div>
         </main>
-        <aside className="border-t border-[#e9e9e5] bg-white px-5 py-5 lg:h-full lg:w-[260px] lg:shrink-0 lg:border-l lg:border-t-0">
+        <aside className="hidden border-t border-[#e9e9e5] bg-white px-5 py-5 lg:block lg:h-full lg:w-[260px] lg:shrink-0 lg:border-l lg:border-t-0">
           <div className="mb-4 flex animate-pulse items-start gap-3"><div className="h-9 w-9 rounded-xl bg-amber-100" /><div className="flex-1 space-y-2"><div className="h-4 w-28 rounded bg-[#e9ece8]" /><div className="h-3 w-full rounded bg-[#eef0ec]" /></div></div>
           <div className="flex animate-pulse flex-col gap-2">{[0, 1, 2, 3].map(item => <div key={item} className="flex min-h-[72px] items-center gap-3 rounded-xl border border-[#e9ece8] p-3"><div className="h-9 w-9 rounded-lg bg-[#eef0ec]" /><div className="flex-1 space-y-2"><div className="h-3 w-24 rounded bg-[#e9ece8]" /><div className="h-3 w-full rounded bg-[#eef0ec]" /></div></div>)}</div>
         </aside>
@@ -1167,7 +1172,7 @@ export default function Community() {
         {/* LEFT: compact, fixed navigation */}
         <aside
           aria-label="Community navigation"
-          className="flex w-full flex-col gap-3 border-b border-[#e9e9e5] bg-white px-5 py-5 lg:h-full lg:w-[280px] lg:shrink-0 lg:overflow-hidden lg:border-b-0 lg:border-r"
+          className="hidden w-full flex-col gap-3 border-b border-[#e9e9e5] bg-white px-5 py-5 lg:flex lg:h-full lg:w-[280px] lg:shrink-0 lg:overflow-hidden lg:border-b-0 lg:border-r"
         >
           <div>
             <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-emerald-700">The Commons</p>
@@ -1249,26 +1254,68 @@ export default function Community() {
         </aside>
 
         {/* CENTER: only desktop panel that scrolls */}
-        <main className="min-w-0 flex-1 px-4 py-5 sm:px-6 lg:h-full lg:overflow-y-auto lg:overscroll-contain lg:px-7 lg:py-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <main className="min-w-0 flex-1 px-2.5 py-3 min-[360px]:px-3 sm:px-6 sm:py-5 lg:h-full lg:overflow-y-auto lg:overscroll-contain lg:px-7 lg:py-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <div className="mx-auto w-full max-w-[760px]">
+            {/* Mobile: the original desktop sidebars are replaced by compact feed controls.
+                These use the same search/category state and event handlers as desktop. */}
+            <section aria-label="Community search and topics" className="mb-3 rounded-2xl border border-[#e9ece8] bg-white p-3 lg:hidden">
+              <div className="mb-3">
+                <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-emerald-700">The Commons</p>
+                <h1 className="mt-0.5 text-[20px] font-bold leading-7 tracking-tight text-[#202522]">Community</h1>
+              </div>
+              <label className="flex min-h-10 min-w-0 items-center gap-2 rounded-xl border border-[#e7e9e5] bg-[#fafbf9] px-3 transition focus-within:border-emerald-300 focus-within:ring-2 focus-within:ring-emerald-100">
+                <Search className="h-4 w-4 shrink-0 text-[#858b86]" aria-hidden="true" />
+                <input
+                  type="text"
+                  role="searchbox"
+                  inputMode="search"
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  placeholder="Search posts"
+                  aria-label="Search community posts"
+                  className="min-w-0 flex-1 bg-transparent text-[13px] text-[#303833] outline-none placeholder:text-[#989e99]"
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery('')}
+                    aria-label="Clear search"
+                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-[#777d78] hover:bg-white hover:text-[#202522] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+                  ><X className="h-4 w-4" /></button>
+                )}
+              </label>
+              <div className="mt-2 flex min-w-0 items-center gap-2">
+                <label htmlFor="community-topic-filter-mobile" className="shrink-0 text-[12px] font-semibold text-[#69716b]">Topic</label>
+                <select
+                  id="community-topic-filter-mobile"
+                  value={selectedCategory}
+                  onChange={e => setSelectedCategory(e.target.value)}
+                  aria-label="Filter community posts by topic"
+                  className="min-h-10 min-w-0 flex-1 rounded-xl border border-[#e7eae5] bg-white px-3 text-[13px] font-medium text-[#465149] outline-none focus:border-emerald-300 focus:ring-2 focus:ring-emerald-100"
+                >
+                  <option value="All">All topics</option>
+                  {MACRO_CATEGORIES.map(category => <option key={category} value={category}>{category}</option>)}
+                </select>
+              </div>
+            </section>
             <button
               type="button"
               onClick={() => { if (!checkRestriction()) setIsCreateModalOpen(true); }}
-              className="mb-4 flex min-h-[64px] w-full items-center gap-3 rounded-2xl border border-[#e9ece8] bg-white p-3 text-left shadow-[0_1px_2px_rgba(20,30,20,0.03)] transition hover:border-emerald-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+              className="mb-3 flex min-h-[56px] w-full items-center gap-2 rounded-2xl border border-[#e9ece8] bg-white p-2.5 text-left shadow-[0_1px_2px_rgba(20,30,20,0.03)] transition hover:border-emerald-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 sm:mb-4 sm:min-h-[64px] sm:gap-3 sm:p-3"
             >
               <Avatar src={currentUserProfile?.avatar_url} name={currentUserProfile?.full_name} size="md" isMe />
-              <span className="flex min-h-10 flex-1 items-center rounded-xl bg-[#f5f7f4] px-4 text-[14px] text-[#7d857f]">What would you like to share?</span>
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-700 text-white"><Plus className="h-4 w-4" /></span>
+              <span className="flex min-h-9 min-w-0 flex-1 items-center rounded-xl bg-[#f5f7f4] px-3 text-[12px] text-[#7d857f] min-[360px]:text-[13px] sm:min-h-10 sm:px-4 sm:text-[14px]">What would you like to share?</span>
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-700 text-white sm:h-10 sm:w-10"><Plus className="h-4 w-4" /></span>
             </button>
 
-            <div className="mb-4 flex flex-nowrap gap-2 overflow-x-auto pb-1 lg:justify-start [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" role="group" aria-label="Filter posts by type">
+            <div className="mb-3 flex flex-nowrap gap-1.5 overflow-x-auto pb-1 sm:mb-4 sm:gap-2 lg:justify-start [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" role="group" aria-label="Filter posts by type">
               {['All', 'My Post', ...POST_TYPES].map(type => (
                 <button
                   key={type}
                   type="button"
                   aria-pressed={selectedPostType === type}
                   onClick={() => setSelectedPostType(type)}
-                  className={`min-h-10 shrink-0 whitespace-nowrap rounded-full px-4 text-[12px] font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 ${
+                  className={`min-h-9 shrink-0 whitespace-nowrap rounded-full px-3 text-[12px] font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 sm:min-h-10 sm:px-4 ${
                     selectedPostType === type
                       ? 'bg-[#25352d] text-white'
                       : 'border border-[#e7eae5] bg-white text-[#59625c] hover:border-[#cfd8d0] hover:bg-[#fbfcfa]'
@@ -1277,9 +1324,9 @@ export default function Community() {
               ))}
             </div>
 
-            <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-3 sm:gap-4">
               {filteredPosts.length === 0 ? (
-                <section className="rounded-[20px] border border-dashed border-[#dfe4dd] bg-white px-6 py-12 text-center">
+                <section className="rounded-[20px] border border-dashed border-[#dfe4dd] bg-white px-3 py-8 text-center sm:px-6 sm:py-12">
                   <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#f0f4ef] text-emerald-700"><Inbox className="h-6 w-6" /></div>
                   <h3 className="text-[16px] font-bold text-[#303833]">{posts.length ? 'No posts match those filters' : 'A good conversation starts here'}</h3>
                   <p className="mx-auto mt-2 max-w-sm text-[14px] leading-6 text-[#777d78]">{posts.length ? 'Try another topic or search, or clear your filters.' : 'Ask a question, share a project, or meet someone learning the same thing.'}</p>
@@ -1296,7 +1343,7 @@ export default function Community() {
                   <article
                     id={`post-${post.id}`}
                     key={post.id}
-                    className={`relative scroll-mt-6 overflow-hidden rounded-[20px] border bg-white shadow-[0_1px_2px_rgba(20,30,20,0.03)] transition ${highlightedPostId === post.id ? 'border-emerald-400 ring-2 ring-emerald-300 shadow-lg' : 'border-[#e9ece8]'}`}
+                    className={`relative scroll-mt-6 min-w-0 overflow-hidden rounded-2xl border bg-white shadow-[0_1px_2px_rgba(20,30,20,0.03)] transition sm:rounded-[20px] ${highlightedPostId === post.id ? 'border-emerald-400 ring-2 ring-emerald-300 shadow-lg' : 'border-[#e9ece8]'}`}
                   >
                     {isOwner ? (
                       <div className="absolute right-3 top-3 z-10 flex gap-1">
@@ -1324,7 +1371,7 @@ export default function Community() {
                         <Flag className="h-4 w-4" />
                       </button>
                     )}
-                    <div className="flex items-center gap-3 px-5 pb-3 pt-5 pr-24">
+                    <div className="flex min-w-0 items-center gap-2 px-3 pb-2 pt-3 pr-[76px] sm:gap-3 sm:px-5 sm:pb-3 sm:pt-5 sm:pr-24">
                       <button type="button" onClick={() => navigate(`/user/${post.user_id}`)} aria-label={`Open ${post.author?.full_name || 'author'}’s profile`} className="shrink-0 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2">
                         <Avatar src={post.author?.avatar_url} name={post.author?.full_name} size="md" />
                       </button>
@@ -1341,7 +1388,7 @@ export default function Community() {
                       </div>
                     </div>
                     {editingPostId === post.id ? (
-                      <div className="px-5 pb-5">
+                      <div className="px-3 pb-3 sm:px-5 sm:pb-5">
                         <textarea
                           autoFocus
                           rows={5}
@@ -1381,14 +1428,14 @@ export default function Community() {
                         </div>
                       </div>
                     ) : (
-                      post.content && <div className="whitespace-pre-wrap break-words px-5 pb-5 text-[15px] leading-7 text-[#37413a]">{renderContentWithTags(post.content)}</div>
+                      post.content && <div className="whitespace-pre-wrap break-words px-3 pb-3 text-[14px] leading-6 text-[#37413a] sm:px-5 sm:pb-5 sm:text-[15px] sm:leading-7">{renderContentWithTags(post.content)}</div>
                     )}
                     {editingPostId !== post.id && post.media_urls?.length > 0 && (
                       <PostImageCollage mediaUrls={post.media_urls} onOpen={openImageGallery} />
                     )}
-                    <div className="flex items-center gap-2 border-t border-[#f0f1ee] px-4 py-2.5">
-                      <button type="button" onClick={() => toggleLike(post.id)} aria-pressed={isLiked} className={`flex min-h-10 items-center gap-2 rounded-xl px-3 text-[13px] font-semibold transition ${isLiked ? 'bg-rose-50 text-rose-600' : 'text-[#69716b] hover:bg-[#f5f7f4]'}`}><Heart className={`h-4 w-4 ${isLiked ? 'fill-current' : ''}`} />{post.likes.length > 0 ? post.likes.length : 'Like'}</button>
-                      <button type="button" onClick={() => setCommentModal(post)} className="flex min-h-10 items-center gap-2 rounded-xl px-3 text-[13px] font-semibold text-[#69716b] transition hover:bg-[#f5f7f4]"><MessageSquare className="h-4 w-4" />{post.comments.length > 0 ? `${post.comments.length} comment${post.comments.length === 1 ? '' : 's'}` : 'Comment'}</button>
+                    <div className="flex min-w-0 items-center gap-1.5 border-t border-[#f0f1ee] px-2 py-2 sm:gap-2 sm:px-4 sm:py-2.5">
+                      <button type="button" onClick={() => toggleLike(post.id)} aria-pressed={isLiked} className={`flex min-h-10 items-center gap-2 rounded-xl px-2.5 text-[12px] font-semibold transition sm:px-3 sm:text-[13px] ${isLiked ? 'bg-rose-50 text-rose-600' : 'text-[#69716b] hover:bg-[#f5f7f4]'}`}><Heart className={`h-4 w-4 ${isLiked ? 'fill-current' : ''}`} />{post.likes.length > 0 ? post.likes.length : 'Like'}</button>
+                      <button type="button" onClick={() => setCommentModal(post)} className="flex min-h-10 items-center gap-2 rounded-xl px-2.5 text-[12px] font-semibold text-[#69716b] transition hover:bg-[#f5f7f4] sm:px-3 sm:text-[13px]"><MessageSquare className="h-4 w-4" />{post.comments.length > 0 ? `${post.comments.length} comment${post.comments.length === 1 ? '' : 's'}` : 'Comment'}</button>
                     </div>
                   </article>
                 );
@@ -1400,7 +1447,7 @@ export default function Community() {
         {/* RIGHT: community posting guide */}
         <aside
           aria-label="Community posting guide"
-          className="border-t border-[#e9e9e5] bg-white px-5 py-5 lg:h-full lg:w-[260px] lg:shrink-0 lg:overflow-hidden lg:border-l lg:border-t-0"
+          className="hidden border-t border-[#e9e9e5] bg-white px-5 py-5 lg:block lg:h-full lg:w-[260px] lg:shrink-0 lg:overflow-hidden lg:border-l lg:border-t-0"
         >
           <div className="mb-4 flex items-start gap-3">
             <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-700"><Sparkles className="h-4 w-4" /></span>
