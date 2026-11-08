@@ -1287,12 +1287,6 @@ export default function Community() {
                   </select>
                   <ChevronDown className="pointer-events-none absolute right-1.5 top-1/2 h-3 w-3 -translate-y-1/2 text-[#64746a]" aria-hidden="true" />
                 </div>
-                <button
-                  type="button"
-                  onClick={() => { if (!checkRestriction()) setIsCreateModalOpen(true); }}
-                  aria-label="Create post"
-                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-700 text-white transition hover:bg-emerald-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
-                ><Plus className="h-4 w-4" /></button>
               </div>
             </div>
             <button
