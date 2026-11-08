@@ -100,7 +100,7 @@ function SkillCard({ skill, isSaved, onSave, onView, width = 260 }) {
       className="group shrink-0 min-w-0 w-[min(222px,calc(100vw-64px))] sm:w-[260px] bg-white rounded-2xl overflow-hidden flex flex-col border border-gray-200/70
         hover:shadow-[0_10px_32px_rgba(16,185,129,0.10)] hover:border-emerald-200 transition-all duration-300 cursor-pointer snap-start"
     >
-      <div className="relative h-[105px] sm:h-[110px] overflow-hidden bg-emerald-900">
+      <div className="relative h-[105px] sm:h-[150px] overflow-hidden bg-emerald-900">
         {skill.cover_image_url ? (
           <img src={skill.cover_image_url} alt={skill.title}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
@@ -130,7 +130,7 @@ function SkillCard({ skill, isSaved, onSave, onView, width = 260 }) {
         </button>
       </div>
 
-      <div className="p-2.5 sm:p-4 flex flex-col flex-1">
+      <div className="p-2 sm:p-2 flex flex-col flex-1">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-1.5 min-w-0">
             <span className="text-[12px] text-gray-500 font-medium truncate">{name}</span>
@@ -153,7 +153,7 @@ function SkillCard({ skill, isSaved, onSave, onView, width = 260 }) {
           {skill.title}
         </h3>
 
-        <div className="flex flex-wrap gap-1 mt-auto mb-2 sm:gap-1.5 sm:mb-3">
+        <div className="flex flex-wrap gap-1 mt-auto mb-1.5 sm:gap-1 sm:mb-2">
           <span className="flex min-w-0 max-w-full items-center gap-1 bg-gray-100 text-gray-600 text-[11px] font-medium px-2.5 py-1 rounded-lg">
             <CatIcon name={skill.category} className="w-3 h-3 shrink-0" /> <span className="min-w-0 truncate">{skill.category}</span>
           </span>
