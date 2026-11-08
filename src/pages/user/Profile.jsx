@@ -342,7 +342,7 @@ export default function Profile() {
             )}
           </div>
 
-          <div className="flex-1 min-w-0">
+          <div className="w-full min-w-0 flex-1 lg:w-auto">
             <div className="bg-white border border-gray-200 rounded-2xl p-3 lg:p-5 mb-3 lg:mb-5 shadow-sm">
               <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2">About</p>
               {isEditing ? (
@@ -370,12 +370,12 @@ export default function Profile() {
 
             {activeTab === 'Listings' && (
               <div>
-                <div className="flex flex-wrap items-center justify-between gap-2 mb-3 lg:mb-5">
-                  <div>
+                <div className="flex min-w-0 flex-nowrap items-start justify-between gap-1.5 mb-3 lg:mb-5 lg:flex-wrap lg:items-center lg:gap-2">
+                  <div className="min-w-0 flex-1 lg:flex-initial">
                     <p className="text-[11px] font-bold uppercase tracking-widest text-gray-400">Offered Skills</p>
-                    <p className="text-[12px] text-gray-500">Manage the skills you offer on the platform</p>
+                    <p className="text-[11px] leading-snug text-gray-500 min-[360px]:text-[12px] lg:leading-normal">Manage the skills you offer on the platform</p>
                   </div>
-                  <button onClick={() => navigate('/create-skill')} className="flex items-center gap-1.5 px-2.5 py-2 lg:px-4 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-[12px] font-bold shadow-sm transition">+ Create Listing</button>
+                  <button onClick={() => navigate('/create-skill')} className="flex shrink-0 items-center justify-center gap-1 whitespace-nowrap rounded-xl bg-emerald-700 px-2 py-1.5 text-[10px] font-bold text-white shadow-sm transition hover:bg-emerald-800 min-[360px]:px-2.5 min-[360px]:text-[11px] lg:gap-1.5 lg:px-4 lg:py-2 lg:text-[12px]">+ Create Listing</button>
                 </div>
 
                 {mySkills.length === 0 ? (
@@ -419,12 +419,12 @@ export default function Profile() {
 
             {activeTab === 'Portfolio' && (
               <div>
-                <div className="flex flex-wrap items-center justify-between gap-2 mb-3 lg:mb-5">
-                  <div>
+                <div className="flex min-w-0 flex-nowrap items-start justify-between gap-1.5 mb-3 lg:mb-5 lg:flex-wrap lg:items-center lg:gap-2">
+                  <div className="min-w-0 flex-1 lg:flex-initial">
                     <p className="text-[11px] font-bold uppercase tracking-widest text-gray-400">Portfolio & Showcase</p>
-                    <p className="text-[12px] text-gray-500">Your work, projects, and achievements</p>
+                    <p className="text-[11px] leading-snug text-gray-500 min-[360px]:text-[12px] lg:leading-normal">Your work, projects, and achievements</p>
                   </div>
-                  <button onClick={() => { setShowAddPortfolioModal(true); setIsEditingPortfolioMode(false); setNewProject({ title: '', description: '', project_url: '', coverFile: null, attachmentFiles: [] }); setPortfolioCoverPreview(null); }} className="flex items-center gap-1.5 px-2.5 py-2 lg:px-4 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-[12px] font-bold shadow-sm transition">+ Add Project</button>
+                  <button onClick={() => { setShowAddPortfolioModal(true); setIsEditingPortfolioMode(false); setNewProject({ title: '', description: '', project_url: '', coverFile: null, attachmentFiles: [] }); setPortfolioCoverPreview(null); }} className="flex shrink-0 items-center justify-center gap-1 whitespace-nowrap rounded-xl bg-emerald-700 px-2 py-1.5 text-[10px] font-bold text-white shadow-sm transition hover:bg-emerald-800 min-[360px]:px-2.5 min-[360px]:text-[11px] lg:gap-1.5 lg:px-4 lg:py-2 lg:text-[12px]">+ Add Project</button>
                 </div>
 
                 {portfolioItems.length === 0 ? (
@@ -435,7 +435,7 @@ export default function Profile() {
                     <button onClick={() => setShowAddPortfolioModal(true)} className="px-4 py-2 bg-emerald-700 text-white rounded-xl text-[12px] font-bold shadow-sm hover:bg-emerald-800 transition">Add First Project</button>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 min-[480px]:grid-cols-2 gap-2.5 lg:gap-4">
+                  <div className="grid w-full min-w-0 grid-cols-1 min-[480px]:grid-cols-2 gap-2.5 lg:gap-4">
                     {portfolioItems.map(item => (
                       <div key={item.id} onClick={() => setSelectedProject(item)} className="bg-white border border-gray-200 rounded-2xl overflow-hidden cursor-pointer hover:shadow-[0_4px_20px_rgba(16,185,129,0.1)] hover:border-emerald-200 transition-all group">
                         <div className="h-32 lg:h-40 bg-gray-100 overflow-hidden relative">

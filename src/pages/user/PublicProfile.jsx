@@ -212,7 +212,7 @@ export default function PublicProfile() {
             )}
           </div>
 
-          <div className="flex-1 min-w-0">
+          <div className="w-full min-w-0 flex-1 lg:w-auto">
             <div className="bg-white border border-gray-200 rounded-2xl p-3 lg:p-5 mb-3 lg:mb-5 shadow-sm">
               <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2">About</p>
               <p className="text-[13px] text-gray-600 leading-relaxed whitespace-pre-wrap">
@@ -296,7 +296,7 @@ export default function PublicProfile() {
                     <p className="text-[12px] text-gray-400">This member has not showcased any work yet.</p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 min-[480px]:grid-cols-2 gap-2.5 lg:gap-4">
+                  <div className="grid w-full min-w-0 grid-cols-1 min-[480px]:grid-cols-2 gap-2.5 lg:gap-4">
                     {portfolioItems.map(item => (
                       <div key={item.id} onClick={() => setSelectedProject(item)}
                         className="bg-white border border-gray-200 rounded-2xl overflow-hidden cursor-pointer hover:shadow-[0_4px_20px_rgba(16,185,129,0.1)] hover:border-emerald-200 transition-all group">
