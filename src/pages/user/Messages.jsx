@@ -225,9 +225,16 @@ export default function Messages() {
         queryParams.get('id');
 
       if (targetId) {
+        // Preserve intentional deep links from Sessions, Support, and notifications.
         const found = combinedContacts.find(c => c.id === targetId);
         if (found) { setAiActive(false); setSelectedContact(found); }
-      } else if (combinedContacts.length > 0 && !selectedContact) {
+      } else if (window.matchMedia('(max-width: 767px)').matches) {
+        // Opening /messages on mobile always begins at the conversation list.
+        // Selecting a chat in the list still opens that chat normally.
+        setAiActive(false);
+        setSelectedContact(null);
+      } else if (combinedContacts.length > 0 && !selectedIdRef.current) {
+        // Keep the existing desktop default-conversation behavior.
         setSelectedContact(combinedContacts[0]);
       }
       
@@ -939,8 +946,8 @@ export default function Messages() {
               className={`w-[calc(100%-16px)] text-left px-3 py-2 flex items-center gap-3 rounded-xl mx-2 mb-1 transition ${aiActive ? 'bg-emerald-100' : 'hover:bg-gray-50'}`}>
               <span className="w-10 h-10 shrink-0 rounded-full bg-emerald-600 text-white flex items-center justify-center"><Sparkles className="w-5 h-5" /></span>
               <span className="flex-1 min-w-0">
-                <span className="flex items-center gap-2 text-[14px] font-bold text-gray-900">SkillCredit AI <span className="text-[10px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">AI</span></span>
-                <span className="block text-[12px] text-gray-500 truncate">Your SkillCredit learning assistant</span>
+                <span className="flex items-center gap-2 text-[14px] font-bold text-gray-900">Skiro AI <span className="text-[10px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">AI</span></span>
+                <span className="block text-[12px] text-gray-500 truncate">Your Skiro AI assistant</span>
               </span>
               <span className="text-[10px] font-semibold text-emerald-600">Pinned</span>
             </button>
@@ -981,29 +988,35 @@ export default function Messages() {
           <SkillCreditAIChat userId={currentUserId} onBack={() => setAiActive(false)} />
         ) : selectedContact ? (
           <>
-            <div className="relative z-20 flex min-h-14 min-w-0 shrink-0 items-center border-b border-gray-100 bg-white px-2.5 py-2 shadow-sm sm:px-5 md:justify-between md:gap-2 md:py-3.5 md:shadow-none">
-              {/* Mobile: Back stays on the left; avatar/name on the right are the profile link. */}
-              <div className="flex w-full min-w-0 items-center justify-between gap-2 md:hidden">
+            <div className="relative z-20 flex min-w-0 shrink-0 items-center justify-between gap-2 border-b border-gray-100 bg-white px-3 py-2.5 sm:px-5 sm:py-3.5">
+              {/* Mobile: same header layout as Skiro AI: Back, avatar/name/status, action. */}
+              <div className="flex min-w-0 items-center gap-2 sm:gap-3 md:hidden">
                 <button type="button" onClick={() => setSelectedContact(null)} aria-label="Back to conversations"
-                  className="inline-flex h-10 shrink-0 items-center gap-1 rounded-lg px-1 text-[12px] font-semibold text-gray-700 hover:bg-gray-100">
+                  className="mr-1 inline-flex h-10 shrink-0 items-center gap-1 rounded-lg px-1 text-[12px] font-semibold text-gray-700 hover:bg-gray-100">
                   <ArrowLeft className="h-4 w-4" /><span>Back</span>
                 </button>
                 <button type="button" onClick={handleVisitProfile} disabled={selectedContact.userId === 'support'}
                   aria-label={selectedContact.userId === 'support' ? 'Support conversation' : `Visit ${selectedContact.name}'s profile`}
                   title={selectedContact.userId === 'support' ? 'Support conversation' : `Visit ${selectedContact.name}'s profile`}
-                  className="flex max-w-[calc(100%-72px)] min-w-0 flex-row-reverse items-center gap-2 rounded-xl px-1 py-1 text-right hover:bg-gray-50 disabled:cursor-default disabled:hover:bg-transparent">
+                  className="flex min-w-0 items-center gap-2 rounded-lg text-left hover:bg-gray-50 disabled:cursor-default disabled:hover:bg-transparent">
                   <span className="relative shrink-0">
                     <Avatar contact={selectedContact} size="md" />
                     {!isClosed && <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-white bg-emerald-500" />}
                   </span>
                   <span className="min-w-0">
-                    <span className="block truncate text-[13px] font-bold leading-tight text-gray-900">{selectedContact.name}</span>
-                    <span className="mt-0.5 flex items-center justify-end gap-1 text-[11px] text-gray-400">
+                    <span className="block truncate text-[15px] font-bold leading-tight text-gray-900">{selectedContact.name}</span>
+                    <span className="mt-0.5 flex items-center gap-1 text-[11px] text-gray-400">
                       {isClosed ? <><Lock className="h-3 w-3" /> Closed</> : <span className="font-medium text-emerald-600">Active now</span>}
                     </span>
                   </span>
                 </button>
               </div>
+              <button type="button" onClick={toggleMute}
+                title={isMuted ? 'Unmute conversation' : 'Mute conversation'}
+                aria-label={isMuted ? 'Unmute conversation' : 'Mute conversation'}
+                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition md:hidden ${isMuted ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
+                {isMuted ? <BellOff className="h-5 w-5" /> : <Bell className="h-5 w-5" />}
+              </button>
               {/* Desktop: preserve the original conversation header and info toggle. */}
               <div className="hidden min-w-0 items-center gap-3 md:flex">
                 <div className="relative">
