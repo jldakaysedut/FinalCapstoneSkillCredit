@@ -383,7 +383,6 @@ export default function Profile() {
                     <div className="w-12 h-12 bg-orange-50 border border-orange-100 rounded-2xl flex items-center justify-center text-2xl mb-3"><ClipboardList className="h-6 w-6 text-orange-500" /></div>
                     <p className="font-bold text-gray-900 mb-1">No listings yet</p>
                     <p className="text-[12px] text-gray-400 mb-4">Share your expertise with the community</p>
-                    <button onClick={() => navigate('/create-skill')} className="px-4 py-2 bg-emerald-700 text-white rounded-xl text-[12px] font-bold shadow-sm hover:bg-emerald-800 transition">Create First Listing</button>
                   </div>
                 ) : (
                   <div className="relative pl-3 lg:pl-6">
@@ -432,7 +431,6 @@ export default function Profile() {
                     <div className="w-12 h-12 bg-purple-50 border border-purple-100 rounded-2xl flex items-center justify-center text-2xl mb-3"><FolderOpen className="h-6 w-6 text-purple-500" /></div>
                     <p className="font-bold text-gray-900 mb-1">No portfolio items yet</p>
                     <p className="text-[12px] text-gray-400 mb-4">Showcase your best work to attract learners</p>
-                    <button onClick={() => setShowAddPortfolioModal(true)} className="px-4 py-2 bg-emerald-700 text-white rounded-xl text-[12px] font-bold shadow-sm hover:bg-emerald-800 transition">Add First Project</button>
                   </div>
                 ) : (
                   <div className="grid w-full min-w-0 grid-cols-1 min-[480px]:grid-cols-2 gap-2.5 lg:gap-4">
