@@ -8,6 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import supabase from '../supabaseClient';
 import { confirmDialog } from './confirmDialog';
 import AIMessageMarkdown from './AIMessageMarkdown';
+import SkiroMascot from './SkiroMascot';
 
 // UI categories only; the backend remains responsible for choosing and enforcing
 // verified SkillCredit read-only tools. Removing a menu option does not change Groq.
@@ -427,6 +428,8 @@ export default function SkillCreditAIChat({ userId, onBack }) {
   const [mode, setMode] = useState('chat');
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  // Visual feedback only; tied to the current chat so switching chats is safe.
+  const [replyCueChatId, setReplyCueChatId] = useState(null);
   const [error, setError] = useState('');
   const [usage, setUsage] = useState(null);
   const [clock, setClock] = useState(Date.now());
@@ -438,6 +441,8 @@ export default function SkillCreditAIChat({ userId, onBack }) {
   const bottom = useRef(null);
   const inputRef = useRef(null);
   const sendingRef = useRef(false);
+  const replyCueTimeout = useRef(null);
+  useEffect(() => () => window.clearTimeout(replyCueTimeout.current), []);
   const quotaResetMs = usage?.reset_at ? Date.parse(usage.reset_at) : NaN;
   const retryMs = usage?.retry_at ? Date.parse(usage.retry_at) : NaN;
   const isWindowOver = Number.isFinite(quotaResetMs) && clock >= quotaResetMs;
@@ -508,6 +513,10 @@ export default function SkillCreditAIChat({ userId, onBack }) {
   }, [allMessages]);
   const visibleMessages = useMemo(() => allMessages.filter((m) => m.chat_id === activeChatId), [allMessages, activeChatId]);
   const category = CATEGORIES.find((c) => c.id === mode) || CATEGORIES[0];
+  // Existing input/request state drives the visual expression. AI/API behavior is unchanged.
+  const mascotStatus = sending ? 'thinking'
+    : replyCueChatId && replyCueChatId === activeChatId ? 'replying'
+    : draft.trim() ? 'typing' : 'idle';
   useEffect(() => { bottom.current?.scrollIntoView({ behavior: 'smooth' }); }, [visibleMessages.length, sending, clarification]);
 
   const pickCategory = (id) => {
@@ -620,6 +629,10 @@ export default function SkillCreditAIChat({ userId, onBack }) {
         .select('id, chat_id, role, content, created_at').single();
       if (assistantSaveError) throw assistantSaveError;
       setAllMessages((prev) => [...prev, assistantMessage]);
+      // A small happy reaction after a real assistant answer is saved.
+      setReplyCueChatId(chatId);
+      window.clearTimeout(replyCueTimeout.current);
+      replyCueTimeout.current = window.setTimeout(() => setReplyCueChatId(null), 1700);
     } catch (err) {
       setError(err.message || 'SkillCredit AI could not complete the request. Please try again.');
     } finally { sendingRef.current = false; setSending(false); void refreshUsage(); }
@@ -636,9 +649,7 @@ export default function SkillCreditAIChat({ userId, onBack }) {
               <ArrowLeft className="h-4 w-4" /><span>Back</span>
             </button>
             <div className="relative shrink-0">
-              <span className="flex h-10 w-10 items-center justify-center rounded-full border border-emerald-100 bg-emerald-100 text-emerald-800">
-                <Sparkles className="h-5 w-5" />
-              </span>
+              <SkiroMascot size={40} status={mascotStatus} />
               <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-white bg-emerald-500" />
             </div>
             <div className="min-w-0">
@@ -688,7 +699,7 @@ export default function SkillCreditAIChat({ userId, onBack }) {
             <div className="flex items-center justify-center gap-2 py-12 text-sm text-gray-400"><Loader2 className="h-4 w-4 animate-spin" />Loading your AI conversations…</div>
           ) : visibleMessages.length === 0 && !clarification ? (
             <div className="m-auto flex w-full max-w-[520px] flex-col items-center px-2 py-8 text-center sm:py-14">
-              <span className="flex h-14 w-14 items-center justify-center rounded-full border border-emerald-100 bg-emerald-100 text-emerald-700"><Sparkles className="h-7 w-7" /></span>
+              <SkiroMascot size={56} status={mascotStatus} animated={false} decorative />
               <h3 className="mt-3 text-[18px] font-bold tracking-tight text-gray-900">Skiro AI</h3>
               <p className="mt-1 text-[13px] leading-5 text-gray-500">Ask about your credits, sessions, skill listings, or create a new teaching skill. I'll help with verified SkillCredit information.</p>
             </div>
@@ -710,7 +721,7 @@ export default function SkillCreditAIChat({ userId, onBack }) {
                     <div className="h-px flex-1 bg-gray-200" />
                   </div>}
                   <div className={`mb-2 flex w-full items-end gap-1.5 ${isUser ? 'justify-end' : 'justify-start'}`}>
-                    {!isUser && <span className="mb-4 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-emerald-100 bg-emerald-100 text-emerald-700"><Sparkles className="h-4 w-4" /></span>}
+                    {!isUser && <SkiroMascot size={32} status="idle" animated={false} decorative className="mb-4" />}
                     <div className={`flex min-w-0 flex-col gap-1 ${isUser ? 'max-w-[88%] items-end sm:max-w-[68%]' : 'max-w-[calc(100%-40px)] items-start sm:max-w-[85%]'}`}>
                       <div className={`min-w-0 max-w-full break-words px-4 py-2.5 text-[14px] leading-snug ${isUser
                         ? 'rounded-2xl rounded-br-sm bg-emerald-600 text-white'
@@ -750,7 +761,7 @@ export default function SkillCreditAIChat({ userId, onBack }) {
               <div className="max-w-[88%] whitespace-pre-wrap break-words rounded-2xl rounded-br-sm bg-emerald-600 px-4 py-2.5 text-[14px] text-white sm:max-w-[68%]">{clarification.original}</div>
             </div>
             <div className="flex w-full items-end gap-1.5">
-              <span className="mb-4 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-emerald-100 bg-emerald-100 text-emerald-700"><Sparkles className="h-4 w-4" /></span>
+              <SkiroMascot size={32} status="idle" animated={false} decorative className="mb-4" />
               <div className="min-w-0 max-w-[calc(100%-40px)] rounded-2xl rounded-bl-sm bg-gray-100 px-4 py-2.5 text-[14px] text-gray-900 sm:max-w-[85%]">
                 <p>{clarification.question}</p>
                 <div className="mt-3 flex flex-wrap gap-2">
@@ -763,7 +774,7 @@ export default function SkillCreditAIChat({ userId, onBack }) {
             </div>
           </div>}
           {sending && <div className="mx-auto mt-4 flex max-w-[920px] items-center gap-2 pl-1 text-[12px] text-gray-500">
-            <span className="flex h-8 w-8 items-center justify-center rounded-full border border-emerald-100 bg-emerald-100 text-emerald-700"><Sparkles className="h-4 w-4" /></span>
+            <SkiroMascot size={32} status="thinking" />
             <span>{mode === 'describe' ? 'Preparing your editable skill draft' : mode === 'wallet' ? 'Checking your account records' : mode === 'recommend' ? 'Finding available skills' : 'Skiro AI is thinking'}</span>
             <span className="flex gap-1" aria-hidden="true"><span className="h-1.5 w-1.5 animate-bounce rounded-full bg-emerald-400"/><span className="h-1.5 w-1.5 animate-bounce rounded-full bg-emerald-400 [animation-delay:120ms]"/><span className="h-1.5 w-1.5 animate-bounce rounded-full bg-emerald-400 [animation-delay:240ms]"/></span>
           </div>}
@@ -823,7 +834,7 @@ export default function SkillCreditAIChat({ userId, onBack }) {
       {/* RIGHT — same 240px information panel placement as other Messages chats. */}
       {showInfoPanel && <aside className="hidden h-full max-h-full min-h-0 w-[240px] shrink-0 overflow-x-hidden overflow-y-auto overscroll-y-contain border-l border-gray-100 bg-white lg:block [scrollbar-width:thin] [scrollbar-color:#94a3b8_#f8fafc] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-slate-50 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300" aria-label="Skiro AI profile and chat history" tabIndex={0}>
         <div className="flex flex-col items-center border-b border-gray-100 px-5 pb-5 pt-8 text-center">
-          <span className="flex h-14 w-14 items-center justify-center rounded-full border border-emerald-100 bg-emerald-100 text-emerald-800"><Sparkles className="h-6 w-6" /></span>
+          <SkiroMascot size={56} status={mascotStatus} animated={false} decorative />
           <h3 className="mt-3 text-[16px] font-bold tracking-tight text-gray-900">Skiro AI</h3>
           <p className="mt-0.5 text-[12px] font-medium text-emerald-600">Your AI assistant</p>
           <p className="mt-2 text-[11px] leading-4 text-gray-400">Explore skills, review your learning, and get help with your account.</p>

@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import supabase from '../../supabaseClient';
 import SkillCreditAIChat from '../../components/SkillCreditAIChat';
+import SkiroMascot from '../../components/SkiroMascot';
 
 const QUICK_EMOJIS = ['👍', '❤', '😊', '😂', '🔥', '🙏', '💡', '🎉'];
 const QUICK_EMOJI_ICONS = {
@@ -941,7 +942,7 @@ export default function Messages() {
           {(!searchQuery || 'skillcredit ai assistant'.includes(searchQuery.toLowerCase())) && (
             <button type="button" onClick={() => { setAiActive(true); setSelectedContact(null); }}
               className={`w-[calc(100%-16px)] text-left px-3 py-2 flex items-center gap-3 rounded-xl mx-2 mb-1 transition ${aiActive ? 'bg-emerald-100' : 'hover:bg-gray-50'}`}>
-              <span className="w-10 h-10 shrink-0 rounded-full bg-emerald-600 text-white flex items-center justify-center"><Sparkles className="w-5 h-5" /></span>
+              <SkiroMascot size={40} status="idle" decorative />
               <span className="flex-1 min-w-0">
                 <span className="flex items-center gap-2 text-[14px] font-bold text-gray-900">Skiro AI <span className="text-[10px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">AI</span></span>
                 <span className="block text-[12px] text-gray-500 truncate">Your Skiro AI assistant</span>

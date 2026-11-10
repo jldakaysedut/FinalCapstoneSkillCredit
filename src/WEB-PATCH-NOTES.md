@@ -116,3 +116,10 @@ Two SQL files are delivered separately with this code:
 - After Web **and Expo** category UI checks and backup, run preview SQL, independently approve the migration, and verify renamed skill categories **and** profile interests.
 - Retest recommendations (`profile.interests`), Category filters, My Listings, messages, bookings, reviews, credit price validation, and Skiro AI against actual Supabase data.
 - Static JSX parsing and category-list comparisons were performed; live browser and database migration were **not** executed here.
+
+
+---
+
+## 10 November 2026 — Skiro AI expressive avatar (Web-only)
+
+Added a lightweight, state-aware sparkle mascot (SVG/CSS) to the AI chat header, empty/reply/clarification avatars, thinking indicator, info panel and pinned Messages entry. The mascot has four **visual** states: idle (gentle breathing), typing (curious face), thinking (thought dots), and replying (brief happy pop **after a saved AI answer**). Respect `prefers-reduced-motion` and keep historical message avatars static. Changed only `SkillCreditAIChat.jsx`, `Messages.jsx`, and new `SkiroMascot.jsx` / `.css`. **No Supabase, AI Edge Function, chat quota, cooldown, message content, data model, navigation or other behavior changes.** See `SKIRO-WEB-MASCOT-PATCH-NOTES.md` in the delivery ZIP for testing and rollback instructions. Expo adaptation deferred.

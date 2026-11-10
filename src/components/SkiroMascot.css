@@ -1,0 +1,46 @@
+/* Skiro AI: expressive but inexpensive SVG/CSS mascot.
+ * All animations use opacity/transform; no timers, canvas or external assets.
+ */
+.skiro-mascot {
+  position: relative;
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+  transform-origin: center;
+  isolation: isolate;
+}
+.skiro-mascot svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.skiro-mascot__spark, .skiro-mascot__eyes, .skiro-mascot__mouth,
+.skiro-mascot__thought, .skiro-mascot__excitement { transform-origin: 32px 32px; }
+.skiro-mascot__eyes, .skiro-mascot__mouth, .skiro-mascot__thought,
+.skiro-mascot__excitement { opacity: 0; }
+.skiro-mascot--idle .skiro-mascot__eyes--smile,
+.skiro-mascot--idle .skiro-mascot__mouth--smile,
+.skiro-mascot--typing .skiro-mascot__eyes--curious,
+.skiro-mascot--typing .skiro-mascot__mouth--curious,
+.skiro-mascot--thinking .skiro-mascot__eyes--thinking,
+.skiro-mascot--thinking .skiro-mascot__mouth--thinking,
+.skiro-mascot--thinking .skiro-mascot__thought,
+.skiro-mascot--replying .skiro-mascot__eyes--smile,
+.skiro-mascot--replying .skiro-mascot__mouth--replying,
+.skiro-mascot--replying .skiro-mascot__excitement { opacity: 1; }
+
+.skiro-mascot--animated.skiro-mascot--idle { animation: skiro-breathe 3.2s ease-in-out infinite; }
+.skiro-mascot--animated.skiro-mascot--typing { animation: skiro-listen 1.8s ease-in-out infinite; }
+.skiro-mascot--animated.skiro-mascot--thinking { animation: skiro-think 1.7s ease-in-out infinite; }
+.skiro-mascot--animated.skiro-mascot--thinking .skiro-mascot__thought { animation: skiro-thought-bob 1.2s ease-in-out infinite; }
+.skiro-mascot--animated.skiro-mascot--thinking .skiro-mascot__spark { animation: skiro-spark-glow 1.15s ease-in-out infinite; }
+.skiro-mascot--animated.skiro-mascot--replying { animation: skiro-hello .68s ease-out both; }
+.skiro-mascot--animated.skiro-mascot--replying .skiro-mascot__excitement { animation: skiro-spark-pop .9s ease-out both; }
+@keyframes skiro-breathe { 0%,100% { transform: scale(.98); } 50% { transform: scale(1.035); } }
+@keyframes skiro-listen { 0%,100% { transform: translateY(0) rotate(0); } 50% { transform: translateY(-1px) rotate(-3deg); } }
+@keyframes skiro-think { 0%,100% { transform: translateY(0) rotate(-2deg); } 50% { transform: translateY(-1.5px) rotate(2deg); } }
+@keyframes skiro-thought-bob { 0%,100% { transform: translateY(1px); opacity: .5; } 50% { transform: translateY(-2px); opacity: 1; } }
+@keyframes skiro-spark-glow { 0%,100% { opacity: 1; transform: scale(.97); } 50% { opacity: .76; transform: scale(1.04); } }
+@keyframes skiro-hello { 0% { transform: translateY(2px) scale(.94); } 45% { transform: translateY(-2px) scale(1.07); } 100% { transform: translateY(0) scale(1); } }
+@keyframes skiro-spark-pop { 0% { transform: scale(.6); opacity: 0; } 55% { transform: scale(1.12); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  .skiro-mascot, .skiro-mascot *, .skiro-mascot svg { animation: none !important; transition: none !important; }
+}
