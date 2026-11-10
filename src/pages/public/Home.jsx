@@ -10,7 +10,8 @@ import {
   Wrench, BookOpen, PenTool, MessageCircle, Mic, Palette,
   Video, Wallet, Briefcase, Layout, Code, UserPlus,
   CalendarCheck, Award, Trophy, Star, Rocket, Code2, 
-  MessageCircleQuestion, Music, Smartphone, Globe, Heart
+  MessageCircleQuestion, Music, Smartphone, Globe, Heart,
+  PenLine, Music2, Film, PiggyBank, Monitor
 } from "lucide-react";
 
 // 🚨 REPLACED emojis with Lucide Icons and added them to data arrays
