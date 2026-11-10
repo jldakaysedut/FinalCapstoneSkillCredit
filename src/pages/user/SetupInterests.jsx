@@ -2,29 +2,28 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import supabase from '../../supabaseClient';
 import {
-  ChefHat, Leaf, Hammer, Dumbbell, Scissors, Gamepad2, Wrench,
+  ChefHat, Leaf, Hammer, Dumbbell, Scissors, Wrench,
   BookOpen, PenLine, MessageCircle, Music2, Palette, Film, Briefcase,
   PiggyBank, Monitor, Code2, Sparkles, Check
 } from 'lucide-react';
 
 const CATEGORIES = [
-  { name: 'Coding & Tech',         icon: Code2,       color: 'text-lime-600',    bg: 'bg-lime-50' },
-  { name: 'UI/UX Design',          icon: Monitor,     color: 'text-sky-500',     bg: 'bg-sky-50' },
-  { name: 'Business & Freelance',  icon: Briefcase,   color: 'text-slate-600',   bg: 'bg-slate-50' },
-  { name: 'Financial Literacy',    icon: PiggyBank,   color: 'text-emerald-600', bg: 'bg-emerald-50' },
-  { name: 'Writing & Content',     icon: PenLine,     color: 'text-teal-500',    bg: 'bg-teal-50' },
-  { name: 'Art & Graphic Design',  icon: Palette,     color: 'text-rose-500',    bg: 'bg-rose-50' },
-  { name: 'Video & Animation',     icon: Film,        color: 'text-amber-500',   bg: 'bg-amber-50' },
-  { name: 'Languages & Speaking',  icon: MessageCircle, color: 'text-cyan-500',  bg: 'bg-cyan-50' },
-  { name: 'School & Tutoring',     icon: BookOpen,    color: 'text-indigo-500',  bg: 'bg-indigo-50' },
-  { name: 'Health & Fitness',      icon: Dumbbell,    color: 'text-red-500',     bg: 'bg-red-50' },
-  { name: 'Cooking & Baking',      icon: ChefHat,     color: 'text-orange-500',  bg: 'bg-orange-50' },
-  { name: 'Singing & Instruments', icon: Music2,      color: 'text-fuchsia-500', bg: 'bg-fuchsia-50' },
-  { name: 'Gaming & Hobbies',      icon: Gamepad2,    color: 'text-violet-500',  bg: 'bg-violet-50' },
-  { name: 'Beauty & Grooming',     icon: Scissors,    color: 'text-pink-500',    bg: 'bg-pink-50' },
-  { name: 'Home & DIY',            icon: Hammer,      color: 'text-yellow-600',  bg: 'bg-yellow-50' },
-  { name: 'Gardening & Farming',   icon: Leaf,        color: 'text-green-500',   bg: 'bg-green-50' },
-  { name: 'Electronics & Repair',  icon: Wrench,      color: 'text-blue-500',    bg: 'bg-blue-50' },
+  { name: 'Cooking & Baking', icon: ChefHat, color: 'text-orange-500', bg: 'bg-orange-50' },
+  { name: 'Gardening & Plant Care', icon: Leaf, color: 'text-green-500', bg: 'bg-green-50' },
+  { name: 'Home Repair & DIY', icon: Hammer, color: 'text-yellow-600', bg: 'bg-yellow-50' },
+  { name: 'Fitness & Sports', icon: Dumbbell, color: 'text-red-500', bg: 'bg-red-50' },
+  { name: 'Beauty & Personal Care', icon: Scissors, color: 'text-pink-500', bg: 'bg-pink-50' },
+  { name: 'Computer, Phone & Electronics Help', icon: Wrench, color: 'text-blue-500', bg: 'bg-blue-50' },
+  { name: 'School Subjects & Tutoring', icon: BookOpen, color: 'text-indigo-500', bg: 'bg-indigo-50' },
+  { name: 'Writing & Editing', icon: PenLine, color: 'text-teal-500', bg: 'bg-teal-50' },
+  { name: 'Languages & Public Speaking', icon: MessageCircle, color: 'text-cyan-500', bg: 'bg-cyan-50' },
+  { name: 'Music & Singing', icon: Music2, color: 'text-fuchsia-500', bg: 'bg-fuchsia-50' },
+  { name: 'Graphic Design & Digital Art', icon: Palette, color: 'text-rose-500', bg: 'bg-rose-50' },
+  { name: 'Video, Animation & AI Content Creation', icon: Film, color: 'text-amber-500', bg: 'bg-amber-50' },
+  { name: 'Business, Entrepreneurship & Marketing', icon: Briefcase, color: 'text-slate-600', bg: 'bg-slate-50' },
+  { name: 'Finance, Investing & Trading', icon: PiggyBank, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+  { name: 'Website & App Design', icon: Monitor, color: 'text-sky-500', bg: 'bg-sky-50' },
+  { name: 'Coding & Programming', icon: Code2, color: 'text-lime-600', bg: 'bg-lime-50' },
 ];
 
 export default function SetupInterests() {

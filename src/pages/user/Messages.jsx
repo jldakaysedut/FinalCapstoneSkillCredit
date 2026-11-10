@@ -6,7 +6,7 @@ import { Fragment, useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   ArrowLeft, Bell, BellOff, BookOpen, Briefcase, CheckCircle2, ChefHat, ChevronDown,
-  Code2, Dumbbell, FileText, Film, Gamepad2, Hammer, Hand, Heart, ImagePlus,
+  Code2, Dumbbell, FileText, Film, Hammer, Hand, Heart, ImagePlus,
   PanelRight, Leaf, Lock, MessageCircle, MessageSquare, Monitor, Music2, Palette,
   PenLine, PiggyBank, Reply, Scissors, Search, Send, Shield, Smile, Star,
   ThumbsUp, UserRound, Wrench, X, Flame, Laugh, Lightbulb, PartyPopper, CalendarDays, Sparkles
@@ -28,24 +28,21 @@ const QUICK_EMOJI_ICONS = {
 
 const CATEGORY_ICON_META = {
   'Cooking & Baking': { icon: ChefHat, color: 'text-orange-500' },
-  'Gardening & Farming': { icon: Leaf, color: 'text-green-500' },
-  'Home & DIY': { icon: Hammer, color: 'text-yellow-600' },
-  'Health & Fitness': { icon: Dumbbell, color: 'text-red-500' },
-  'Beauty & Grooming': { icon: Scissors, color: 'text-pink-500' },
-  'Gaming & Hobbies': { icon: Gamepad2, color: 'text-violet-500' },
-  'Electronics & Repair': { icon: Wrench, color: 'text-blue-500' },
-  'Electronics, Appliance & Basic Repair': { icon: Wrench, color: 'text-blue-500' },
-  'School & Tutoring': { icon: BookOpen, color: 'text-indigo-500' },
-  'Writing & Content': { icon: PenLine, color: 'text-teal-500' },
-  'Languages & Speaking': { icon: MessageCircle, color: 'text-cyan-500' },
-  'Singing & Instruments': { icon: Music2, color: 'text-fuchsia-500' },
-  'Art & Graphic Design': { icon: Palette, color: 'text-rose-500' },
-  'Video & Animation': { icon: Film, color: 'text-amber-500' },
-  'Business & Freelance': { icon: Briefcase, color: 'text-slate-600' },
-  'Financial Literacy': { icon: PiggyBank, color: 'text-emerald-600' },
-  'Financial Literacy & Money Management': { icon: PiggyBank, color: 'text-emerald-600' },
-  'UI/UX Design': { icon: Monitor, color: 'text-sky-500' },
-  'Coding & Tech': { icon: Code2, color: 'text-lime-600' },
+  'Gardening & Plant Care': { icon: Leaf, color: 'text-green-500' },
+  'Home Repair & DIY': { icon: Hammer, color: 'text-yellow-600' },
+  'Fitness & Sports': { icon: Dumbbell, color: 'text-red-500' },
+  'Beauty & Personal Care': { icon: Scissors, color: 'text-pink-500' },
+  'Computer, Phone & Electronics Help': { icon: Wrench, color: 'text-blue-500' },
+  'School Subjects & Tutoring': { icon: BookOpen, color: 'text-indigo-500' },
+  'Writing & Editing': { icon: PenLine, color: 'text-teal-500' },
+  'Languages & Public Speaking': { icon: MessageCircle, color: 'text-cyan-500' },
+  'Music & Singing': { icon: Music2, color: 'text-fuchsia-500' },
+  'Graphic Design & Digital Art': { icon: Palette, color: 'text-rose-500' },
+  'Video, Animation & AI Content Creation': { icon: Film, color: 'text-amber-500' },
+  'Business, Entrepreneurship & Marketing': { icon: Briefcase, color: 'text-slate-600' },
+  'Finance, Investing & Trading': { icon: PiggyBank, color: 'text-emerald-600' },
+  'Website & App Design': { icon: Monitor, color: 'text-sky-500' },
+  'Coding & Programming': { icon: Code2, color: 'text-lime-600' },
 };
 
 const CategoryIcon = ({ category, className = 'w-4 h-4' }) => {

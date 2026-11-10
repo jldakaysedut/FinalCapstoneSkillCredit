@@ -6,7 +6,7 @@ import DownloadAppSection from "../../components/DownloadAppSection";
 // 🚨 ADDED: Imported all necessary modern Lucide Icons
 import {
   GraduationCap, MessageSquare, CheckCircle, ShieldCheck,
-  ChefHat, Leaf, Hammer, Scissors, Gamepad2, Dumbbell,
+  ChefHat, Leaf, Hammer, Scissors, Dumbbell,
   Wrench, BookOpen, PenTool, MessageCircle, Mic, Palette,
   Video, Wallet, Briefcase, Layout, Code, UserPlus,
   CalendarCheck, Award, Trophy, Star, Rocket, Code2, 
@@ -31,23 +31,22 @@ const features = [
 ];
 
 const learnTopics = [
-  { Icon: ChefHat,   label:"Cooking & Baking", accent:"#ea580c", soft:"#fff7ed" },
-  { Icon: Leaf,      label:"Gardening & Farming", accent:"#16a34a", soft:"#f0fdf4" },
-  { Icon: Hammer,    label:"Home & DIY", accent:"#ca8a04", soft:"#fefce8" },
-  { Icon: Scissors,  label:"Beauty & Grooming", accent:"#db2777", soft:"#fdf2f8" },
-  { Icon: Gamepad2,  label:"Gaming & Hobbies", accent:"#7c3aed", soft:"#f5f3ff" },
-  { Icon: Dumbbell,  label:"Health & Fitness", accent:"#dc2626", soft:"#fef2f2" },
-  { Icon: Wrench,    label:"Appliance & Repair", accent:"#2563eb", soft:"#eff6ff" },
-  { Icon: BookOpen,  label:"School & Tutoring", accent:"#4f46e5", soft:"#eef2ff" },
-  { Icon: PenTool,   label:"Writing & Content", accent:"#0f766e", soft:"#f0fdfa" },
-  { Icon: Mic,       label:"Languages & Speaking", accent:"#0891b2", soft:"#ecfeff" },
-  { Icon: Music,     label:"Singing & Instruments", accent:"#c026d3", soft:"#fdf4ff" },
-  { Icon: Palette,   label:"Art & Graphic Design", accent:"#e11d48", soft:"#fff1f2" },
-  { Icon: Video,     label:"Video & Animation", accent:"#d97706", soft:"#fffbeb" },
-  { Icon: Wallet,    label:"Financial Literacy", accent:"#059669", soft:"#ecfdf5" },
-  { Icon: Briefcase, label:"Business & Freelance", accent:"#475569", soft:"#f8fafc" },
-  { Icon: Layout,    label:"UI/UX Design", accent:"#0284c7", soft:"#f0f9ff" },
-  { Icon: Code,      label:"Coding & Tech", accent:"#4d7c0f", soft:"#f7fee7" },
+  { Icon: ChefHat, label:"Cooking & Baking", accent:"#f97316", soft:"#fff7ed" },
+  { Icon: Leaf, label:"Gardening & Plant Care", accent:"#22c55e", soft:"#f0fdf4" },
+  { Icon: Hammer, label:"Home Repair & DIY", accent:"#a78bfa", soft:"#fefce8" },
+  { Icon: Dumbbell, label:"Fitness & Sports", accent:"#ef4444", soft:"#fef2f2" },
+  { Icon: Scissors, label:"Beauty & Personal Care", accent:"#ec4899", soft:"#fdf2f8" },
+  { Icon: Wrench, label:"Computer, Phone & Electronics Help", accent:"#64748b", soft:"#eff6ff" },
+  { Icon: BookOpen, label:"School Subjects & Tutoring", accent:"#0ea5e9", soft:"#eef2ff" },
+  { Icon: PenLine, label:"Writing & Editing", accent:"#8b5cf6", soft:"#f0fdfa" },
+  { Icon: MessageCircle, label:"Languages & Public Speaking", accent:"#14b8a6", soft:"#ecfeff" },
+  { Icon: Music2, label:"Music & Singing", accent:"#f43f5e", soft:"#fdf4ff" },
+  { Icon: Palette, label:"Graphic Design & Digital Art", accent:"#f59e0b", soft:"#fff1f2" },
+  { Icon: Film, label:"Video, Animation & AI Content Creation", accent:"#dc2626", soft:"#fffbeb" },
+  { Icon: Briefcase, label:"Business, Entrepreneurship & Marketing", accent:"#0d9488", soft:"#f8fafc" },
+  { Icon: PiggyBank, label:"Finance, Investing & Trading", accent:"#ca8a04", soft:"#ecfdf5" },
+  { Icon: Monitor, label:"Website & App Design", accent:"#7c3aed", soft:"#f0f9ff" },
+  { Icon: Code2, label:"Coding & Programming", accent:"#10b981", soft:"#f7fee7" },
 ];
 
 function getInitials(name) {
@@ -327,7 +326,7 @@ export default function Home() {
       {/* ── WHAT CAN YOU LEARN (EXPLORE) ── */}
       <section id="explore" className="section-pad reveal" style={{ background:"#faf8f4", padding:"72px 48px" }}>
         <div style={{ maxWidth:1080, margin:"0 auto", textAlign:"center" }}>
-          <span style={{ fontSize:12, fontWeight:800, color:"#2d6a4f", letterSpacing:"0.12em", textTransform:"uppercase" }}>Explore by interest · 17 categories</span>
+          <span style={{ fontSize:12, fontWeight:800, color:"#2d6a4f", letterSpacing:"0.12em", textTransform:"uppercase" }}>Explore by interest · {learnTopics.length} categories</span>
           <h2 style={{ fontFamily:"'Fraunces',serif", fontSize:36, fontWeight:900, color:"#111", marginTop:10, marginBottom:8, letterSpacing:"-0.02em" }}>Anything the community knows</h2>
           <p style={{ fontSize:15, color:"#666", marginBottom:32, lineHeight:1.7 }}>From everyday skills to creative work, find a topic you’re excited to learn or teach.</p>
           <div className="explore-pill-cloud-v1">

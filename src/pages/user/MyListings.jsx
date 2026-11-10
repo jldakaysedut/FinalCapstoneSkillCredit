@@ -1,28 +1,27 @@
 import { confirmDialog } from '../../components/confirmDialog';
 import useRealtimeRefresh from '../../hooks/useRealtimeRefresh';
 import { useState, useEffect } from 'react';
-import { ArrowLeft, Bell, BookOpen, Briefcase, ChefHat, ChevronDown, CircleHelp, ClipboardList, Code2, Coins, Dumbbell, ExternalLink, Film, Gamepad2, Hammer, Leaf, MessageCircle, Monitor, Music2, Palette, PenLine, Scissors, Star, Tag, Trash2, Wrench, Zap } from 'lucide-react';
+import { ArrowLeft, Bell, BookOpen, Briefcase, ChefHat, ChevronDown, CircleHelp, ClipboardList, Code2, Coins, Dumbbell, ExternalLink, Film, Hammer, Leaf, MessageCircle, Monitor, Music2, Palette, PenLine, PiggyBank, Scissors, Star, Tag, Trash2, Wrench, Zap } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom'; // 🚨 ADDED useLocation
 import supabase from '../../supabaseClient';
 
 const CATEGORIES = [
-  { name: 'Cooking & Baking',      icon: ChefHat,       iconColor: 'text-orange-500',  color: '#f97316' },
-  { name: 'Gardening & Farming',   icon: Leaf,          iconColor: 'text-green-500',   color: '#16a34a' },
-  { name: 'Home & DIY',            icon: Hammer,        iconColor: 'text-yellow-600',  color: '#ca8a04' },
-  { name: 'Health & Fitness',      icon: Dumbbell,      iconColor: 'text-red-500',     color: '#ef4444' },
-  { name: 'Beauty & Grooming',     icon: Scissors,      iconColor: 'text-pink-500',    color: '#ec4899' },
-  { name: 'Gaming & Hobbies',      icon: Gamepad2,      iconColor: 'text-violet-500',  color: '#8b5cf6' },
-  { name: 'Electronics & Repair',  icon: Wrench,        iconColor: 'text-blue-500',    color: '#3b82f6' },
-  { name: 'School & Tutoring',     icon: BookOpen,      iconColor: 'text-indigo-500',  color: '#6366f1' },
-  { name: 'Writing & Content',     icon: PenLine,       iconColor: 'text-teal-500',    color: '#14b8a6' },
-  { name: 'Languages & Speaking',  icon: MessageCircle, iconColor: 'text-cyan-500',    color: '#06b6d4' },
-  { name: 'Singing & Instruments', icon: Music2,         iconColor: 'text-fuchsia-500', color: '#d946ef' },
-  { name: 'Art & Graphic Design',  icon: Palette,       iconColor: 'text-rose-500',    color: '#f43f5e' },
-  { name: 'Video & Animation',     icon: Film,          iconColor: 'text-amber-500',   color: '#f59e0b' },
-  { name: 'Business & Freelance',  icon: Briefcase,     iconColor: 'text-slate-600',   color: '#475569' },
-  { name: 'Financial Literacy',    icon: Coins,         iconColor: 'text-emerald-600', color: '#059669' },
-  { name: 'UI/UX Design',          icon: Monitor,       iconColor: 'text-sky-500',     color: '#0ea5e9' },
-  { name: 'Coding & Tech',         icon: Code2,         iconColor: 'text-lime-600',    color: '#65a30d' },
+  { name: 'Cooking & Baking', icon: ChefHat, iconColor: 'text-orange-500', color: '#f97316' },
+  { name: 'Gardening & Plant Care', icon: Leaf, iconColor: 'text-green-500', color: '#22c55e' },
+  { name: 'Home Repair & DIY', icon: Hammer, iconColor: 'text-yellow-600', color: '#a78bfa' },
+  { name: 'Fitness & Sports', icon: Dumbbell, iconColor: 'text-red-500', color: '#ef4444' },
+  { name: 'Beauty & Personal Care', icon: Scissors, iconColor: 'text-pink-500', color: '#ec4899' },
+  { name: 'Computer, Phone & Electronics Help', icon: Wrench, iconColor: 'text-blue-500', color: '#64748b' },
+  { name: 'School Subjects & Tutoring', icon: BookOpen, iconColor: 'text-indigo-500', color: '#0ea5e9' },
+  { name: 'Writing & Editing', icon: PenLine, iconColor: 'text-teal-500', color: '#8b5cf6' },
+  { name: 'Languages & Public Speaking', icon: MessageCircle, iconColor: 'text-cyan-500', color: '#14b8a6' },
+  { name: 'Music & Singing', icon: Music2, iconColor: 'text-fuchsia-500', color: '#f43f5e' },
+  { name: 'Graphic Design & Digital Art', icon: Palette, iconColor: 'text-rose-500', color: '#f59e0b' },
+  { name: 'Video, Animation & AI Content Creation', icon: Film, iconColor: 'text-amber-500', color: '#dc2626' },
+  { name: 'Business, Entrepreneurship & Marketing', icon: Briefcase, iconColor: 'text-slate-600', color: '#0d9488' },
+  { name: 'Finance, Investing & Trading', icon: PiggyBank, iconColor: 'text-emerald-600', color: '#ca8a04' },
+  { name: 'Website & App Design', icon: Monitor, iconColor: 'text-sky-500', color: '#7c3aed' },
+  { name: 'Coding & Programming', icon: Code2, iconColor: 'text-lime-600', color: '#10b981' },
 ];
 const catInfo = n => CATEGORIES.find(c => c.name === n) ?? { icon: Tag, iconColor: 'text-slate-500', color: '#6b7280' };
 

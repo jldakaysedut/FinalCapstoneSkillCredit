@@ -82,3 +82,37 @@ The patch archive intentionally contains no `.env.local`, `.git`, `node_modules`
 3. Search `garden`, `farming`, `Python`, `Photoshop`, `tech-related skills`, and `May nagtuturo ba ng halaman?`; approved active relevant listings should rank ahead of unrelated ones where RLS permits them.
 4. Check AI quota and 5-second cooldown, conversation delete, new chat, result-card links and AI skill drafts.
 5. New Profile with no skills or portfolio: only one header action per section and the original empty-state message. Test creating a listing and adding a project through the retained header controls.
+
+---
+
+## 10 November 2026 — Canonical 16-category Web synchronization (pre-migration)
+
+**Source of truth:** `src/pages/user/CreateSkill.jsx` from the user-uploaded Web `src.zip`.
+
+### Web source changes (category metadata only)
+
+- `src/pages/user/UserDashboard.jsx` — replaced its outdated 17-category `CATEGORIES` array with the exact 16 Create Skill labels. Existing category filters, card rendering, category icon lookup, search, recommendation sorting, bookmarks, Supabase fetching and responsive layout are unchanged.
+- `src/pages/user/SetupInterests.jsx` — replaced the old category choices with the same 16 labels. Existing interest selection and saving operations are unchanged; new users will save the canonical names.
+- `src/pages/user/MyListings.jsx` — updated category/icon metadata to the canonical list. Imported the existing Lucide `PiggyBank` icon to match the Create Skill finance category; existing `Coins` usages elsewhere are unchanged.
+- `src/pages/user/Messages.jsx` — updated only `CATEGORY_ICON_META`, so session messages show the correct icons with canonical labels. Message sending and session handling are unchanged.
+- `src/pages/public/Home.jsx` — replaced the old 17-category marketing pills with the 16 current names and updated the count to `learnTopics.length`. All layouts, styles, transitions, and other content are unchanged.
+- `src/WEB-PATCH-NOTES.md` — appended this note. `CreateSkill.jsx` and `EditSkill.jsx` are unchanged.
+
+### Permanent data migration is a **separate, manual step**
+
+Two SQL files are delivered separately with this code:
+
+1. `sql/01_PREVIEW_ONLY.sql` — read-only inventory of existing skill categories and `user_profiles.interests`, including unidentified values and ambiguous `Gaming & Hobbies` records.
+2. `sql/02_ONE_TIME_RENAME_REQUIRES_APPROVAL.sql` — prepared transactionally guarded, **not executed**, to rename known legacy category strings in `public.skills.category` and existing saved user-interest arrays. It refuses to proceed when unknown/ambiguous category labels remain. It does not change skill IDs, prices, sessions, reviews, schema, policies, functions, or other application data.
+
+**DO NOT** execute the one-time migration without backing up affected data and reviewing the preview. Web and Expo share the same Supabase; the Expo category UI must also be synchronized before running it or old Expo filters/icons may fail. A Git push, Vercel deploy, or JSX replacement **never** automatically renames old Supabase records. The Web category filters will match canonical categories only; old records will remain under their old names until the migration is reviewed and executed.
+
+### Test checklist
+
+- Confirm all 16 labels match Create Skill across Browse filters (desktop/mobile Web), Setup Interests, My Listings, Messages, and public Home.
+- Confirm a newly approved canonical-category listing shows its corresponding icon rather than the Pin fallback.
+- Before migration, check that old-category listings still exist in All Skills (this change does not delete them); they will not match new exact-category filters until migrated.
+- Inventory historic `Gaming & Hobbies` or other unexpected categories. Review their actual skill titles and decide on the correct category per record; never force an unrelated category.
+- After Web **and Expo** category UI checks and backup, run preview SQL, independently approve the migration, and verify renamed skill categories **and** profile interests.
+- Retest recommendations (`profile.interests`), Category filters, My Listings, messages, bookings, reviews, credit price validation, and Skiro AI against actual Supabase data.
+- Static JSX parsing and category-list comparisons were performed; live browser and database migration were **not** executed here.
