@@ -123,3 +123,41 @@ Two SQL files are delivered separately with this code:
 ## 10 November 2026 — Skiro AI expressive avatar (Web-only)
 
 Added a lightweight, state-aware sparkle mascot (SVG/CSS) to the AI chat header, empty/reply/clarification avatars, thinking indicator, info panel and pinned Messages entry. The mascot has four **visual** states: idle (gentle breathing), typing (curious face), thinking (thought dots), and replying (brief happy pop **after a saved AI answer**). Respect `prefers-reduced-motion` and keep historical message avatars static. Changed only `SkillCreditAIChat.jsx`, `Messages.jsx`, and new `SkiroMascot.jsx` / `.css`. **No Supabase, AI Edge Function, chat quota, cooldown, message content, data model, navigation or other behavior changes.** See `SKIRO-WEB-MASCOT-PATCH-NOTES.md` in the delivery ZIP for testing and rollback instructions. Expo adaptation deferred.
+
+
+---
+
+## 11 November 2026 — Universal leaderboard (Web-only, existing Edge Function)
+
+**Reference:** Latest uploaded `capstoneskillcredit(1).zip`. The existing `supabase/functions/skillcredit-leaderboard/index.ts` already implements global, signed-in-only read aggregation using the Supabase service role internally; the browser does **not** receive or use the service role key.
+
+### Files modified
+
+1. `src/pages/user/Leaderboard.jsx` — Replaced the three browser-side reads from `user_profiles`, `reviews`, and `sessions` with one `supabase.functions.invoke('skillcredit-leaderboard')`. Preserves the existing tabs, header, skeleton, cards, ranking categories, metrics, wallet-balance interpretation of Credits, and profile navigation. Added deterministic UUID tie-breakers for equal scores; a focused error state and Retry button prevent a failed function request from silently appearing as an empty leaderboard.
+2. `src/WEB-PATCH-NOTES.md` — This note.
+
+### Explicitly unchanged
+
+- The existing function source `supabase/functions/skillcredit-leaderboard/index.ts` (no new function file).
+- All other Web UI, logic, routes, Supabase database tables/records, RLS policies, SQL, Auth configuration, PayMongo and Skiro AI; no Expo Mobile files.
+- Original leaderboard calculation: Top Rated = average of 5 review scores per review, averaged per instructor, rounded to 1 decimal; Most Sessions = sessions with status `completed` for the instructor; Credits = `user_profiles.credits_balance` (current wallet, **not** lifetime earnings).
+
+### Required manual deployment (not performed by a local ZIP or Git push)
+
+From the existing Web project root after authenticating/linking Supabase CLI to the correct project:
+
+```bash
+npx supabase functions deploy skillcredit-leaderboard
+```
+
+This deploys the existing function; simply uploading `Leaderboard.jsx` to Vercel is **not** enough. Do not place service credentials in `.env.local` or browser code. Supabase Edge Function runtime must have `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY` environment values available server-side (normally automatically supplied by Supabase); do not share their values. Keep JWT verification enabled and ensure callers are signed in.
+
+### Manual verification (live Supabase required)
+
+1. In Supabase Dashboard → Edge Functions, confirm `skillcredit-leaderboard` appears as deployed, then check logs for failures if any.
+2. Run `npm run build` and deploy the Web update to Vercel via the normal Git push.
+3. Sign in as two regular users in separate browser sessions; compare Top Rated, Most Sessions and Credits ranking order and summary values. Allow for the function's ~20-second cache if records just changed.
+4. Verify profile navigation, skeleton, no-members state, and Retry behavior when the function is temporarily unavailable.
+5. The function has a deliberate maximum dataset guard of 100,000 rows per table and may return an error above that threshold; production scalability should be reviewed if usage approaches this limit.
+
+This patch is prepared locally only. No Supabase deployment or live cross-account test has been performed by ChatGPT.

@@ -31,45 +31,50 @@ export default function Leaderboard() {
   const [profiles,     setProfiles]     = useState([]);
   const [statsSummary, setStatsSummary] = useState({ totalUsers: 0, topRating: '0.0', totalSessionsCompleted: 0, totalCreditsCirculating: 0 });
 
+  const [error, setError] = useState('');
+  const [reloadKey, setReloadKey] = useState(0);
+
   useEffect(() => {
+    let cancelled = false;
+
     const run = async () => {
       setLoading(true);
+      setError('');
       try {
-        const [{ data: usersData }, { data: reviewsData }, { data: sessionsData }] = await Promise.all([
-  supabase.from('user_profiles').select('id,full_name,avatar_url,bio,role,credits_balance').eq('is_deleted', false),
-  supabase.from('reviews').select('instructor_id,rating,q1_clarity,q2_patience,q3_relevance,q4_professionalism'),
-  supabase.from('sessions').select('instructor_id,status'),
-]);
-        const reviewMap = {};
-        reviewsData?.forEach(rev => {
-          if (!reviewMap[rev.instructor_id]) reviewMap[rev.instructor_id] = { sum: 0, count: 0 };
-          const avg5 = ([rev.rating, rev.q1_clarity, rev.q2_patience, rev.q3_relevance, rev.q4_professionalism].map(Number).reduce((a, b) => a + b, 0)) / 5;
-          reviewMap[rev.instructor_id].sum += avg5;
-          reviewMap[rev.instructor_id].count++;
+        // One shared global dataset for every signed-in account.
+        // The existing Edge Function performs the authorized aggregate reads;
+        // the browser never queries RLS-restricted session rows directly.
+        const { data, error: functionError } = await supabase.functions.invoke('skillcredit-leaderboard', {
+          body: {},
         });
-        const sessionMap = {}; let totalDone = 0;
-        sessionsData?.forEach(s => { if (s.status === 'completed') { totalDone++; sessionMap[s.instructor_id] = (sessionMap[s.instructor_id] || 0) + 1; } });
-        let topRating = 0, totalCredits = 0;
-        const processed = (usersData || []).map(u => {
-          const r = reviewMap[u.id] || { sum: 0, count: 0 };
-          const avg = r.count > 0 ? parseFloat((r.sum / r.count).toFixed(1)) : 0;
-          totalCredits += Number(u.credits_balance || 0);
-          if (avg > topRating) topRating = avg;
-          return { ...u, avgRating: avg, totalReviews: r.count, sessionsCompleted: sessionMap[u.id] || 0, creditsBalance: Number(u.credits_balance || 0) };
-        });
-        setProfiles(processed);
-        setStatsSummary({ totalUsers: processed.length, topRating: topRating > 0 ? topRating.toFixed(1) : '5.0', totalSessionsCompleted: totalDone, totalCreditsCirculating: totalCredits });
-      } catch (e) { console.error(e); }
-      finally { setLoading(false); }
+        if (functionError) throw functionError;
+        if (!data || !Array.isArray(data.profiles) || !data.statsSummary) {
+          throw new Error('Invalid global leaderboard response');
+        }
+
+        if (cancelled) return;
+        setProfiles(data.profiles);
+        setStatsSummary(data.statsSummary);
+      } catch (err) {
+        console.error('Global leaderboard fetch failed:', err);
+        if (cancelled) return;
+        setProfiles([]);
+        setStatsSummary({ totalUsers: 0, topRating: '0.0', totalSessionsCompleted: 0, totalCreditsCirculating: 0 });
+        setError('Global leaderboard is unavailable. Please try again.');
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
     };
+
     run();
-  }, []);
+    return () => { cancelled = true; };
+  }, [reloadKey]);
 
   const sorted = useMemo(() => {
     const list = [...profiles];
-    if (categoryTab === 'ratings')  list.sort((a, b) => b.avgRating - a.avgRating || b.totalReviews - a.totalReviews);
-    if (categoryTab === 'sessions') list.sort((a, b) => b.sessionsCompleted - a.sessionsCompleted || b.avgRating - a.avgRating);
-    if (categoryTab === 'credits')  list.sort((a, b) => b.creditsBalance - a.creditsBalance);
+    if (categoryTab === 'ratings')  list.sort((a, b) => b.avgRating - a.avgRating || b.totalReviews - a.totalReviews || a.id.localeCompare(b.id));
+    if (categoryTab === 'sessions') list.sort((a, b) => b.sessionsCompleted - a.sessionsCompleted || b.avgRating - a.avgRating || a.id.localeCompare(b.id));
+    if (categoryTab === 'credits')  list.sort((a, b) => b.creditsBalance - a.creditsBalance || a.id.localeCompare(b.id));
     return list;
   }, [profiles, categoryTab]);
 
@@ -139,7 +144,7 @@ export default function Leaderboard() {
         </div>
 
         {/* ══ STAT STRIP — same kanban-pill style, sits below header ══ */}
-        <div className="mb-6 grid grid-cols-2 gap-2 rounded-xl border border-gray-100 bg-gray-50 p-2 lg:mb-8 lg:flex lg:flex-row lg:items-center lg:justify-between lg:gap-2 lg:p-3">
+        {!error && <div className="mb-6 grid grid-cols-2 gap-2 rounded-xl border border-gray-100 bg-gray-50 p-2 lg:mb-8 lg:flex lg:flex-row lg:items-center lg:justify-between lg:gap-2 lg:p-3">
           {[
             { icon: Users,         label: 'Members',         value: statsSummary.totalUsers,                color: 'text-gray-700'    },
             { icon: Star,          label: 'Top Rating',      value: statsSummary.topRating,                 color: 'text-amber-600'   },
@@ -152,13 +157,23 @@ export default function Leaderboard() {
               <span className={`col-span-2 min-w-0 break-words text-[16px] font-bold lg:ml-1 lg:text-[17px] ${color}`}>{value}</span>
             </div>
           ))}
-        </div>
+        </div>}
 
         {sorted.length === 0 ? (
           <div className="flex flex-col items-center rounded-2xl border border-gray-200 bg-white px-3 py-12 text-center shadow-sm lg:py-20">
             <Trophy className="w-10 h-10 text-gray-300 mb-4" />
-            <p className="text-[18px] font-bold text-gray-900 mb-1">No members yet</p>
-            <p className="text-[12px] text-gray-400">Check back after some sessions are completed.</p>
+            {error ? (
+              <>
+                <p className="text-[18px] font-bold text-gray-900 mb-1">Leaderboard unavailable</p>
+                <p className="text-[12px] text-gray-400">{error}</p>
+                <button type="button" onClick={() => setReloadKey(key => key + 1)} className="mt-4 rounded-full bg-gray-900 px-4 py-2 text-[12px] font-bold text-white hover:bg-gray-700">Try again</button>
+              </>
+            ) : (
+              <>
+                <p className="text-[18px] font-bold text-gray-900 mb-1">No members yet</p>
+                <p className="text-[12px] text-gray-400">Check back after some sessions are completed.</p>
+              </>
+            )}
           </div>
         ) : (
           <div className="space-y-6 lg:space-y-10">
