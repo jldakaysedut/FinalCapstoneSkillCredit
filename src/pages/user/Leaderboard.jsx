@@ -31,66 +31,45 @@ export default function Leaderboard() {
   const [profiles,     setProfiles]     = useState([]);
   const [statsSummary, setStatsSummary] = useState({ totalUsers: 0, topRating: '0.0', totalSessionsCompleted: 0, totalCreditsCirculating: 0 });
 
-  const [loadError, setLoadError] = useState('');
-  const [retryKey, setRetryKey] = useState(0);
-
   useEffect(() => {
-    let disposed = false;
-    let requesting = false;
-    const loadGlobalLeaderboard = async (initial = false) => {
-      if (disposed || requesting) return;
-      requesting = true;
-      if (initial) setLoading(true);
+    const run = async () => {
+      setLoading(true);
       try {
-        // The Edge Function validates the signed-in user, then computes
-        // platform-wide aggregates securely. No personal/RLS-filtered session
-        // rows or service-role credentials are exposed to the browser.
-        const { data, error } = await supabase.functions.invoke('skillcredit-leaderboard', { body: {} });
-        if (error) throw error;
-        if (!data || !Array.isArray(data.profiles) || !data.statsSummary ||
-            !Number.isFinite(Number(data.statsSummary.totalUsers)) ||
-            !Number.isFinite(Number(data.statsSummary.totalSessionsCompleted))) {
-          throw new Error('Unexpected leaderboard response');
-        }
-        if (!disposed) {
-          setProfiles(data.profiles);
-          setStatsSummary(data.statsSummary);
-          setLoadError('');
-        }
-      } catch (error) {
-        console.error('Could not load global leaderboard:', error);
-        if (!disposed) setLoadError('Global leaderboard is unavailable. Please try again.');
-      } finally {
-        requesting = false;
-        if (!disposed) setLoading(false);
-      }
+        const [{ data: usersData }, { data: reviewsData }, { data: sessionsData }] = await Promise.all([
+  supabase.from('user_profiles').select('id,full_name,avatar_url,bio,role,credits_balance').eq('is_deleted', false),
+  supabase.from('reviews').select('instructor_id,rating,q1_clarity,q2_patience,q3_relevance,q4_professionalism'),
+  supabase.from('sessions').select('instructor_id,status'),
+]);
+        const reviewMap = {};
+        reviewsData?.forEach(rev => {
+          if (!reviewMap[rev.instructor_id]) reviewMap[rev.instructor_id] = { sum: 0, count: 0 };
+          const avg5 = ([rev.rating, rev.q1_clarity, rev.q2_patience, rev.q3_relevance, rev.q4_professionalism].map(Number).reduce((a, b) => a + b, 0)) / 5;
+          reviewMap[rev.instructor_id].sum += avg5;
+          reviewMap[rev.instructor_id].count++;
+        });
+        const sessionMap = {}; let totalDone = 0;
+        sessionsData?.forEach(s => { if (s.status === 'completed') { totalDone++; sessionMap[s.instructor_id] = (sessionMap[s.instructor_id] || 0) + 1; } });
+        let topRating = 0, totalCredits = 0;
+        const processed = (usersData || []).map(u => {
+          const r = reviewMap[u.id] || { sum: 0, count: 0 };
+          const avg = r.count > 0 ? parseFloat((r.sum / r.count).toFixed(1)) : 0;
+          totalCredits += Number(u.credits_balance || 0);
+          if (avg > topRating) topRating = avg;
+          return { ...u, avgRating: avg, totalReviews: r.count, sessionsCompleted: sessionMap[u.id] || 0, creditsBalance: Number(u.credits_balance || 0) };
+        });
+        setProfiles(processed);
+        setStatsSummary({ totalUsers: processed.length, topRating: topRating > 0 ? topRating.toFixed(1) : '5.0', totalSessionsCompleted: totalDone, totalCreditsCirculating: totalCredits });
+      } catch (e) { console.error(e); }
+      finally { setLoading(false); }
     };
-
-    loadGlobalLeaderboard(true);
-    // Poll global totals rather than relying on the user's RLS-limited
-    // session realtime events. Also refresh on tab focus/visibility changes.
-    const timer = window.setInterval(() => {
-      if (document.visibilityState !== 'hidden') loadGlobalLeaderboard();
-    }, 45_000);
-    const onFocus = () => loadGlobalLeaderboard();
-    const onVisibility = () => {
-      if (document.visibilityState === 'visible') loadGlobalLeaderboard();
-    };
-    window.addEventListener('focus', onFocus);
-    document.addEventListener('visibilitychange', onVisibility);
-    return () => {
-      disposed = true;
-      window.clearInterval(timer);
-      window.removeEventListener('focus', onFocus);
-      document.removeEventListener('visibilitychange', onVisibility);
-    };
-  }, [retryKey]);
+    run();
+  }, []);
 
   const sorted = useMemo(() => {
     const list = [...profiles];
-    if (categoryTab === 'ratings')  list.sort((a, b) => b.avgRating - a.avgRating || b.totalReviews - a.totalReviews || a.id.localeCompare(b.id));
-    if (categoryTab === 'sessions') list.sort((a, b) => b.sessionsCompleted - a.sessionsCompleted || b.avgRating - a.avgRating || a.id.localeCompare(b.id));
-    if (categoryTab === 'credits')  list.sort((a, b) => b.creditsBalance - a.creditsBalance || a.id.localeCompare(b.id));
+    if (categoryTab === 'ratings')  list.sort((a, b) => b.avgRating - a.avgRating || b.totalReviews - a.totalReviews);
+    if (categoryTab === 'sessions') list.sort((a, b) => b.sessionsCompleted - a.sessionsCompleted || b.avgRating - a.avgRating);
+    if (categoryTab === 'credits')  list.sort((a, b) => b.creditsBalance - a.creditsBalance);
     return list;
   }, [profiles, categoryTab]);
 
@@ -160,7 +139,7 @@ export default function Leaderboard() {
         </div>
 
         {/* ══ STAT STRIP — same kanban-pill style, sits below header ══ */}
-        {(!loadError || profiles.length > 0) && <div className="mb-6 grid grid-cols-2 gap-2 rounded-xl border border-gray-100 bg-gray-50 p-2 lg:mb-8 lg:flex lg:flex-row lg:items-center lg:justify-between lg:gap-2 lg:p-3">
+        <div className="mb-6 grid grid-cols-2 gap-2 rounded-xl border border-gray-100 bg-gray-50 p-2 lg:mb-8 lg:flex lg:flex-row lg:items-center lg:justify-between lg:gap-2 lg:p-3">
           {[
             { icon: Users,         label: 'Members',         value: statsSummary.totalUsers,                color: 'text-gray-700'    },
             { icon: Star,          label: 'Top Rating',      value: statsSummary.topRating,                 color: 'text-amber-600'   },
@@ -173,15 +152,9 @@ export default function Leaderboard() {
               <span className={`col-span-2 min-w-0 break-words text-[16px] font-bold lg:ml-1 lg:text-[17px] ${color}`}>{value}</span>
             </div>
           ))}
-        </div>}
+        </div>
 
-        {loadError && (
-          <div role="alert" className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-[12px] text-amber-900">
-            <span>{loadError}{profiles.length > 0 ? ' Displayed results may be outdated.' : ''}</span>
-            <button type="button" onClick={() => setRetryKey((key) => key + 1)} className="rounded-lg border border-amber-300 bg-white px-3 py-1.5 font-bold text-amber-900 hover:bg-amber-100">Retry</button>
-          </div>
-        )}
-        {loadError && profiles.length === 0 ? null : sorted.length === 0 ? (
+        {sorted.length === 0 ? (
           <div className="flex flex-col items-center rounded-2xl border border-gray-200 bg-white px-3 py-12 text-center shadow-sm lg:py-20">
             <Trophy className="w-10 h-10 text-gray-300 mb-4" />
             <p className="text-[18px] font-bold text-gray-900 mb-1">No members yet</p>
