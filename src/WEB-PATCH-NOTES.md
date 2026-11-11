@@ -161,3 +161,30 @@ This deploys the existing function; simply uploading `Leaderboard.jsx` to Vercel
 5. The function has a deliberate maximum dataset guard of 100,000 rows per table and may return an error above that threshold; production scalability should be reviewed if usage approaches this limit.
 
 This patch is prepared locally only. No Supabase deployment or live cross-account test has been performed by ChatGPT.
+
+---
+
+## 11 November 2026 — Top Rated Top 3/Top 10 qualification (Web only)
+
+**Baseline:** the working universal-leaderboard Web patch (`SkillCredit-Web-Universal-Leaderboard-SOURCE.zip`), not the older browser-side leaderboard.
+
+### Changes
+
+- `src/pages/user/Leaderboard.jsx` — For **Top Rated only**, require **at least 3 received reviews** (`totalReviews >= 3`) for the Top 3 and Top 10 (#4–#10) positions. A member with 0–2 reviews remains in the existing **Community** list regardless of their rating, and all qualified members who fall outside Top 10 also remain in Community. Community members are ranked by the existing average-rating ordering **without a minimum review count**. Community ranks on Top Rated are labeled `C1`, `C2`, etc., to distinguish them from podium/Top 10 positions; short progress text explains when a member is below the threshold.
+- The existing average rating calculation, tie-break rules, display/cards, navigation, tab controls, and `Top Rating` summary are preserved. If nobody has 3 reviews, the featured positions are empty but Community still displays members. When review counts update, eligibility is re-evaluated on the next leaderboard data fetch.
+- **Most Sessions** and **Credits** retain their original Top 3, Top 10, Community order and numbering exactly.
+
+### Explicitly unchanged
+
+- `supabase/functions/skillcredit-leaderboard/index.ts` — not modified and no Edge Function re-deployment needed for this patch.
+- No database changes, RLS adjustments, new tables/functions/pages, Expo files, or changes to other Web features.
+
+### Verification
+
+1. Top Rated: users with 0, 1, or 2 reviews appear in Community only, even with a 5-star rating.
+2. Top Rated: users with 3+ reviews populate Champion, Runner-up, and Top 10 in descending average-rating order. If fewer than 10 qualify, leave the remaining featured slots unfilled.
+3. Top Rated: users outside qualified Top 10 appear in Community; `C1`, `C2` represent **Community positions**, not global Top Rated places.
+4. Most Sessions and Credits: verify the original sorting, positions (#1–#10 and #11+), and displayed wallet balance remain unchanged.
+5. Update reviews in Supabase and re-open/reload the leaderboard: newly qualified members can move into featured spots. The Edge Function's existing short cache can delay visibility briefly.
+
+**Note:** Changes have been checked with local test fixtures/syntax validation; real account and deployment checks still need to be done on the live app.

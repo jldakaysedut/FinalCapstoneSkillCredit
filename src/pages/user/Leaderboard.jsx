@@ -18,6 +18,8 @@ const CATEGORY_TABS = [
   { key: 'credits',  label: 'Credits',       icon: Coins,         color: 'text-emerald-600', active: 'bg-gray-900 text-white border-gray-900'   },
 ];
 
+const MIN_TOP_RATED_REVIEWS = 3;
+
 const MEDALS = {
   1: { label: 'Champion',  bg: 'from-amber-400 to-yellow-300',  ring: 'ring-amber-300',  text: 'text-amber-900',  badge: 'bg-amber-100 border-amber-300 text-amber-800'  },
   2: { label: 'Runner-up', bg: 'from-gray-400 to-gray-300',     ring: 'ring-gray-300',   text: 'text-gray-700',   badge: 'bg-gray-100 border-gray-300 text-gray-600'    },
@@ -78,6 +80,19 @@ export default function Leaderboard() {
     return list;
   }, [profiles, categoryTab]);
 
+  // Top Rated: only members with 3+ reviews can occupy the featured Top 3 / Top 10.
+  // Community has no minimum: it includes everyone outside the qualified Top 10,
+  // in the same ratings order (including members with 0, 1, or 2 reviews).
+  // Other leaderboard tabs keep their original Top 10 / Community split.
+  const rankedSections = useMemo(() => {
+    if (categoryTab !== 'ratings') {
+      return { featured: sorted.slice(0, 10), community: sorted.slice(10) };
+    }
+    const featured = sorted.filter(user => Number(user.totalReviews) >= MIN_TOP_RATED_REVIEWS).slice(0, 10);
+    const featuredIds = new Set(featured.map(user => user.id));
+    return { featured, community: sorted.filter(user => !featuredIds.has(user.id)) };
+  }, [sorted, categoryTab]);
+
   const getPrimaryScore = (user) => {
     if (categoryTab === 'ratings')  return user.avgRating > 0 ? user.avgRating : '—';
     if (categoryTab === 'sessions') return user.sessionsCompleted;
@@ -116,10 +131,10 @@ export default function Leaderboard() {
       </div>
     </div>
   );
-  const champion  = sorted[0]  ? { user: sorted[0],  rank: 1 } : null;
-  const top2to3   = sorted.slice(1, 3).map((u, i) => ({ user: u, rank: i + 2 }));
-  const top4to10  = sorted.slice(3, 10).map((u, i) => ({ user: u, rank: i + 4 }));
-  const community = sorted.slice(10).map((u, i) => ({ user: u, rank: i + 11 }));
+  const champion  = rankedSections.featured[0] ? { user: rankedSections.featured[0], rank: 1 } : null;
+  const top2to3   = rankedSections.featured.slice(1, 3).map((u, i) => ({ user: u, rank: i + 2 }));
+  const top4to10  = rankedSections.featured.slice(3, 10).map((u, i) => ({ user: u, rank: i + 4 }));
+  const community = rankedSections.community.map((u, i) => ({ user: u, rank: categoryTab === 'ratings' ? `C${i + 1}` : i + 11 }));
 
   return (
     <div className="min-h-screen" style={{ background: '#faf9f6' }}>
@@ -308,7 +323,7 @@ export default function Leaderboard() {
               </div>
             )}
 
-            {/* ══ COMMUNITY (11+) COMPACT LIST ══ */}
+            {/* ══ COMMUNITY — unrated/under-3 reviews stay here in Top Rated ══ */}
             {community.length > 0 && (
               <div>
                 <div className="mb-2 flex min-w-0 items-center gap-2 lg:mb-4 lg:gap-3">
@@ -320,13 +335,13 @@ export default function Leaderboard() {
                 <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
                   {community.map(({ user, rank }, i) => (
                     <div key={user.id} className={`flex min-w-0 items-center gap-2 px-2.5 py-2.5 hover:bg-gray-50 cursor-pointer transition lg:gap-3 lg:px-4 lg:py-3 ${i < community.length - 1 ? 'border-b border-gray-100' : ''}`} onClick={() => navigate(`/user/${user.id}`)}>
-                      <span className="w-5 shrink-0 text-right text-[10px] font-bold text-gray-300 lg:w-6 lg:text-[11px]">#{rank}</span>
+                      <span className="w-5 shrink-0 text-right text-[10px] font-bold text-gray-300 lg:w-6 lg:text-[11px]" title={categoryTab === 'ratings' ? 'Community position (not a Top 10 rank)' : undefined}>{categoryTab === 'ratings' ? rank : `#${rank}`}</span>
                       <div className="w-8 h-8 rounded-full overflow-hidden bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-xs border border-gray-200 shrink-0">
                         {user.avatar_url ? <img src={user.avatar_url} alt={user.full_name} className="w-full h-full object-cover" /> : user.full_name?.charAt(0).toUpperCase()}
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="font-bold text-[14px] text-gray-800 truncate">{user.full_name || 'Anonymous'}</p>
-                        <p className="text-[10px] text-gray-400 truncate">{user.role || 'Member'}</p>
+                        <p className="text-[10px] text-gray-400 truncate">{user.role || 'Member'}{categoryTab === 'ratings' && Number(user.totalReviews) < MIN_TOP_RATED_REVIEWS ? ` · ${Number(user.totalReviews) || 0}/${MIN_TOP_RATED_REVIEWS} reviews for Top 10` : ''}</p>
                       </div>
                       <div className="flex items-center gap-3 shrink-0">
                         <span className="flex items-center gap-1 text-[11px] font-bold text-amber-600"><Star className="w-3 h-3 fill-amber-400 text-amber-400" />{user.avgRating > 0 ? user.avgRating : '—'}</span>
