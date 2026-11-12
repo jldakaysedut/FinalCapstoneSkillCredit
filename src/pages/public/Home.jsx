@@ -283,7 +283,7 @@ export default function Home() {
                   <div style={{ display:"flex", gap:5 }}>
                     {["#fc605b","#fdbc40","#34c84a"].map(c => <div key={c} style={{ width:11, height:11, borderRadius:"50%", background:c }} />)}
                   </div>
-                  <div style={{ flex:1, background:"#fff", borderRadius:6, padding:"4px 12px", fontSize:11, color:"#aaa", fontWeight:600 }}>SkillCredit · Illustrative preview</div>
+                  <div style={{ flex:1, background:"#fff", borderRadius:6, padding:"4px 12px", fontSize:11, color:"#aaa", fontWeight:600 }}>Skillcredit-ph.vercel.app</div>
                 </div>
 
                 {/* Container for Cards */}

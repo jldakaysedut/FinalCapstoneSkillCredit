@@ -1,3 +1,10 @@
+## 2026-11-13 — Public-page navigation scroll reset (Web only)
+
+- **Fixed**: Clicking **Privacy**, **Terms**, or **Contact** in the Home footer now opens the destination from the **top of the page**, rather than retaining the Home footer scroll position. The same reset applies when moving between public pages without a URL hash.
+- **File modified**: `src/layouts/MainLayout.jsx`. The public layout already uses React Router `useLocation`; added a pathname-based `useLayoutEffect` with instant scroll reset before paint. In-page anchor navigation (`/#explore`, `/#about`, `/#download-app`) is excluded so its scroll target remains functional.
+- **Unchanged**: Home content, footer link destinations, public-page content, existing smooth scrolling for section links, login/register links, user/dashboard routes, Supabase, PayMongo, and Expo Mobile. No new dependencies or database changes.
+- **Verification**: JSX parse check, link/route assertions, and source-diff check. Live mobile browser and Vercel testing still required.
+
 # SkillCredit Web — centered dialogs, notification routing, and selected realtime refresh
 
 Source: `capstoneskillcredit.zip` supplied in chat (6 November 2026).

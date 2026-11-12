@@ -1,9 +1,17 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useLayoutEffect } from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
 
 export default function MainLayout() {
   const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
+
+  // React Router keeps the old scroll position when switching public pages.
+  // Start Privacy, Terms, Contact (and Home) at the top after navigation.
+  // Keep section/hash navigation working as before.
+  useLayoutEffect(() => {
+    if (location.hash) return;
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+  }, [location.pathname]);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
