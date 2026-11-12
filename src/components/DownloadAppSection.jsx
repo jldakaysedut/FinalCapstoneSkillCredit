@@ -40,7 +40,8 @@ export default function DownloadAppSection() {
         @keyframes scPhoneFloat{0%,100%{transform:translateY(0) rotate(6deg)}50%{transform:translateY(-12px) rotate(4deg)}}
         @keyframes scChipFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
         @media(max-width:900px){.sc-download-inner{grid-template-columns:1fr;gap:25px}.sc-phone-scene{min-height:440px}.sc-phone-shell{width:238px;height:460px}.sc-chip-top{left:12%}.sc-chip-bottom{right:9%}}
-        @media(max-width:520px){.sc-download-section{padding:68px 20px}.sc-download-title{font-size:38px}.sc-download-actions{align-items:stretch}.sc-download-btn{width:100%}.sc-phone-scene{min-height:400px;transform:scale(.83);transform-origin:top center;margin-bottom:-55px}.sc-chip-top{left:-9%}.sc-chip-bottom{right:-10%}}
+        @media(max-width:520px){.sc-download-section{padding:68px 20px}.sc-download-title{font-size:clamp(30px,8vw,38px)}.sc-download-actions{align-items:flex-start;gap:10px}.sc-download-btn{width:fit-content;max-width:100%;min-height:44px;padding:12px 16px;font-size:clamp(12px,3.6vw,14px);line-height:1.4;text-align:center;flex-wrap:wrap}.sc-phone-scene{min-height:400px;transform:scale(.83);transform-origin:top center;margin-bottom:-55px}.sc-chip-top{left:-9%}.sc-chip-bottom{right:-10%}}
+        @media(max-width:350px){.sc-download-section{padding-left:16px;padding-right:16px}.sc-download-btn{padding:11px 13px;font-size:12px}}
         @media(prefers-reduced-motion:reduce){.sc-phone-shell,.sc-floating-chip{animation:none}.sc-download-btn{transition:none}.sc-download-btn:hover{transform:none}}
       `}</style>
       <div className="sc-download-inner">
