@@ -220,7 +220,7 @@ function ExpandablePostContent({ content, children }) {
           aria-expanded={expanded}
           className="mt-1 inline-flex min-h-7 items-center rounded-md text-[13px] font-semibold text-[#67746b] hover:text-emerald-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 sm:text-[14px]"
         >
-          {expanded ? 'See less' : 'See more . . . .'}
+          {expanded ? 'See less' : 'See more'}
         </button>
       )}
     </div>
@@ -1418,19 +1418,20 @@ export default function Community() {
                         <Flag className="h-4 w-4" />
                       </button>
                     )}
-                    <div className="flex min-w-0 items-center gap-2 px-3 pb-2 pt-3 pr-[76px] sm:gap-3 sm:px-5 sm:pb-3 sm:pt-5 sm:pr-24">
+                    <div className={`flex min-w-0 items-start gap-2 px-3 pb-2 pt-3 sm:items-center sm:gap-3 sm:px-5 sm:pb-3 sm:pt-5 sm:pr-24 ${isOwner ? 'pr-[76px]' : 'pr-[52px]'}`}>
                       <button type="button" onClick={() => navigate(`/user/${post.user_id}`)} aria-label={`Open ${post.author?.full_name || 'author'}’s profile`} className="shrink-0 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2">
                         <Avatar src={post.author?.avatar_url} name={post.author?.full_name} size="md" />
                       </button>
                       <div className="min-w-0 flex-1">
-                        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                          <button type="button" onClick={() => navigate(`/user/${post.user_id}`)} className="truncate text-[14px] font-bold text-[#303833] hover:text-emerald-800">{post.author?.full_name || 'Community member'}</button>
-                          {post.author?.role && <span className="rounded-full bg-[#f2f4f1] px-2 py-0.5 text-[11px] font-medium text-[#68716a]">{post.author.role}</span>}
-                          <span className="text-[12px] text-[#8b928c]">{new Date(post.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
+                        <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 sm:gap-x-2 sm:gap-y-1">
+                          <button type="button" onClick={() => navigate(`/user/${post.user_id}`)} className="min-w-0 max-w-full text-left text-[13px] font-bold leading-5 text-[#303833] hover:text-emerald-800 sm:truncate sm:text-[14px]">{post.author?.full_name || 'Community member'}</button>
+                          {post.author?.role && <span className="rounded-full bg-[#f2f4f1] px-1.5 py-0.5 text-[10px] font-medium leading-4 text-[#68716a] sm:px-2 sm:text-[11px]">{post.author.role}</span>}
+                          <span className="hidden text-[12px] text-[#8b928c] sm:inline">{new Date(post.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
                         </div>
-                        <div className="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-[#788079]">
-                          <span className="rounded-full bg-emerald-50 px-2.5 py-1 font-semibold text-emerald-800">{post.post_type}</span>
-                          <span>{post.category}</span>
+                        <div className="mt-0.5 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[11px] leading-4 text-[#788079] sm:mt-1 sm:gap-2">
+                          <span className="shrink-0 text-[#8b928c] sm:hidden">{new Date(post.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
+                          <span className="rounded-full bg-emerald-50 px-2 py-0.5 font-semibold text-emerald-800 sm:px-2.5 sm:py-1">{post.post_type}</span>
+                          <span className="min-w-0">{post.category}</span>
                         </div>
                       </div>
                     </div>

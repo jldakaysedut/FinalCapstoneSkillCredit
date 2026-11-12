@@ -317,3 +317,14 @@ This patch is prepared locally only. No Supabase deployment or live cross-accoun
 - Reduced the existing public header logo to 27px desktop, 23px mobile, 21px narrow mobile; removed CSS `scale(1.6)` that enlarged and cropped it.
 - Uses the existing green-and-gold `public/logo.png` icon (not the older `src/assets/logo.png`).
 - Logo-to-wordmark spacing tightened. No modifications to nav links, authentication routes, page tabs, scroll behavior, Supabase, backend, or Expo.
+
+
+## 2026-11-13 — Mobile Community post header spacing
+
+- **File:** `src/pages/user/Community.jsx`
+- Kept Community post content, Supabase queries, notifications, edit/delete/report actions, profile links, likes/comments, and desktop layout intact.
+- On mobile only, compacted the author, role, date, post-type, and category line spacing and font sizing.
+- Placed the date beside the post-type badge on mobile to prevent a dedicated date-only row on narrow screens. The date stays in its original position on desktop.
+- Reduced excess reserved right space for posts with only a Report icon while preserving the space required for owner Edit/Delete icons.
+- Aligned avatars to the top of the author text on mobile; original desktop alignment retained.
+- No changes to database, RLS, Edge Functions, web routes, or business logic.
