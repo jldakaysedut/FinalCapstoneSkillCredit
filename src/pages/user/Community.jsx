@@ -171,6 +171,62 @@ function ImageGalleryModal({ images = [], initialIndex = 0, onClose }) {
   );
 }
 
+// Keep long Community posts compact without changing stored content or media.
+function ExpandablePostContent({ content, children }) {
+  const measureRef = useRef(null);
+  const [expanded, setExpanded] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
+
+  useEffect(() => {
+    const measure = measureRef.current;
+    if (!measure) return undefined;
+
+    const checkOverflow = () => {
+      const lineHeight = parseFloat(window.getComputedStyle(measure).lineHeight);
+      if (!lineHeight) return;
+      const exceedsThreeLines = measure.getBoundingClientRect().height > lineHeight * 3 + 1;
+      setHasMore(previous => previous === exceedsThreeLines ? previous : exceedsThreeLines);
+    };
+
+    checkOverflow();
+    if (typeof ResizeObserver === 'undefined') {
+      window.addEventListener('resize', checkOverflow);
+      return () => window.removeEventListener('resize', checkOverflow);
+    }
+    const observer = new ResizeObserver(checkOverflow);
+    observer.observe(measure);
+    return () => observer.disconnect();
+  }, [content]);
+
+  useEffect(() => setExpanded(false), [content]);
+
+  return (
+    <div className="relative px-3 pb-3 text-[14px] leading-6 text-[#37413a] sm:px-5 sm:pb-5 sm:text-[15px] sm:leading-7">
+      <div className={`whitespace-pre-wrap break-words ${!expanded ? 'line-clamp-3' : ''}`}>
+        {children}
+      </div>
+      {/* Offscreen sizing follows real line wraps, including newlines and mobile widths. */}
+      <div
+        ref={measureRef}
+        aria-hidden="true"
+        className="pointer-events-none invisible absolute inset-x-3 top-0 whitespace-pre-wrap break-words sm:inset-x-5"
+      >
+        {children}
+      </div>
+      {hasMore && (
+        <button
+          type="button"
+          onClick={() => setExpanded(value => !value)}
+          aria-expanded={expanded}
+          className="mt-1 inline-flex min-h-7 items-center rounded-md text-[13px] font-semibold text-[#67746b] hover:text-emerald-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 sm:text-[14px]"
+        >
+          {expanded ? 'See less' : 'See more'}
+        </button>
+      )}
+    </div>
+  );
+}
+
 // ── Nested Comment Thread ─────────────────────────────────────────────
 function CommentThread({
   comments, currentUserId, currentUserProfile,
@@ -1419,7 +1475,7 @@ export default function Community() {
                         </div>
                       </div>
                     ) : (
-                      post.content && <div className="whitespace-pre-wrap break-words px-3 pb-3 text-[14px] leading-6 text-[#37413a] sm:px-5 sm:pb-5 sm:text-[15px] sm:leading-7">{renderContentWithTags(post.content)}</div>
+                      post.content && <ExpandablePostContent content={post.content}>{renderContentWithTags(post.content)}</ExpandablePostContent>
                     )}
                     {editingPostId !== post.id && post.media_urls?.length > 0 && (
                       <PostImageCollage mediaUrls={post.media_urls} onOpen={openImageGallery} />

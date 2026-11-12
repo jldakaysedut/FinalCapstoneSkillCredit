@@ -188,3 +188,29 @@ This patch is prepared locally only. No Supabase deployment or live cross-accoun
 5. Update reviews in Supabase and re-open/reload the leaderboard: newly qualified members can move into featured spots. The Edge Function's existing short cache can delay visibility briefly.
 
 **Note:** Changes have been checked with local test fixtures/syntax validation; real account and deployment checks still need to be done on the live app.
+
+---
+
+## 12 November 2026 — Community post See more / See less (Web only)
+
+**Baseline:** `SkillCredit-Web-TopRated-3Reviews-SOURCE.zip` (working global leaderboard and 3-review Top Rated eligibility preserved).
+
+### Files modified
+
+1. `src/pages/user/Community.jsx` — Adds a small `ExpandablePostContent` display component for **Community feed post text only**. Posts longer than **3 rendered lines** are collapsed by default and show `See more`. Selecting it reveals the entire original post and changes the action to `See less`; selecting that collapses the content again. Short posts remain fully visible without a button. An invisible measurement element and `ResizeObserver` detect real line wrapping, including newlines and responsive widths. Existing hashtags remain active.
+2. `src/WEB-PATCH-NOTES.md` — Documents this UI-only change.
+
+### Explicitly unchanged
+
+- Database content, Supabase queries, auth, post creation/update/deletion, hashtags, images/media collage, likes, comments, moderation/reporting, and Community filters.
+- Leaderboard (including global rankings and 3-review rule), other Web pages, payment, Edge Functions, AI, and Expo Mobile.
+- No added dependencies, no SQL, no database migration.
+
+### Manual verification
+
+1. A post of one to three visible lines displays normally with **no See more** action.
+2. A longer post shows at most three visible lines and **See more**. Click to expand full text, then **See less** to collapse.
+3. Verify different widths (desktop and mobile), multiline posts, hashtags, and posts with image attachments.
+4. Verify editing, comments, likes, reports and post navigation remain normal.
+
+**Verification completed locally:** JSX syntax validated; full Vite/browser/E2E testing and Vercel deployment not performed here.
