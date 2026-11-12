@@ -38,7 +38,7 @@ export default function ContactUs() {
     <div className="mx-auto w-full max-w-6xl px-4 pb-16 pt-7 sm:px-7 sm:pb-24 sm:pt-10">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <Link to="/" className="inline-flex min-h-11 items-center gap-2 rounded-full border border-[#dce7da] bg-white px-4 text-sm font-semibold text-[#275e43] transition hover:bg-[#eff7ef]"><ArrowLeft size={16}/> Back to Home</Link>
-        <nav aria-label="Information pages" className="flex flex-wrap items-center gap-1 rounded-full border border-[#e0e9de] bg-white p-1 text-xs font-semibold sm:text-sm">
+        <nav aria-label="Information pages" className="public-info-tabs flex flex-wrap items-center gap-1 rounded-full border border-[#e0e9de] bg-white p-1 text-xs font-semibold sm:text-sm">
           {[["/privacy","Privacy Policy"],["/terms","Terms & Conditions"],["/contact","Contact Us"]].map(([to,label]) => to === '/contact'
             ? <span key={to} aria-current="page" className="rounded-full bg-[#2d6a4f] px-3 py-2 text-white">{label}</span>
             : <Link key={to} to={to} className="rounded-full px-3 py-2 text-[#516b58] transition hover:bg-[#eff6ef]">{label}</Link>)}

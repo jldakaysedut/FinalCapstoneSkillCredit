@@ -283,3 +283,32 @@ This patch is prepared locally only. No Supabase deployment or live cross-accoun
 - Corrected Home marketing copy to match actual SkillCredit features and optional top-up.
 - Removed the Home Teaching Activity preview and its unused session query; preserved Home recent Student Ratings and the global `/leaderboard` implementation.
 - No changes to auth logic, Supabase, payments, or Expo. See `SkillCredit-Web-Home-Content-CTA-Cleanup-Patch-Notes.md`.
+
+
+---
+
+## 13 November 2026 — Public pages: mobile tabs and SkillCredit logo (Web only)
+
+**Baseline:** `SkillCredit-Web-Public-Pages-Scroll-To-Top-SOURCE.zip`, including all earlier Web updates (global leaderboard, Top Rated 3-review rule, Community See more/less, session notifications, Home mobile corrections, and scroll-to-top public navigation).
+
+### Changed files
+
+1. `src/layouts/MainLayout.jsx` — Uses the existing `src/assets/logo.png` beside the `SkillCredit` wordmark. Adds small-screen logo sizing and scoped CSS for public information navigation tabs. Existing home destination, auth links, scroll-to-top, page routing and layout functions are unchanged.
+2. `src/pages/public/PrivacyPolicy.jsx` — Identifies the existing public-info tab group for responsive styling. No content or links changed.
+3. `src/pages/public/TermsConditions.jsx` — Identifies the existing public-info tab group for responsive styling. No content or links changed.
+4. `src/pages/public/ContactUs.jsx` — Identifies the existing public-info tab group for responsive styling. No form, email, content or links changed.
+5. `src/WEB-PATCH-NOTES.md` — Documents this targeted UI adjustment.
+
+### Mobile behavior
+
+- At widths 540px and below, Privacy Policy / Terms & Conditions / Contact Us form one 3-column navigation row. Labels may wrap **inside their own tab** when necessary but the entire Contact Us tab stays on the same row. Tap targets retain minimum 44px height.
+- Desktop navigation layout remains the same. Header includes the existing SkillCredit illustrated mark, scaled/cropped visually via CSS to accommodate transparency around the original artwork.
+- No additional image files/dependencies. No Supabase, logic, payment, notifications, leaderboard, or Expo changes.
+
+### Validate
+
+- Check public pages at 320, 360, 390, 480px and 768px in mobile browser. All three tabs must remain visible in one row.
+- Test link navigation and automatically scroll-to-top between Privacy, Terms, Contact, Home.
+- Check logo and both auth buttons in MainLayout header, with no overflow on narrow phones.
+- Check desktop header and public page nav at 1280px.
+- Run `npm run build` locally and test on a real mobile phone before pushing.
