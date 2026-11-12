@@ -214,3 +214,26 @@ This patch is prepared locally only. No Supabase deployment or live cross-accoun
 4. Verify editing, comments, likes, reports and post navigation remain normal.
 
 **Verification completed locally:** JSX syntax validated; full Vite/browser/E2E testing and Vercel deployment not performed here.
+
+
+---
+
+## 12 November 2026 — Session decline and cancellation notifications (Web only)
+
+**Baseline:** `SkillCredit-Web-Community-SeeMore-SOURCE.zip`, which already includes the global leaderboard, Top Rated 3-review threshold, and Community See More behavior.
+
+### Changed files
+
+1. `src/pages/user/Sessions.jsx` — Added `notifications` inserts after a successful session status update for existing `decline` and `cancel` actions, notifying the *other* participant. Message wording distinguishes teacher declining an initial booking, teacher withdrawing a proposed schedule, learner declining a proposed time (which cancels the entire session), learner cancelling a pending booking, and either participant cancelling an upcoming session. Uses the existing `session_cancelled` type and `/sessions?session=<id>` destination. Added a `session_update` notice when a participant uses existing **Undo** on Mark as Done. Existing `cancel_no_show` notification is left intact. Notification-insert errors are logged and do not re-run or undo session/refund operations.
+2. `src/WEB-PATCH-NOTES.md` — This note.
+
+### Explicitly unchanged
+
+- Session state choices, confirmation dialogs, refund amounts and update statements, completion RPC, booking, start, scheduling, disputes, review logic, notifications UI, routes, and all other code paths.
+- Supabase database schema, RLS, Edge Functions, Auth, Web leaderboard, Community, payment, AI, and all Expo Mobile files.
+
+### Verification performed / remaining
+
+- Local JSX parse, targeted static checks, and distribution ZIP integrity checks performed.
+- Live Supabase / UI validation remains necessary: teacher decline, learner cancel pending, teacher and learner cancel upcoming, learner rejects proposed schedule, teacher cancels proposed schedule, undo done, existing no-show refund, and recipient link navigation.
+- This patch does NOT make credit refunds atomic or address pre-existing cancellation concurrency/permission risks. The notification is sent when the `sessions.update` call returns no error; it does not independently verify the credit balance update.
