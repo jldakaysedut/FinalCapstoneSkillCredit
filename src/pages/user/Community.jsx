@@ -220,7 +220,7 @@ function ExpandablePostContent({ content, children }) {
           aria-expanded={expanded}
           className="mt-1 inline-flex min-h-7 items-center rounded-md text-[13px] font-semibold text-[#67746b] hover:text-emerald-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 sm:text-[14px]"
         >
-          {expanded ? 'See less' : 'See more...'}
+          {expanded ? 'See less' : 'See more . . . .'}
         </button>
       )}
     </div>
