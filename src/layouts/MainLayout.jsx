@@ -61,7 +61,7 @@ export default function MainLayout() {
           .main-nav { padding:0 10px!important; gap:4px!important; }
           .main-nav-logo .main-nav-wordmark span { font-size:clamp(14px,4.45vw,16px)!important; }
           .main-nav-logo a { gap:4px!important; }
-          .main-nav-logo-mark { width:21px; height:21px; }
+          .main-nav-logo-mark { width:24px; height:24px; }
           .main-nav-auth a { padding:7px 8px!important; font-size:11px!important; }
         }
       `}</style>
