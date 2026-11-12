@@ -270,3 +270,9 @@ This patch is prepared locally only. No Supabase deployment or live cross-accoun
 - Parsed both modified JSX files via TypeScript's JSX parser: no syntax errors.
 - Browser-based responsive CSS layout fixture validated centered footer / signup CTA and no horizontal overflow at widths 320, 360, 390, 480, 768, and 1280px. This fixture is not a full app/browser end-to-end test.
 - Full Vite build could not be completed in this Linux workspace because the uploaded node_modules contains incompatible/missing native Rolldown bindings. Build locally on the user's machine using `npm run build` and test on mobile Chrome before deployment.
+
+## Home copy alignment and compact mobile CTA
+- Made Home hero and final join CTA compact and mobile-friendly.
+- Corrected Home marketing copy to match actual SkillCredit features and optional top-up.
+- Removed the Home Teaching Activity preview and its unused session query; preserved Home recent Student Ratings and the global `/leaderboard` implementation.
+- No changes to auth logic, Supabase, payments, or Expo. See `SkillCredit-Web-Home-Content-CTA-Cleanup-Patch-Notes.md`.

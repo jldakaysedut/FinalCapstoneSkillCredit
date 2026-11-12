@@ -9,7 +9,7 @@ import {
   ChefHat, Leaf, Hammer, Scissors, Dumbbell,
   Wrench, BookOpen, PenTool, MessageCircle, Mic, Palette,
   Video, Wallet, Briefcase, Layout, Code, UserPlus,
-  CalendarCheck, Award, Trophy, Star, Rocket, Code2, 
+  CalendarCheck, Award, Star, Rocket, Code2, 
   MessageCircleQuestion, Music, Smartphone, Globe, Heart,
   PenLine, Music2, Film, PiggyBank, Monitor
 } from "lucide-react";
@@ -25,10 +25,10 @@ const mockCards = [
 ];
 
 const features = [
-  { Icon: GraduationCap, title:"1-on-1 Sessions",   desc:"Book private sessions with verified skill teachers. Credits held in escrow until you're satisfied.", color:"#2d6a4f", bg:"#e8f4e8" },
+  { Icon: GraduationCap, title:"1-on-1 Sessions",   desc:"Explore approved skill listings, request a booking, and agree on a schedule with your teacher.", color:"#2d6a4f", bg:"#e8f4e8" },
   { Icon: MessageSquare, title:"Community Forum",   desc:"Ask questions, share knowledge, and build connections with other learners.", color:"#3730a3", bg:"#f0f4ff" },
-  { Icon: CheckCircle,   title:"Skill Verification",desc:"Quality learning through peer reviews and rating systems so you know who's qualified.", color:"#d97706", bg:"#fef3c7" },
-  { Icon: ShieldCheck,   title:"Escrow Protection", desc:"Credits are locked safely until both parties confirm the session is fully complete.", color:"#0f766e", bg:"#ccfbf1" },
+  { Icon: CheckCircle,   title:"Listings & Reviews",desc:"Skill listings go through moderation, while learners can rate completed sessions.", color:"#d97706", bg:"#fef3c7" },
+  { Icon: ShieldCheck,   title:"Session Credit Protection", desc:"Credits for a booked session are held until the required completion confirmations are received.", color:"#0f766e", bg:"#ccfbf1" },
 ];
 
 const learnTopics = [
@@ -55,7 +55,6 @@ function getInitials(name) {
 }
 
 export default function Home() {
-  const [topSessions, setTopSessions] = useState([]);
   const [topRated, setTopRated] = useState([]);
 
   useEffect(() => {
@@ -73,37 +72,17 @@ export default function Home() {
     return () => observer.disconnect();
   }, []);
 
-  // Fetching Logic for Weekly Leaderboards
+  // Public Home preview: recent learner review ratings only.
+  // The authenticated global leaderboard and its Top Rated eligibility are unchanged.
   useEffect(() => {
-    const fetchLeaderboards = async () => {
+    const fetchRecentRatings = async () => {
       try {
         const sevenDaysAgo = new Date();
         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
         const isoDate = sevenDaysAgo.toISOString();
 
-        // 1. Aggregate Weekly Top Sessions
-        const { data: sessionData } = await supabase
-          .from("sessions")
-          .select("instructor_id, instructor:user_profiles!sessions_instructor_id_fkey(id, full_name, avatar_url)")
-          .eq("status", "completed")
-          .gte("created_at", isoDate);
+        // Recent learner ratings preview only; activity panel is not displayed.
 
-        if (sessionData) {
-          const counts = {};
-          sessionData.forEach(s => {
-            if (!s.instructor) return;
-            const id = s.instructor.id;
-            if (!counts[id]) counts[id] = { ...s.instructor, count: 0 };
-            counts[id].count += 1;
-          });
-          const topS = Object.values(counts)
-            .sort((a, b) => b.count - a.count)
-            .slice(0, 3)
-            .map(u => ({ ...u, metric_value: `${u.count} sessions` }));
-          setTopSessions(topS);
-        }
-
-        // 2. Aggregate Weekly Top Rated
         const { data: reviewData } = await supabase
           .from("reviews")
           .select("instructor_id, rating, instructor:user_profiles!reviews_instructor_id_fkey(id, full_name, avatar_url)")
@@ -129,7 +108,7 @@ export default function Home() {
         console.error("Failed to fetch leaderboards:", error);
       }
     };
-    fetchLeaderboards();
+    fetchRecentRatings();
   }, []);
 
   return (
@@ -183,7 +162,7 @@ export default function Home() {
         .steps-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
         .community-grid{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:center}
         .problem-grid{display:grid;grid-template-columns:1fr auto 1fr;gap:24px;align-items:center;max-width:700px;margin:0 auto}
-        .leaderboard-display-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:24px;max-width:960px;margin:0 auto}
+        .leaderboard-display-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:24px;max-width:560px;margin:0 auto}
         .footer-inner{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px}
 
         @media(max-width:1024px){
@@ -202,8 +181,8 @@ export default function Home() {
         @media(max-width:480px){
           .features-grid{grid-template-columns:1fr}
           .hero-h1-text{font-size:40px!important}
-          .hero-btns-wrap{flex-direction:column}
-          .hero-btns-wrap a{width:100%;text-align:center;justify-content:center}
+          .hero-btns-wrap{flex-direction:row;align-items:center;justify-content:center;flex-wrap:wrap}
+          .hero-btns-wrap a{width:auto;text-align:center;justify-content:center}
         }
 
         /* Mobile Home layout polish: presentation only; all existing links and handlers remain unchanged. */
@@ -234,15 +213,15 @@ export default function Home() {
         }
         @media(max-width:480px){
           .sc-home .hero-shell{padding:22px 20px!important;}
-          .sc-home .hero-btns-wrap{align-items:flex-start;}
-          .sc-home .hero-btns-wrap a{width:fit-content!important;align-self:flex-start;}
+          .sc-home .hero-btns-wrap{align-items:center;justify-content:center;gap:8px!important;}
+          .sc-home .hero-btns-wrap a{width:auto!important;flex:0 1 auto;align-self:auto;white-space:nowrap;padding:11px 13px!important;font-size:13px!important;min-height:44px;}
           .sc-home .home-final-cta-actions{gap:10px!important;}
           .sc-home .home-final-cta-btn{padding:12px 14px!important;}
           .sc-home .footer-team-pill{gap:8px!important;}
         }
         @media(max-width:350px){
           .sc-home .hero-shell{padding:20px 16px!important;}
-          .sc-home .hero-btns-wrap a{font-size:12px!important;padding:11px 12px!important;}
+          .sc-home .hero-btns-wrap a{font-size:12px!important;padding:11px 10px!important;}
           .sc-home .home-final-cta-btn{font-size:12px!important;padding:11px 12px!important;}
           .sc-home .site-footer{padding-left:16px!important;padding-right:16px!important;}
         }
@@ -255,7 +234,7 @@ export default function Home() {
             <div>
               <div className="hero-tag" style={{ display:"inline-flex", alignItems:"center", gap:8, background:"#e8f4e8", border:"1.5px solid #b7e4c7", padding:"6px 16px", borderRadius:999, marginBottom:24 }}>
                 <Rocket size={14} color="#2d6a4f" style={{ animation:"pulse 2s infinite" }} />
-                <span style={{ fontSize:12, color:"#2d6a4f", fontWeight:700 }}>Early Access — Join the first learners</span>
+                <span style={{ fontSize:12, color:"#2d6a4f", fontWeight:700 }}>Learn, teach, and grow</span>
               </div>
               <h1 className="hero-h1">
                 <span className="hero-h1-text" style={{ fontFamily:"'Fraunces',serif", fontSize:62, fontWeight:900, color:"#111", lineHeight:1.05, display:"block", marginBottom:20, letterSpacing:"-0.02em" }}>
@@ -263,15 +242,15 @@ export default function Home() {
                 </span>
               </h1>
               <p className="hero-p" style={{ fontSize:17, color:"#555", lineHeight:1.75, marginBottom:32, maxWidth:460 }}>
-                Learn any skill by spending credits — or <strong style={{ color:"#2d6a4f" }}>earn credits by teaching what you know</strong>. No cash needed. Ever.
+                Discover skills you can learn with credits, and <strong style={{ color:"#2d6a4f" }}>earn credits by teaching what you know</strong>. Optional wallet top-ups are available.
               </p>
               <div className="hero-btns">
                 <div className="hero-btns-wrap" style={{ display:"flex", gap:12, flexWrap:"wrap", marginBottom:12 }}>
-                  <Link to="/register" className="cta-btn hero-primary-btn" style={{ background:"#2d6a4f", color:"#fff", padding:"16px 32px", borderRadius:14, fontWeight:800, fontSize:16, boxShadow:"0 6px 24px rgba(45,106,79,0.3)", display:"inline-flex", alignItems:"center", gap:8 }}>
-                    Get 20 free credits — join now
+                  <Link to="/register" className="cta-btn hero-primary-btn" style={{ background:"#2d6a4f", color:"#fff", padding:"13px 20px", borderRadius:12, fontWeight:800, fontSize:14, boxShadow:"0 6px 20px rgba(45,106,79,0.2)", display:"inline-flex", alignItems:"center", gap:8 }}>
+                    Join free · 20 credits
                   </Link>
-                  <Link to="/login" className="hero-secondary-btn" style={{ background:"#f0ece4", color:"#444", padding:"16px 26px", borderRadius:14, fontWeight:700, fontSize:16, display:"inline-flex", alignItems:"center", gap:8 }}>
-                    Log in →
+                  <Link to="/login" className="hero-secondary-btn" style={{ background:"#f0ece4", color:"#444", padding:"13px 18px", borderRadius:12, fontWeight:700, fontSize:14, display:"inline-flex", alignItems:"center", gap:8 }}>
+                    Log in
                   </Link>
                 </div>
                 <p style={{ fontSize:12, color:"#888", marginBottom:12 }}>No credit card required · Free to get started</p>
@@ -287,8 +266,8 @@ export default function Home() {
                   ))}
                 </div>
                 <div>
-                  <div style={{ fontSize:13, fontWeight:800, color:"#111", lineHeight:1.2 }}>Be among the first learners</div>
-                  <div style={{ fontSize:11, color:"#999", marginTop:2 }}>Early access is open — grab your 20 free credits now</div>
+                  <div style={{ fontSize:13, fontWeight:800, color:"#111", lineHeight:1.2 }}>Share what you know</div>
+                  <div style={{ fontSize:11, color:"#999", marginTop:2 }}>Create an account and start with 20 SkillCredits</div>
                 </div>
               </div>
             </div>
@@ -304,7 +283,7 @@ export default function Home() {
                   <div style={{ display:"flex", gap:5 }}>
                     {["#fc605b","#fdbc40","#34c84a"].map(c => <div key={c} style={{ width:11, height:11, borderRadius:"50%", background:c }} />)}
                   </div>
-                  <div style={{ flex:1, background:"#fff", borderRadius:6, padding:"4px 12px", fontSize:11, color:"#aaa", fontWeight:600 }}>skillcredit-ph.vercel.app</div>
+                  <div style={{ flex:1, background:"#fff", borderRadius:6, padding:"4px 12px", fontSize:11, color:"#aaa", fontWeight:600 }}>SkillCredit · Illustrative preview</div>
                 </div>
 
                 {/* Container for Cards */}
@@ -343,7 +322,7 @@ export default function Home() {
             Learning is expensive.<br /><em style={{ color:"#52b788", fontStyle:"italic" }}>But everyone knows something valuable.</em>
           </h2>
           <p style={{ fontSize:16, color:"rgba(255,255,255,0.5)", lineHeight:1.8, maxWidth:600, margin:"0 auto 48px" }}>
-            Courses cost thousands. Tutors are hard to find. Most skills stay locked inside people who never get to share them.
+            Finding an affordable teacher can take time. SkillCredit helps people share the skills they know and learn from one another.
           </p>
           <div className="problem-grid">
             <div style={{ background:"rgba(255,255,255,0.06)", borderRadius:20, padding:"28px 24px", border:"1px solid rgba(255,255,255,0.08)" }}>
@@ -351,7 +330,7 @@ export default function Home() {
                 <Wallet size={36} color="#ef4444" strokeWidth={1.5} />
               </div>
               <h3 style={{ fontFamily:"'Fraunces',serif", fontSize:18, fontWeight:900, color:"#fff", marginBottom:8 }}>Before SkillCredit</h3>
-              <p style={{ fontSize:13, color:"rgba(255,255,255,0.4)", lineHeight:1.7 }}>Pay ₱500/hr for tutors. Watch YouTube and hope. Can't afford online courses.</p>
+              <p style={{ fontSize:13, color:"rgba(255,255,255,0.4)", lineHeight:1.7 }}>Lessons can be costly, and finding the right teacher may take extra time.</p>
             </div>
             <div style={{ fontSize:28, color:"#52b788", fontWeight:900 }}>→</div>
             <div style={{ background:"rgba(82,183,136,0.1)", borderRadius:20, padding:"28px 24px", border:"1.5px solid rgba(82,183,136,0.25)" }}>
@@ -359,7 +338,7 @@ export default function Home() {
                 <Globe size={36} color="#52b788" strokeWidth={1.5} />
               </div>
               <h3 style={{ fontFamily:"'Fraunces',serif", fontSize:18, fontWeight:900, color:"#52b788", marginBottom:8 }}>With SkillCredit</h3>
-              <p style={{ fontSize:13, color:"rgba(255,255,255,0.55)", lineHeight:1.7 }}>Teach guitar, earn credits. Spend them to learn Python. No cash needed.</p>
+              <p style={{ fontSize:13, color:"rgba(255,255,255,0.55)", lineHeight:1.7 }}>Teach a skill to earn credits after a completed session, then use those credits to book a lesson.</p>
             </div>
           </div>
         </div>
@@ -394,9 +373,9 @@ export default function Home() {
           </div>
           <div className="steps-grid">
             {[
-              { Icon: UserPlus, num:"01", title:"Sign up & get 20 credits",      desc:"Create your profile, list skills you can teach and skills you want to learn. 20 free credits land in your wallet instantly." },
-              { Icon: CalendarCheck, num:"02", title:"Book a session",                desc:"Find a teacher from the community listings and book a 1-on-1 session to start learning immediately." },
-              { Icon: Award, num:"03", title:"Teach & earn",                  desc:"Every session you teach earns you credits. Spend those earned credits to keep learning — forever." },
+              { Icon: UserPlus, num:"01", title:"Sign up & get 20 credits",      desc:"Create your account, set up your interests, and start with 20 SkillCredits in your wallet." },
+              { Icon: CalendarCheck, num:"02", title:"Book a session",                desc:"Find an approved skill listing, request a session, and confirm the schedule with your teacher." },
+              { Icon: Award, num:"03", title:"Teach & earn",                  desc:"Complete a teaching session and confirm completion with your learner to receive credits." },
             ].map(item => (
               <div key={item.num} style={{ background:"#faf8f4", borderRadius:20, padding:"32px 28px", border:"1.5px solid #e8e2d9", position:"relative", overflow:"hidden" }}>
                 <div style={{ position:"absolute", top:-16, right:-16, width:80, height:80, borderRadius:"50%", background:"#e8f4e8", opacity:.7 }} />
@@ -417,7 +396,7 @@ export default function Home() {
         <div style={{ maxWidth:1100, margin:"0 auto" }}>
           <div style={{ textAlign:"center", marginBottom:48 }}>
             <span style={{ fontSize:12, fontWeight:800, color:"#2d6a4f", letterSpacing:"0.12em", textTransform:"uppercase" }}>Platform Features</span>
-            <h2 style={{ fontFamily:"'Fraunces',serif", fontSize:40, fontWeight:900, color:"#111", marginTop:10, letterSpacing:"-0.02em" }}>Everything you need to learn safely</h2>
+            <h2 style={{ fontFamily:"'Fraunces',serif", fontSize:40, fontWeight:900, color:"#111", marginTop:10, letterSpacing:"-0.02em" }}>Tools to learn with confidence</h2>
           </div>
           <div className="features-grid">
             {features.map((f,i) => (
@@ -433,55 +412,20 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── CLEAN CORPORATE LEADERBOARD ── */}
+      {/* ── PUBLIC RECENT-RATINGS PREVIEW ── */}
       <section className="section-pad reveal" style={{ background:"#ffffff", padding:"80px 48px", borderTop:"1px solid #e8e2d9", borderBottom:"1px solid #e8e2d9" }}>
         <div style={{ maxWidth:960, margin:"0 auto" }}>
           <div style={{ textAlign:"center", marginBottom:48 }}>
             <span style={{ fontSize:12, fontWeight:800, color:"#2d6a4f", letterSpacing:"0.12em", textTransform:"uppercase" }}>Community Excellence</span>
             <h2 style={{ fontFamily:"'Fraunces',serif", fontSize:38, fontWeight:900, color:"#111", marginTop:10, lineHeight:1.15 }}>
-              This Week's Top Performers
+              Recent Learner Ratings
             </h2>
-            <p style={{ fontSize:15, color:"#666", marginTop:12 }}>Recognizing the most active and highly-rated teachers on SkillCredit.</p>
+            <p style={{ fontSize:15, color:"#666", marginTop:12 }}>A preview of learner ratings submitted recently. The full leaderboard is available after login.</p>
           </div>
 
           <div className="leaderboard-display-grid">
-            {/* Column 1: Most Sessions Taught */}
-            <div style={{ background:"#fff", borderRadius:20, padding:"28px", border:"1px solid #e2e8f0", boxShadow:"0 4px 20px rgba(0,0,0,0.03)" }}>
-              <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:24, paddingBottom:16, borderBottom:"1px solid #f1f5f9" }}>
-                <div style={{ width:48, height:48, borderRadius:14, background:"#eff6ff", display:"flex", alignItems:"center", justifyContent:"center" }}>
-                  <Trophy size={24} color="#3b82f6" strokeWidth={2} />
-                </div>
-                <div>
-                  <div style={{ fontSize:18, fontWeight:800, color:"#0f172a", fontFamily:"'Fraunces',serif" }}>Teaching Activity</div>
-                  <div style={{ fontSize:12, color:"#64748b", fontWeight:600 }}>Most sessions completed this week</div>
-                </div>
-              </div>
-              
-              <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
-                {topSessions.length === 0 ? (
-                  <p style={{ color:"#94a3b8", fontSize:13, textAlign:"center", padding:"20px 0" }}>Gathering activities...</p>
-                ) : (
-                  topSessions.map((user, idx) => (
-                    <div key={user.id} style={{ display:"flex", alignItems:"center", justifyContent:"space-between", background:"#f8fafc", padding:"14px 16px", borderRadius:14, border:"1px solid #f1f5f9", transition:"background 0.2s" }} onMouseEnter={e => e.currentTarget.style.background="#f1f5f9"} onMouseLeave={e => e.currentTarget.style.background="#f8fafc"}>
-                      <div style={{ display:"flex", alignItems:"center", gap:12 }}>
-                        <div style={{ fontSize:15, fontWeight:900, color:idx === 0 ? "#d97706" : idx === 1 ? "#64748b" : "#b45309", width: 24 }}>
-                          #{idx + 1}
-                        </div>
-                        <div style={{ width:36, height:36, borderRadius:10, background:"#e2e8f0", display:"flex", alignItems:"center", justifyContent:"center", color:"#475569", fontSize:12, fontWeight:900, overflow:"hidden" }}>
-                          {user.avatar_url ? <img src={user.avatar_url} alt="" style={{ width:"100%", height:"100%", objectFit:"cover" }} /> : getInitials(user.full_name)}
-                        </div>
-                        <div style={{ fontSize:14, fontWeight:700, color:"#334155" }}>{user.full_name}</div>
-                      </div>
-                      <div style={{ fontSize:12, fontWeight:800, color:"#2563eb", background:"#dbeafe", padding:"4px 10px", borderRadius:8 }}>
-                        {user.metric_value}
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
+            {/* Recent learner ratings preview (not the authenticated global leaderboard) */}
 
-            {/* Column 2: Highest Rated */}
             <div style={{ background:"#fff", borderRadius:20, padding:"28px", border:"1px solid #e2e8f0", boxShadow:"0 4px 20px rgba(0,0,0,0.03)" }}>
               <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:24, paddingBottom:16, borderBottom:"1px solid #f1f5f9" }}>
                 <div style={{ width:48, height:48, borderRadius:14, background:"#fef3c7", display:"flex", alignItems:"center", justifyContent:"center" }}>
@@ -489,7 +433,7 @@ export default function Home() {
                 </div>
                 <div>
                   <div style={{ fontSize:18, fontWeight:800, color:"#0f172a", fontFamily:"'Fraunces',serif" }}>Student Ratings</div>
-                  <div style={{ fontSize:12, color:"#64748b", fontWeight:600 }}>Highest rated by learners this week</div>
+                  <div style={{ fontSize:12, color:"#64748b", fontWeight:600 }}>Average ratings from learner reviews in the past 7 days</div>
                 </div>
               </div>
 
@@ -529,20 +473,20 @@ export default function Home() {
         <div style={{ position:"absolute", bottom:-80, right:"15%", width:400, height:400, borderRadius:"50%", background:"rgba(255,255,255,0.03)" }} />
         <div className="home-final-cta-inner" style={{ position:"relative" }}>
           <div style={{ display:"inline-flex", alignItems:"center", gap:8, background:"rgba(255,255,255,0.1)", border:"1px solid rgba(255,255,255,0.2)", borderRadius:999, padding:"6px 18px", marginBottom:24, fontSize:13, color:"rgba(255,255,255,0.8)", fontWeight:600 }}>
-            <Rocket size={14} color="#fff" /> Limited early access — join now
+            <Rocket size={14} color="#fff" /> Join the SkillCredit community
           </div>
           <h2 style={{ fontFamily:"'Fraunces',serif", fontSize:48, fontWeight:900, color:"#fff", marginBottom:16, letterSpacing:"-0.02em", lineHeight:1.1 }}>
             Ready to start your<br /><em style={{ fontStyle:"italic", color:"#b7e4c7" }}>skill journey?</em>
           </h2>
           <p style={{ fontSize:17, color:"rgba(255,255,255,0.65)", maxWidth:500, margin:"0 auto 40px" }}>
-            Join the first learners building the SkillCredit community. It's free, it's fair, and it starts today.
+            Share what you know, explore skills you want to learn, and connect with the community.
           </p>
           <div className="home-final-cta-actions" style={{ display:"flex", gap:14, justifyContent:"center", flexWrap:"wrap", marginBottom:16 }}>
-            <Link to="/register" className="cta-btn home-final-cta-btn" style={{ background:"#fff", color:"#2d6a4f", padding:"18px 40px", borderRadius:14, fontWeight:900, fontSize:17, display:"inline-flex", alignItems:"center", gap:8 }}>
-              Create free account — get 20 credits
+            <Link to="/register" className="cta-btn home-final-cta-btn" style={{ background:"#fff", color:"#2d6a4f", padding:"13px 22px", borderRadius:12, fontWeight:800, fontSize:14, display:"inline-flex", alignItems:"center", gap:8 }}>
+              Join free · Get 20 credits
             </Link>
           </div>
-          <p style={{ color:"rgba(255,255,255,0.35)", fontSize:13 }}>No credit card required · 20 free credits on signup · Cancel anytime</p>
+          <p style={{ color:"rgba(255,255,255,0.35)", fontSize:13 }}>No credit card required to sign up · 20 starting credits · Optional paid top-ups</p>
         </div>
       </section>
 
