@@ -1,6 +1,5 @@
 import { useState, useEffect, useLayoutEffect } from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
-import skillCreditLogo from '../assets/logo.png';
 
 export default function MainLayout() {
   const [scrolled, setScrolled] = useState(false);
@@ -40,9 +39,9 @@ export default function MainLayout() {
         .cta-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 32px rgba(45,106,79,0.4) !important; }
         .main-nav { box-sizing:border-box; width:100%; gap:12px; }
         .main-nav-logo { flex:0 0 auto; min-width:0; }
-        .main-nav-logo a { white-space:nowrap; gap:7px; }
-        .main-nav-logo-mark { width:36px; height:36px; overflow:hidden; display:inline-flex; align-items:center; justify-content:center; flex:0 0 auto; }
-        .main-nav-logo-mark img { width:100%; height:100%; display:block; object-fit:contain; transform:scale(1.6); }
+        .main-nav-logo a { white-space:nowrap; gap:6px; }
+        .main-nav-logo-mark { width:27px; height:27px; overflow:hidden; display:inline-flex; align-items:center; justify-content:center; flex:0 0 auto; }
+        .main-nav-logo-mark img { width:100%; height:100%; display:block; object-fit:contain; }
         .main-nav-wordmark { display:inline-flex; align-items:center; }
         /* Mobile public-page tabs remain in one row, even on narrow phones. */
         @media(max-width:540px){
@@ -54,7 +53,7 @@ export default function MainLayout() {
         @media(max-width:480px){
           .main-nav { height:60px!important; padding:0 14px!important; gap:6px!important; }
           .main-nav-logo .main-nav-wordmark span { font-size:clamp(15px,4.45vw,20px)!important; }
-          .main-nav-logo-mark { width:32px; height:32px; }
+          .main-nav-logo-mark { width:23px; height:23px; }
           .main-nav-auth { gap:6px!important; }
           .main-nav-auth a { padding:8px 10px!important; font-size:12px!important; }
         }
@@ -62,7 +61,7 @@ export default function MainLayout() {
           .main-nav { padding:0 10px!important; gap:4px!important; }
           .main-nav-logo .main-nav-wordmark span { font-size:clamp(14px,4.45vw,16px)!important; }
           .main-nav-logo a { gap:4px!important; }
-          .main-nav-logo-mark { width:28px; height:28px; }
+          .main-nav-logo-mark { width:21px; height:21px; }
           .main-nav-auth a { padding:7px 8px!important; font-size:11px!important; }
         }
       `}</style>
@@ -79,7 +78,7 @@ export default function MainLayout() {
         {/* LOGO (Scroll to top) */}
         <div className="main-nav-logo" style={{ display: "flex", alignItems: "center" }}>
           <a href="/#" style={{ display: "flex", alignItems: "center", textDecoration: "none" }}>
-            <span className="main-nav-logo-mark" aria-hidden="true"><img src={skillCreditLogo} alt="" /></span>
+            <span className="main-nav-logo-mark" aria-hidden="true"><img src="/logo.png" alt="" /></span>
             <span className="main-nav-wordmark">
               <span style={{ fontFamily: "'Fraunces', serif", fontSize: 22, fontWeight: 900, color: "#2d6a4f" }}>Skill</span>
               <span style={{ fontFamily: "'Fraunces', serif", fontSize: 22, fontWeight: 900, color: "#111" }}>Credit</span>
