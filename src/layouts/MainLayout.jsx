@@ -40,7 +40,7 @@ export default function MainLayout() {
         .main-nav { box-sizing:border-box; width:100%; gap:12px; }
         .main-nav-logo { flex:0 0 auto; min-width:0; }
         .main-nav-logo a { white-space:nowrap; gap:6px; }
-        .main-nav-logo-mark { width:27px; height:27px; overflow:hidden; display:inline-flex; align-items:center; justify-content:center; flex:0 0 auto; }
+        .main-nav-logo-mark { width:32px; height:32px; overflow:hidden; display:inline-flex; align-items:center; justify-content:center; flex:0 0 auto; }
         .main-nav-logo-mark img { width:100%; height:100%; display:block; object-fit:contain; }
         .main-nav-wordmark { display:inline-flex; align-items:center; }
         /* Mobile public-page tabs remain in one row, even on narrow phones. */
@@ -53,7 +53,7 @@ export default function MainLayout() {
         @media(max-width:480px){
           .main-nav { height:60px!important; padding:0 14px!important; gap:6px!important; }
           .main-nav-logo .main-nav-wordmark span { font-size:clamp(15px,4.45vw,20px)!important; }
-          .main-nav-logo-mark { width:23px; height:23px; }
+          .main-nav-logo-mark { width:27px; height:27px; }
           .main-nav-auth { gap:6px!important; }
           .main-nav-auth a { padding:8px 10px!important; font-size:12px!important; }
         }
