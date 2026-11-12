@@ -205,47 +205,6 @@ export default function Home() {
           .hero-btns-wrap{flex-direction:column}
           .hero-btns-wrap a{width:100%;text-align:center;justify-content:center}
         }
-
-        /* Mobile Home layout polish: presentation only; all existing links and handlers remain unchanged. */
-        .sc-home .home-final-cta-inner{max-width:680px;margin:0 auto;}
-        .sc-home .home-final-cta-actions a,
-        .sc-home .hero-btns-wrap a,
-        .sc-home .home-anchor{min-height:44px;}
-
-        @media(max-width:768px){
-          .sc-home .site-footer{padding:30px 20px 22px!important;}
-          .sc-home .footer-inner{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:15px;text-align:center;width:100%;}
-          .sc-home .footer-signature{transform:none!important;display:flex;align-items:center;flex-direction:column;justify-content:center;width:100%;max-width:100%;text-align:center!important;}
-          .sc-home .footer-team-pill{max-width:100%;gap:10px!important;padding:8px 13px!important;justify-content:center;}
-          .sc-home .footer-links{justify-content:center;flex-wrap:wrap;gap:12px 20px!important;}
-          .sc-home .footer-signature > p{color:#b9c4be!important;margin-bottom:10px!important;}
-          .sc-home .footer-team-pill span:nth-child(2){color:#d3e5dc!important;}
-          .sc-home .footer-copyright{color:#9ca9a2!important;line-height:1.6;}
-          .sc-home .home-final-cta{padding:58px 20px!important;}
-          .sc-home .home-final-cta h2{font-size:clamp(28px,7vw,39px)!important;line-height:1.18!important;}
-          .sc-home .home-final-cta p{font-size:clamp(12px,3.5vw,15px)!important;line-height:1.65;}
-          .sc-home .home-final-cta-inner > p:last-child{color:rgba(255,255,255,.78)!important;}
-          .sc-home .home-final-cta-actions{margin-bottom:14px!important;}
-          .sc-home .home-final-cta-btn{width:auto!important;max-width:100%;min-height:44px;padding:12px 19px!important;font-size:clamp(12px,3.5vw,15px)!important;line-height:1.4;justify-content:center;text-align:center;white-space:normal;overflow-wrap:break-word;}
-          .sc-home .hero-btns-wrap{gap:10px!important;}
-          .sc-home .hero-btns-wrap a{max-width:100%;min-height:44px;padding:12px 18px!important;font-size:clamp(12px,3.5vw,15px)!important;line-height:1.35;text-align:center;justify-content:center;}
-          .sc-home .hero-download-link{font-size:12px!important;line-height:1.5;}
-          .sc-home .home-anchor{font-size:12px!important;padding:10px 13px!important;max-width:100%;}
-        }
-        @media(max-width:480px){
-          .sc-home .hero-shell{padding:22px 20px!important;}
-          .sc-home .hero-btns-wrap{align-items:flex-start;}
-          .sc-home .hero-btns-wrap a{width:fit-content!important;align-self:flex-start;}
-          .sc-home .home-final-cta-actions{gap:10px!important;}
-          .sc-home .home-final-cta-btn{padding:12px 14px!important;}
-          .sc-home .footer-team-pill{gap:8px!important;}
-        }
-        @media(max-width:350px){
-          .sc-home .hero-shell{padding:20px 16px!important;}
-          .sc-home .hero-btns-wrap a{font-size:12px!important;padding:11px 12px!important;}
-          .sc-home .home-final-cta-btn{font-size:12px!important;padding:11px 12px!important;}
-          .sc-home .site-footer{padding-left:16px!important;padding-right:16px!important;}
-        }
       `}</style>
 
       {/* ── HERO ── */}
@@ -267,10 +226,10 @@ export default function Home() {
               </p>
               <div className="hero-btns">
                 <div className="hero-btns-wrap" style={{ display:"flex", gap:12, flexWrap:"wrap", marginBottom:12 }}>
-                  <Link to="/register" className="cta-btn hero-primary-btn" style={{ background:"#2d6a4f", color:"#fff", padding:"16px 32px", borderRadius:14, fontWeight:800, fontSize:16, boxShadow:"0 6px 24px rgba(45,106,79,0.3)", display:"inline-flex", alignItems:"center", gap:8 }}>
+                  <Link to="/register" className="cta-btn" style={{ background:"#2d6a4f", color:"#fff", padding:"16px 32px", borderRadius:14, fontWeight:800, fontSize:16, boxShadow:"0 6px 24px rgba(45,106,79,0.3)", display:"inline-flex", alignItems:"center", gap:8 }}>
                     Get 20 free credits — join now
                   </Link>
-                  <Link to="/login" className="hero-secondary-btn" style={{ background:"#f0ece4", color:"#444", padding:"16px 26px", borderRadius:14, fontWeight:700, fontSize:16, display:"inline-flex", alignItems:"center", gap:8 }}>
+                  <Link to="/login" style={{ background:"#f0ece4", color:"#444", padding:"16px 26px", borderRadius:14, fontWeight:700, fontSize:16, display:"inline-flex", alignItems:"center", gap:8 }}>
                     Log in →
                   </Link>
                 </div>
@@ -524,10 +483,10 @@ export default function Home() {
       <DownloadAppSection />
 
       {/* ── FINAL CTA ── */}
-      <section className="section-pad reveal home-final-cta" style={{ background:"linear-gradient(135deg,#1a3d2e 0%,#2d6a4f 50%,#1a4a35 100%)", padding:"96px 48px", textAlign:"center", position:"relative", overflow:"hidden" }}>
+      <section className="section-pad reveal" style={{ background:"linear-gradient(135deg,#1a3d2e 0%,#2d6a4f 50%,#1a4a35 100%)", padding:"96px 48px", textAlign:"center", position:"relative", overflow:"hidden" }}>
         <div style={{ position:"absolute", top:-60, left:"10%", width:300, height:300, borderRadius:"50%", background:"rgba(255,255,255,0.04)" }} />
         <div style={{ position:"absolute", bottom:-80, right:"15%", width:400, height:400, borderRadius:"50%", background:"rgba(255,255,255,0.03)" }} />
-        <div className="home-final-cta-inner" style={{ position:"relative" }}>
+        <div style={{ position:"relative" }}>
           <div style={{ display:"inline-flex", alignItems:"center", gap:8, background:"rgba(255,255,255,0.1)", border:"1px solid rgba(255,255,255,0.2)", borderRadius:999, padding:"6px 18px", marginBottom:24, fontSize:13, color:"rgba(255,255,255,0.8)", fontWeight:600 }}>
             <Rocket size={14} color="#fff" /> Limited early access — join now
           </div>
@@ -537,8 +496,8 @@ export default function Home() {
           <p style={{ fontSize:17, color:"rgba(255,255,255,0.65)", maxWidth:500, margin:"0 auto 40px" }}>
             Join the first learners building the SkillCredit community. It's free, it's fair, and it starts today.
           </p>
-          <div className="home-final-cta-actions" style={{ display:"flex", gap:14, justifyContent:"center", flexWrap:"wrap", marginBottom:16 }}>
-            <Link to="/register" className="cta-btn home-final-cta-btn" style={{ background:"#fff", color:"#2d6a4f", padding:"18px 40px", borderRadius:14, fontWeight:900, fontSize:17, display:"inline-flex", alignItems:"center", gap:8 }}>
+          <div style={{ display:"flex", gap:14, justifyContent:"center", flexWrap:"wrap", marginBottom:16 }}>
+            <Link to="/register" className="cta-btn" style={{ background:"#fff", color:"#2d6a4f", padding:"18px 40px", borderRadius:14, fontWeight:900, fontSize:17, display:"inline-flex", alignItems:"center", gap:8 }}>
               Create free account — get 20 credits
             </Link>
           </div>
@@ -553,13 +512,12 @@ export default function Home() {
             <span style={{ fontFamily:"'Fraunces',serif", fontSize:18, fontWeight:900, color:"#2d6a4f" }}>Skill</span>
             <span style={{ fontFamily:"'Fraunces',serif", fontSize:18, fontWeight:900, color:"#fff" }}>Credit</span>
           </div>
-          <div className="footer-signature" style={{ textAlign: "center", transform: "translateX(35px)" }}>
+          <div style={{ textAlign: "center", transform: "translateX(35px)" }}>
             <p style={{ fontSize: 12, color: "#444", marginBottom: 6 }}>
               Built with ❤️ for learners and teachers
             </p>
 
             <div
-              className="footer-team-pill"
               style={{
                 display: "inline-flex",
                 alignItems: "center",
@@ -579,7 +537,7 @@ export default function Home() {
               </span>
             </div>
           </div>
-          <div className="footer-links" style={{ display:"flex", gap:16 }}>
+          <div style={{ display:"flex", gap:16 }}>
             {[
               { label: "Privacy", path: "/privacy" },
               { label: "Terms", path: "/terms" },
@@ -592,7 +550,7 @@ export default function Home() {
           </div>
         </div>
         <div style={{ borderTop:"1px solid #222", marginTop:24, paddingTop:20, textAlign:"center" }}>
-          <p className="footer-copyright" style={{ fontSize:11, color:"#333" }}>© 2026 SkillCredit · All rights reserved · Thesis Project</p>
+          <p style={{ fontSize:11, color:"#333" }}>© 2026 SkillCredit · All rights reserved · Thesis Project</p>
         </div>
       </footer>
     </div>

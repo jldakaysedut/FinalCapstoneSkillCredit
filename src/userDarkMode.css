@@ -291,11 +291,3 @@ body[data-skillcredit-user-dark="true"] [role="alertdialog"] .bg-slate-100 { bac
 [data-sc-user-theme="dark"] .sc-create-skill [class~="text-gray-300"] {
   color: #c0d0d7;
 }
-
-/* Immersive Web additions: preserve user-only dark theme without affecting staff routes. */
-[data-sc-user-theme="dark"] :is(.sc-skiro-guide, .sc-session-journey, .sc-skill-passport, .sc-discovery-compass) {
-  background-color: var(--sc-panel);
-  background-image: none;
-  border-color: var(--sc-border);
-  color: var(--sc-ink);
-}

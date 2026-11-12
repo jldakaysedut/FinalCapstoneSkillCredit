@@ -645,26 +645,6 @@ export default function UserDashboard() {
               )}
               
               {!loading && profile?.interests?.length > 0 && recommendedSkills.length > 0 && (
-                <section aria-label="Interest-based skill discovery" className="sc-discovery-compass mb-4 rounded-2xl border border-emerald-100 bg-emerald-50/60 px-4 py-3">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <div>
-                      <p className="text-[11px] font-bold uppercase tracking-wider text-emerald-700">Your discovery compass</p>
-                      <p className="mt-1 text-xs text-gray-600">These recommendations match the interests saved in your profile.</p>
-                    </div>
-                    <span className="rounded-full bg-white px-2.5 py-1 text-xs font-semibold text-emerald-800">{recommendedSkills.length} matching skills</span>
-                  </div>
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {profile.interests.filter(interest => recommendedSkills.some(skill => skill.category === interest)).map(interest => (
-                      <button key={interest} type="button" onClick={() => jumpTo(interest)}
-                        className="rounded-full border border-emerald-200 bg-white px-3 py-1.5 text-xs font-semibold text-emerald-800 transition hover:bg-emerald-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500">
-                        Explore {interest}
-                      </button>
-                    ))}
-                  </div>
-                </section>
-              )}
-
-              {!loading && profile?.interests?.length > 0 && recommendedSkills.length > 0 && (
                 <Swimlane 
                   icon={Lightbulb} 
                   iconColor="text-purple-500" 

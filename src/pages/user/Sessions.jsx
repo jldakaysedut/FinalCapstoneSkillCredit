@@ -6,7 +6,6 @@ import {
   Heart, MessageCircle, MessageSquare, PenLine, RefreshCw, Star, Target, ShieldCheck, Scale, PlayCircle, CheckCircle2
 } from 'lucide-react';
 import supabase from '../../supabaseClient';
-import SessionJourney from '../../components/SessionJourney';
 
 // ─────────────────────────────────────────────────────────────────
 // SESSIONS V4 — "Upcoming State" + Formal Start & Cancelled Chat
@@ -907,14 +906,6 @@ export default function Sessions() {
                                   </div>
                                 </div>
                               </div>
-
-                              {isExpanded && (
-                                <SessionJourney
-                                  status={hasReported ? 'disputed' : session.status}
-                                  instructorCompleted={session.instructor_completed}
-                                  studentCompleted={session.student_completed}
-                                />
-                              )}
 
                               {isExpanded && (
                                 <div className="mt-2.5 pt-2.5 sm:mt-4 sm:pt-4 border-t border-gray-100 flex flex-col sm:flex-row gap-2.5 sm:gap-6 animate-in slide-in-from-top-2 duration-200 relative z-30">

@@ -2,7 +2,7 @@ import { confirmDialog } from '../../components/confirmDialog';
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import supabase from '../../supabaseClient';
-import { Briefcase, BookOpen, CalendarDays, Camera, ClipboardList, Clock3, Coins, ExternalLink, FileText, FolderOpen, Heart, Image, Lightbulb, Mail, Paperclip, Pencil, Star, Target, Trash2, X, Sparkles } from 'lucide-react';
+import { Briefcase, BookOpen, CalendarDays, Camera, ClipboardList, Clock3, Coins, ExternalLink, FileText, FolderOpen, Heart, Image, Lightbulb, Mail, Paperclip, Pencil, Star, Target, Trash2, X } from 'lucide-react';
 
 const STAT_CONFIG = [
   { key: 'credits_balance', label: 'Credits',        icon: Coins, color: 'text-emerald-700', bg: 'bg-emerald-50',  border: 'border-emerald-100' },
@@ -351,39 +351,6 @@ export default function Profile() {
                 <p className="text-[13px] text-gray-600 leading-relaxed whitespace-pre-wrap">{profile.bio || 'No bio added yet. Click Edit Profile to introduce yourself to the community!'}</p>
               )}
             </div>
-
-            {/* Read-only Skill Passport: derived from already-loaded profile data. */}
-            <section aria-label="My Skill Passport" className="sc-skill-passport mb-3 rounded-2xl border border-emerald-100 bg-gradient-to-br from-emerald-50 via-white to-white p-3 shadow-sm lg:mb-5 lg:p-5">
-              <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                <div>
-                  <p className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-emerald-700"><Sparkles className="h-3.5 w-3.5" /> Skill Passport</p>
-                  <h3 className="mt-1 text-[14px] font-bold text-gray-900">Your teaching and creative footprint</h3>
-                </div>
-                <span className="rounded-full border border-emerald-100 bg-white px-2.5 py-1 text-[10px] font-medium text-emerald-700">Based on existing activity</span>
-              </div>
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                {[
-                  { label: 'Approved listings', value: mySkills.length },
-                  { label: 'Teaching sessions', value: stats.sessionsTaught },
-                  { label: 'Student reviews', value: stats.totalReviews },
-                  { label: 'Portfolio projects', value: portfolioItems.length },
-                ].map(item => (
-                  <div key={item.label} className="rounded-xl border border-emerald-100/80 bg-white px-3 py-3 text-center">
-                    <p className="text-xl font-bold text-emerald-800">{item.value}</p>
-                    <p className="mt-1 text-[10px] font-semibold leading-4 text-gray-500">{item.label}</p>
-                  </div>
-                ))}
-              </div>
-              {mySkills.some(skill => skill.category) && (
-                <div className="mt-3 flex flex-wrap items-center gap-1.5">
-                  <span className="mr-1 text-[11px] font-semibold text-gray-500">Skills you offer:</span>
-                  {[...new Set(mySkills.map(skill => skill.category).filter(Boolean))].slice(0, 5).map(category => (
-                    <span key={category} className="rounded-full border border-emerald-100 bg-emerald-50 px-2.5 py-1 text-[10px] font-semibold text-emerald-800">{category}</span>
-                  ))}
-                </div>
-              )}
-              <p className="mt-3 text-[10px] text-gray-400">Activity snapshot only — not an official certificate or new ranking.</p>
-            </section>
 
             <div className="flex min-w-0 gap-1 overflow-x-auto scrollbar-hide pb-1 mb-3 lg:mb-5">
               {TABS.map(tab => {

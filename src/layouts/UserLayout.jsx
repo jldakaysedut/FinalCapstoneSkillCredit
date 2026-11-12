@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from 'react';
 import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import supabase from '../supabaseClient';
 import '../userDarkMode.css';
-import SkiroPageGuide from '../components/SkiroPageGuide';
 import {
   Bell, ChevronDown, Menu, X, Moon, Sun, Shield,
   AlertTriangle, ShieldAlert, Scale, ShieldCheck, MessageSquare,
@@ -1123,7 +1122,6 @@ export default function UserLayout() {
 
       {/* ══ PAGE CONTENT */}
       <main className="max-w-[1600px] mx-auto w-full min-w-0">
-        <SkiroPageGuide />
         <Outlet />
       </main>
 

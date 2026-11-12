@@ -220,7 +220,7 @@ function ExpandablePostContent({ content, children }) {
           aria-expanded={expanded}
           className="mt-1 inline-flex min-h-7 items-center rounded-md text-[13px] font-semibold text-[#67746b] hover:text-emerald-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 sm:text-[14px]"
         >
-          {expanded ? 'See less' : 'See more'}
+          {expanded ? 'See less' : 'See more . . . .'}
         </button>
       )}
     </div>
@@ -1481,8 +1481,8 @@ export default function Community() {
                       <PostImageCollage mediaUrls={post.media_urls} onOpen={openImageGallery} />
                     )}
                     <div className="flex min-w-0 items-center gap-1.5 border-t border-[#f0f1ee] px-2 py-2 sm:gap-2 sm:px-4 sm:py-2.5">
-                      <button type="button" onClick={() => toggleLike(post.id)} aria-pressed={isLiked} title={isLiked ? 'Unlike this post' : 'Like this post'} className={`group flex min-h-10 items-center gap-2 rounded-xl px-2.5 text-[12px] font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 sm:px-3 sm:text-[13px] ${isLiked ? 'bg-rose-50 text-rose-600' : 'text-[#69716b] hover:bg-[#f5f7f4]'}`}><Heart className={`h-4 w-4 motion-safe:transition-transform motion-safe:duration-200 group-hover:scale-110 ${isLiked ? 'fill-current motion-safe:scale-110' : ''}`} />{post.likes.length > 0 ? post.likes.length : 'Like'}</button>
-                      <button type="button" onClick={() => setCommentModal(post)} className="group flex min-h-10 items-center gap-2 rounded-xl px-2.5 text-[12px] font-semibold text-[#69716b] transition hover:bg-[#f5f7f4] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 sm:px-3 sm:text-[13px]"><MessageSquare className="h-4 w-4" />{post.comments.length > 0 ? `${post.comments.length} comment${post.comments.length === 1 ? '' : 's'}` : 'Comment'}</button>
+                      <button type="button" onClick={() => toggleLike(post.id)} aria-pressed={isLiked} className={`flex min-h-10 items-center gap-2 rounded-xl px-2.5 text-[12px] font-semibold transition sm:px-3 sm:text-[13px] ${isLiked ? 'bg-rose-50 text-rose-600' : 'text-[#69716b] hover:bg-[#f5f7f4]'}`}><Heart className={`h-4 w-4 ${isLiked ? 'fill-current' : ''}`} />{post.likes.length > 0 ? post.likes.length : 'Like'}</button>
+                      <button type="button" onClick={() => setCommentModal(post)} className="flex min-h-10 items-center gap-2 rounded-xl px-2.5 text-[12px] font-semibold text-[#69716b] transition hover:bg-[#f5f7f4] sm:px-3 sm:text-[13px]"><MessageSquare className="h-4 w-4" />{post.comments.length > 0 ? `${post.comments.length} comment${post.comments.length === 1 ? '' : 's'}` : 'Comment'}</button>
                     </div>
                   </article>
                 );
