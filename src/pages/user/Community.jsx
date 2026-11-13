@@ -689,7 +689,7 @@ function CreatePostModal({
               </button>
               <button type="submit"
                 disabled={isSubmitting || (!newPostContent.trim() && filePreviews.length === 0)}
-                className="h-11 rounded-full bg-gradient-to-r from-[#40b343] via-[#20983d] to-[#07803a] px-5 text-sm font-semibold text-white shadow-[0_6px_14px_rgba(25,141,52,0.16)] transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-40">
+                className="h-11 rounded-xl bg-emerald-600 px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-40">
                 {isSubmitting ? 'Posting…' : 'Post'}
               </button>
             </div>
@@ -1182,7 +1182,7 @@ export default function Community() {
   const openImageGallery = (images, index) => setImageGallery({ images, index });
 
   if (loading) return (
-    <div role="status" aria-live="polite" aria-label="Loading community" className="min-h-[calc(100vh-64px)] bg-[#faf9f6] text-[#202522]">
+    <div role="status" aria-live="polite" aria-label="Loading community" className="min-h-[calc(100vh-64px)] bg-[#f7f8f6] text-[#202522]">
       <div className="mx-auto flex w-full max-w-[1600px] flex-col lg:h-[calc(100vh-64px)] lg:flex-row lg:overflow-hidden">
         <aside className="hidden w-full flex-col gap-4 border-b border-[#e9e9e5] bg-white px-5 py-5 lg:flex lg:h-full lg:w-[280px] lg:shrink-0 lg:border-b-0 lg:border-r">
           <div className="animate-pulse space-y-2"><div className="h-3 w-24 rounded bg-[#e9ece8]" /><div className="h-7 w-36 rounded bg-[#e9ece8]" /></div>
@@ -1226,7 +1226,7 @@ export default function Community() {
 
   // ── RENDER ────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-[calc(100vh-64px)] bg-[#faf9f6] text-[#202522]">
+    <div className="min-h-[calc(100vh-64px)] bg-[#f7f8f6] text-[#202522]">
       <div className="mx-auto flex w-full max-w-[1600px] flex-col lg:h-[calc(100vh-64px)] lg:flex-row lg:overflow-hidden">
 
         {/* LEFT: compact, fixed navigation */}
@@ -1236,10 +1236,10 @@ export default function Community() {
         >
           <div>
             <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-emerald-700">The Commons</p>
-            <h1 className="mt-1 text-[27px] font-bold tracking-tight text-[#202522]" style={{ fontFamily: "'Fraunces', serif" }}>Community</h1>
+            <h1 className="mt-1 text-[22px] font-bold tracking-tight text-[#202522]">Community</h1>
           </div>
 
-          <label className="flex min-h-11 items-center gap-2 rounded-full border border-[#dfe9dd] bg-white px-3.5 shadow-[0_3px_12px_rgba(30,81,40,0.035)] transition focus-within:border-emerald-300 focus-within:ring-2 focus-within:ring-emerald-100">
+          <label className="flex min-h-11 items-center gap-2 rounded-xl border border-[#e7e9e5] bg-[#fafbf9] px-3.5 transition focus-within:border-emerald-300 focus-within:ring-2 focus-within:ring-emerald-100">
             <Search className="h-4 w-4 shrink-0 text-[#858b86]" aria-hidden="true" />
             <input
               type="text"
@@ -1267,14 +1267,14 @@ export default function Community() {
               id="community-topic-filter"
               value={selectedCategory}
               onChange={e => setSelectedCategory(e.target.value)}
-              className="min-h-11 w-full rounded-full border border-[#dfe9dd] bg-white px-3 text-[13px] font-medium text-[#465149] outline-none transition focus:border-emerald-300 focus:ring-2 focus:ring-emerald-100"
+              className="min-h-11 w-full rounded-xl border border-[#e7eae5] bg-white px-3 text-[13px] font-medium text-[#465149] outline-none transition focus:border-emerald-300 focus:ring-2 focus:ring-emerald-100"
             >
               <option value="All">All topics</option>
               {MACRO_CATEGORIES.map(category => <option key={category} value={category}>{category}</option>)}
             </select>
           </section>
 
-          <section aria-labelledby="trending-heading" className="rounded-[22px] border border-[#e4ebe2] bg-white p-4 shadow-[0_5px_16px_rgba(26,80,37,0.04)]">
+          <section aria-labelledby="trending-heading" className="rounded-2xl border border-[#e9ece8] bg-[#fcfdfb] p-3">
             <h2 id="trending-heading" className="mb-2 flex items-center gap-2 text-[13px] font-bold text-[#303833]">
               Trending <Flame className="h-4 w-4 text-orange-500" aria-hidden="true" />
             </h2>
@@ -1318,8 +1318,8 @@ export default function Community() {
           <div className="mx-auto w-full max-w-[760px]">
             {/* Mobile only: compact title and composer. Desktop sidebar and composer stay unchanged. */}
             <div className="mb-3 lg:hidden">
-              <h1 className="mb-3 px-1 text-[24px] font-bold leading-8 tracking-tight text-[#202522] min-[360px]:text-[27px]" style={{ fontFamily: "'Fraunces', serif" }}>Community</h1>
-              <div className="flex min-w-0 items-center gap-1.5 rounded-[22px] border border-[#e4ebe2] bg-white p-2 shadow-[0_6px_20px_rgba(26,80,37,0.045)] min-[360px]:gap-2 min-[360px]:p-2.5">
+              <h1 className="mb-3 px-1 text-[20px] font-bold leading-7 tracking-tight text-[#202522] min-[360px]:text-[22px]">Community</h1>
+              <div className="flex min-w-0 items-center gap-1.5 rounded-2xl border border-[#e9ece8] bg-white p-2 shadow-[0_1px_2px_rgba(20,30,20,0.03)] min-[360px]:gap-2 min-[360px]:p-2.5">
                 <Avatar src={currentUserProfile?.avatar_url} name={currentUserProfile?.full_name} size="sm" isMe />
                 <button
                   type="button"
@@ -1348,11 +1348,11 @@ export default function Community() {
             <button
               type="button"
               onClick={() => { if (!checkRestriction()) setIsCreateModalOpen(true); }}
-              className="mb-3 hidden min-h-[56px] w-full items-center gap-2 rounded-[22px] border border-[#e4ebe2] bg-white p-2.5 text-left shadow-[0_6px_20px_rgba(26,80,37,0.045)] transition hover:border-emerald-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 sm:mb-4 sm:min-h-[64px] sm:gap-3 sm:p-3 lg:flex"
+              className="mb-3 hidden min-h-[56px] w-full items-center gap-2 rounded-2xl border border-[#e9ece8] bg-white p-2.5 text-left shadow-[0_1px_2px_rgba(20,30,20,0.03)] transition hover:border-emerald-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 sm:mb-4 sm:min-h-[64px] sm:gap-3 sm:p-3 lg:flex"
             >
               <Avatar src={currentUserProfile?.avatar_url} name={currentUserProfile?.full_name} size="md" isMe />
               <span className="flex min-h-9 min-w-0 flex-1 items-center rounded-xl bg-[#f5f7f4] px-3 text-[12px] text-[#7d857f] min-[360px]:text-[13px] sm:min-h-10 sm:px-4 sm:text-[14px]">What would you like to share?</span>
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-r from-[#40b343] to-[#07803a] text-white shadow-[0_5px_13px_rgba(25,141,52,0.16)] sm:h-10 sm:w-10"><Plus className="h-4 w-4" /></span>
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-700 text-white sm:h-10 sm:w-10"><Plus className="h-4 w-4" /></span>
             </button>
 
             <div className="mb-3 flex flex-nowrap gap-1.5 overflow-x-auto pb-1 sm:mb-4 sm:gap-2 lg:justify-start [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" role="group" aria-label="Filter posts by type">
@@ -1364,7 +1364,7 @@ export default function Community() {
                   onClick={() => setSelectedPostType(type)}
                   className={`min-h-9 shrink-0 whitespace-nowrap rounded-full px-3 text-[12px] font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 sm:min-h-10 sm:px-4 ${
                     selectedPostType === type
-                      ? 'bg-gradient-to-r from-[#40b343] via-[#20983d] to-[#07803a] text-white shadow-[0_5px_13px_rgba(25,141,52,0.16)]'
+                      ? 'bg-[#25352d] text-white'
                       : 'border border-[#e7eae5] bg-white text-[#59625c] hover:border-[#cfd8d0] hover:bg-[#fbfcfa]'
                   }`}
                 >{type}</button>
@@ -1379,7 +1379,7 @@ export default function Community() {
                   <p className="mx-auto mt-2 max-w-sm text-[14px] leading-6 text-[#777d78]">{posts.length ? 'Try another topic or search, or clear your filters.' : 'Ask a question, share a project, or meet someone learning the same thing.'}</p>
                   <div className="mt-5 flex flex-wrap justify-center gap-2">
                     {posts.length > 0 && <button type="button" onClick={() => { setSearchQuery(''); setSelectedCategory('All'); setSelectedPostType('All'); }} className="min-h-11 rounded-xl border border-[#dfe4dd] px-4 text-[13px] font-semibold text-[#465149] hover:bg-[#f7f8f6]">Clear filters</button>}
-                    <button type="button" onClick={() => { if (!checkRestriction()) setIsCreateModalOpen(true); }} className="min-h-11 rounded-full bg-gradient-to-r from-[#40b343] via-[#20983d] to-[#07803a] px-5 text-[13px] font-semibold text-white shadow-[0_6px_14px_rgba(25,141,52,0.15)] hover:brightness-95">Share what you know</button>
+                    <button type="button" onClick={() => { if (!checkRestriction()) setIsCreateModalOpen(true); }} className="min-h-11 rounded-xl bg-emerald-700 px-4 text-[13px] font-semibold text-white hover:bg-emerald-800">Share what you know</button>
                   </div>
                 </section>
               ) : filteredPosts.map(post => {
@@ -1390,7 +1390,7 @@ export default function Community() {
                   <article
                     id={`post-${post.id}`}
                     key={post.id}
-                    className={`relative scroll-mt-6 min-w-0 overflow-hidden rounded-[22px] border bg-white shadow-[0_5px_22px_rgba(26,80,37,0.045)] transition sm:rounded-[24px] ${highlightedPostId === post.id ? 'border-emerald-400 ring-2 ring-emerald-300 shadow-lg' : 'border-[#e9ece8]'}`}
+                    className={`relative scroll-mt-6 min-w-0 overflow-hidden rounded-2xl border bg-white shadow-[0_1px_2px_rgba(20,30,20,0.03)] transition sm:rounded-[20px] ${highlightedPostId === post.id ? 'border-emerald-400 ring-2 ring-emerald-300 shadow-lg' : 'border-[#e9ece8]'}`}
                   >
                     {isOwner ? (
                       <div className="absolute right-3 top-3 z-10 flex gap-1">
@@ -1472,7 +1472,7 @@ export default function Community() {
                         </div>
                         <div className="mt-3 flex justify-end gap-2">
                           <button type="button" onClick={cancelPostEdit} disabled={savingPostEdit} className="min-h-9 rounded-lg px-3 text-[13px] font-semibold text-gray-600 hover:bg-gray-100 disabled:opacity-50">Cancel</button>
-                          <button type="button" onClick={() => handleUpdatePost(post.id)} disabled={savingPostEdit} className="min-h-9 rounded-full bg-gradient-to-r from-[#40b343] to-[#07803a] px-4 text-[13px] font-semibold text-white hover:brightness-95 disabled:opacity-50">{savingPostEdit ? 'Saving…' : 'Save changes'}</button>
+                          <button type="button" onClick={() => handleUpdatePost(post.id)} disabled={savingPostEdit} className="min-h-9 rounded-lg bg-emerald-700 px-3 text-[13px] font-semibold text-white hover:bg-emerald-800 disabled:opacity-50">{savingPostEdit ? 'Saving…' : 'Save changes'}</button>
                         </div>
                       </div>
                     ) : (

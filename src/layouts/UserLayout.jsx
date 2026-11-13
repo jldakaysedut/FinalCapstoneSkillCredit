@@ -840,16 +840,16 @@ export default function UserLayout() {
   const initial   = profile.full_name?.charAt(0)?.toUpperCase() || '?';
 
   return (
-    <div data-sc-user-theme={darkMode ? 'dark' : 'light'} className="sc-user-shell min-h-screen min-w-0 bg-[#faf9f6] font-sans text-gray-900 relative">
+    <div data-sc-user-theme={darkMode ? 'dark' : 'light'} className="min-h-screen min-w-0 bg-[#faf9f6] font-sans text-gray-900 relative">
 
       {/* ══ NAVBAR */}
-      <nav className="sc-user-navbar sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-gray-200/60">
+      <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-gray-200/60">
         <div className="max-w-[1600px] mx-auto px-2 min-[360px]:px-3 sm:px-4 md:px-6 h-16 grid grid-cols-[minmax(0,1fr)_auto] sm:grid-cols-[1fr_auto_1fr] items-center gap-1.5 sm:gap-4">
 
           {/* Logo */}
           <Link to="/dashboard" className="flex min-w-0 items-center gap-2.5 shrink-0">
             <img src="/logo.png" alt="SkillCredit" className="w-8 h-8 object-contain" />
-            <span className="sc-user-wordmark font-bold text-xl text-emerald-900 tracking-tight hidden sm:block">SkillCredit</span>
+            <span className="font-bold text-xl text-emerald-900 tracking-tight hidden sm:block">SkillCredit</span>
           </Link>
 
           {/* Desktop nav links */}
@@ -858,11 +858,14 @@ export default function UserLayout() {
               <Link key={to} to={to}
                 className={`relative px-4 py-2 rounded-full font-semibold text-sm transition-all ${
                   isActive(to)
-                    ? 'sc-user-nav-active text-white'
-                    : 'text-gray-600 hover:text-[#168341] hover:bg-emerald-50/80'
+                    ? 'text-emerald-800 bg-emerald-50/80'
+                    : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100/80'
                 }`}
               >
                 {label}
+                {isActive(to) && (
+                  <span className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-emerald-600" />
+                )}
               </Link>
             ))}
           </div>
@@ -997,7 +1000,7 @@ export default function UserLayout() {
                   isProfileOpen ? 'border-emerald-200 bg-emerald-50/80' : 'border-gray-200 hover:border-gray-300 bg-white shadow-sm'
                 }`}
               >
-                <div className="w-7 h-7 bg-gradient-to-br from-[#40b343] to-[#07803a] text-white rounded-full flex items-center justify-center font-bold text-xs overflow-hidden shrink-0">
+                <div className="w-7 h-7 bg-gradient-to-br from-emerald-400 to-teal-500 text-white rounded-full flex items-center justify-center font-bold text-xs overflow-hidden shrink-0">
                   {profile.avatar_url
                     ? <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" />
                     : initial}
@@ -1075,11 +1078,11 @@ export default function UserLayout() {
               {NAV_LINKS.map(({ to, label }) => (
                 <Link key={to} to={to} onClick={() => setIsMobileOpen(false)}
                   className={`flex items-center gap-3 px-4 py-3 rounded-2xl font-semibold text-sm transition ${
-                    isActive(to) ? 'sc-user-nav-active text-white' : 'text-gray-600 hover:bg-emerald-50/70'
+                    isActive(to) ? 'bg-emerald-50 text-emerald-800' : 'text-gray-600 hover:bg-gray-50'
                   }`}
                 >
                   {label}
-                  {isActive(to) && <ChevronRight className="w-4 h-4 ml-auto text-white/90" />}
+                  {isActive(to) && <ChevronRight className="w-4 h-4 ml-auto text-emerald-400" />}
                 </Link>
               ))}
             </div>
