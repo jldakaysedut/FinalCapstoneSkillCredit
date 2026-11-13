@@ -174,7 +174,7 @@ export default function Home() {
         .sc-home ::selection { background:#c7eed5; color:#10452d; }
         .sc-home .hero-section { position:relative;isolation:isolate;background:radial-gradient(circle at 78% 24%,#e3f2e5 0%,transparent 40%),radial-gradient(circle at 0% 100%,#f3eadd,transparent 40%); }
         .sc-home .hero-section:before {content:"";position:absolute;inset:0;pointer-events:none;opacity:.2;background-image:radial-gradient(#45845e 0.75px,transparent 0.75px);background-size:24px 24px;mask-image:linear-gradient(90deg,transparent,#000 80%);z-index:-1;}
-        /* Option B: softly layered mint-green organic bubbles on light Home sections. */
+        /* Option C: compact, feathered mint bubble clusters, kept clear of section dividers. */
         .sc-home .home-soft-bubbles { position:relative; isolation:isolate; overflow:hidden; }
         .sc-home .home-soft-bubbles::before,
         .sc-home .home-soft-bubbles::after {
@@ -182,44 +182,48 @@ export default function Home() {
           position:absolute;
           z-index:0;
           pointer-events:none;
+          border-radius:50%;
           filter:blur(2px);
+          background-repeat:no-repeat;
         }
+        /* No concentric ring shadows or oversized shapes: the color fades out naturally. */
         .sc-home .home-soft-bubbles::before {
-          width:clamp(340px,48vw,650px);
-          height:clamp(280px,36vw,510px);
-          top:-200px;
-          left:-240px;
-          border-radius:61% 39% 62% 38% / 42% 64% 36% 58%;
-          transform:rotate(-16deg);
-          background:linear-gradient(135deg,rgba(177,221,176,.62),rgba(210,238,207,.48) 66%,rgba(235,248,227,.25));
-          box-shadow:0 0 0 36px rgba(191,228,189,.16),0 0 0 84px rgba(216,239,213,.14);
+          width:clamp(140px,17vw,205px);
+          height:clamp(135px,16vw,195px);
+          left:-46px;
+          top:26%;
+          background:
+            radial-gradient(circle at 42% 49%,rgba(126,197,145,.40) 0 14%,rgba(170,220,178,.23) 31%,transparent 67%),
+            radial-gradient(circle at 77% 23%,rgba(162,215,174,.28) 0 9%,transparent 29%),
+            radial-gradient(circle at 77% 76%,rgba(179,226,181,.29) 0 8%,transparent 28%);
         }
         .sc-home .home-soft-bubbles::after {
-          width:clamp(380px,51vw,690px);
-          height:clamp(290px,38vw,540px);
-          right:-255px;
-          bottom:-220px;
-          border-radius:45% 55% 38% 62% / 62% 37% 63% 38%;
-          transform:rotate(14deg);
-          background:linear-gradient(225deg,rgba(170,216,166,.55),rgba(201,236,201,.47) 62%,rgba(237,249,227,.24));
-          box-shadow:0 0 0 35px rgba(187,228,180,.16),0 0 0 79px rgba(220,242,213,.13);
+          width:clamp(118px,14vw,172px);
+          height:clamp(120px,14vw,170px);
+          right:-36px;
+          bottom:22%;
+          background:
+            radial-gradient(circle at 57% 47%,rgba(132,201,149,.36) 0 15%,rgba(189,227,193,.20) 32%,transparent 65%),
+            radial-gradient(circle at 22% 76%,rgba(166,218,172,.30) 0 10%,transparent 31%),
+            radial-gradient(circle at 20% 21%,rgba(201,233,198,.23) 0 9%,transparent 28%);
         }
         .sc-home .home-soft-bubbles > * { position:relative; z-index:1; }
-        /* Alternate the corner shapes, so the sections don't look repetitive. */
-        .sc-home #how-it-works.home-soft-bubbles::before { left:auto; right:-245px; top:-200px; transform:rotate(19deg); }
-        .sc-home #how-it-works.home-soft-bubbles::after { right:auto; left:-260px; bottom:-210px; transform:rotate(-14deg); }
-        .sc-home #features.home-soft-bubbles::before { top:-225px; left:-285px; }
-        .sc-home #features.home-soft-bubbles::after { right:-270px; bottom:-235px; }
-        /* Ratings remain the visual focus in the leaderboard section. */
-        .sc-home .home-leaderboard.home-soft-bubbles::before,
-        .sc-home .home-leaderboard.home-soft-bubbles::after { opacity:.75; }
+        /* Offset bubbles per section, always away from the top/bottom seam. */
+        .sc-home #how-it-works.home-soft-bubbles::before { left:auto;right:-41px;top:24%; }
+        .sc-home #how-it-works.home-soft-bubbles::after { right:auto;left:-30px;bottom:25%; }
+        .sc-home #features.home-soft-bubbles::before { left:-43px;top:38%; }
+        .sc-home #features.home-soft-bubbles::after { right:-38px;bottom:28%; }
+        .sc-home .home-leaderboard.home-soft-bubbles::before { left:auto;right:-34px;top:32%;opacity:.72; }
+        .sc-home .home-leaderboard.home-soft-bubbles::after { right:auto;left:-30px;bottom:23%;opacity:.72; }
         @media(max-width:600px) {
-          .sc-home .home-soft-bubbles::before { width:350px; height:300px; top:-175px; left:-215px; }
-          .sc-home .home-soft-bubbles::after { width:370px; height:310px; right:-235px; bottom:-190px; }
-          .sc-home #how-it-works.home-soft-bubbles::before { left:auto; right:-225px; top:-178px; }
-          .sc-home #how-it-works.home-soft-bubbles::after { right:auto; left:-230px; bottom:-185px; }
-          .sc-home #features.home-soft-bubbles::before { top:-185px; left:-230px; }
-          .sc-home #features.home-soft-bubbles::after { right:-240px; bottom:-192px; }
+          .sc-home .home-soft-bubbles::before { width:146px;height:139px;left:-47px;top:27%; }
+          .sc-home .home-soft-bubbles::after { width:116px;height:120px;right:-39px;bottom:21%; }
+          .sc-home #how-it-works.home-soft-bubbles::before { left:auto;right:-48px;top:30%; }
+          .sc-home #how-it-works.home-soft-bubbles::after { right:auto;left:-36px;bottom:25%; }
+          .sc-home #features.home-soft-bubbles::before { left:-45px;top:35%; }
+          .sc-home #features.home-soft-bubbles::after { right:-36px;bottom:26%; }
+          .sc-home .home-leaderboard.home-soft-bubbles::before { left:auto;right:-50px;top:34%; }
+          .sc-home .home-leaderboard.home-soft-bubbles::after { right:auto;left:-37px;bottom:22%; }
         }
         .sc-home .hero-shell {max-width:1200px;margin:0 auto;padding:26px 48px;width:100%;}
         .sc-home .hero-download-link {display:inline-flex;align-items:center;gap:9px;margin-top:7px;font-size:13px;font-weight:800;color:#2d6a4f;text-decoration:none;border-bottom:1px solid transparent;transition:gap .2s,border-color .2s;}
