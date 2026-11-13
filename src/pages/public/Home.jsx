@@ -16,7 +16,7 @@ import {
 
 // 🚨 REPLACED emojis with Lucide Icons and added them to data arrays
 const mockCards = [
-  { type:"listing",   title:"Python for Absolute Beginners",               teacher:"Maria S.",  credits:15, rating:4.9, color:"#e8f4e8", accent:"#168341", Icon: Code2 },
+  { type:"listing",   title:"Python for Absolute Beginners",               teacher:"Maria S.",  credits:15, rating:4.9, color:"#e8f4e8", accent:"#2d6a4f", Icon: Code2 },
   { type:"community", title:"How do I center a div in CSS? I've tried everything 😭", upvotes:47, answers:12, color:"#f0f4ff", accent:"#3730a3", Icon: MessageCircleQuestion },
   { type:"listing",   title:"UI/UX Design Fundamentals with Figma",              teacher:"Reina C.", credits:12, rating:5.0, color:"#fdf0f8", accent:"#9d174d", Icon: Layout },
   { type:"listing",   title:"Guitar Basics — From zero to your first song",      teacher:"Sam R.",   credits:10, rating:4.7, color:"#fef9f0", accent:"#92400e", Icon: Music },
@@ -25,7 +25,7 @@ const mockCards = [
 ];
 
 const features = [
-  { Icon: GraduationCap, title:"1-on-1 Sessions",   desc:"Explore approved skill listings, request a booking, and agree on a schedule with your teacher.", color:"#168341", bg:"#e8f4e8" },
+  { Icon: GraduationCap, title:"1-on-1 Sessions",   desc:"Explore approved skill listings, request a booking, and agree on a schedule with your teacher.", color:"#2d6a4f", bg:"#e8f4e8" },
   { Icon: MessageSquare, title:"Community Forum",   desc:"Ask questions, share knowledge, and build connections with other learners.", color:"#3730a3", bg:"#f0f4ff" },
   { Icon: CheckCircle,   title:"Listings & Reviews",desc:"Skill listings go through moderation, while learners can rate completed sessions.", color:"#d97706", bg:"#fef3c7" },
   { Icon: ShieldCheck,   title:"Session Credit Protection", desc:"Credits for a booked session are held until the required completion confirmations are received.", color:"#0f766e", bg:"#ccfbf1" },
@@ -166,74 +166,26 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="sc-home" style={{ fontFamily:"'DM Sans',sans-serif", overflowX:"hidden", width: "100%" }}>
+    <div className="sc-home" style={{ background:"#faf8f4", fontFamily:"'DM Sans',sans-serif", overflowX:"hidden", width: "100%" }}>
       <style>{`
         .sc-home { color:#162b21; }
         .sc-home section { scroll-margin-top:75px; }
         .sc-home a:focus-visible { outline:3px solid #66b88d; outline-offset:4px; }
         .sc-home ::selection { background:#c7eed5; color:#10452d; }
-        /* Warm off-white canvas with barely visible mint highlights.
-           Keep the same quiet background rhythm as the four auth pages. */
-        .sc-home {
-          background:
-            radial-gradient(circle at 4% 5%, rgba(199,220,199,.13) 0%, transparent 24%),
-            radial-gradient(circle at 96% 92%, rgba(205,225,202,.11) 0%, transparent 26%),
-            linear-gradient(180deg,#fcfbf9 0%,#fafaf8 50%,#fffdfa 100%);
-        }
-        .sc-home .hero-section { position:relative; isolation:isolate; background:transparent; }
-        /* Download section shares the same pastel canvas while retaining its mock phone/card layout. */
-        .sc-home .sc-download-section { background:transparent; }
-        .sc-home .home-soft-bubbles { position:relative; isolation:isolate; overflow:hidden; }
-        /* Keep decorative shapes smaller than the content; they fade within each section. */
-        .sc-home .home-soft-bubbles::before {
-          content:"";
-          position:absolute;
-          top:0; left:0;
-          width:clamp(125px,16vw,190px);
-          height:clamp(82px,10vw,130px);
-          pointer-events:none;
-          z-index:0;
-          background:
-            radial-gradient(ellipse at -15% -5%,rgba(146,192,126,.09) 0 34%,transparent 69%),
-            radial-gradient(ellipse at 15% -24%,rgba(205,236,193,.16) 0 52%,transparent 79%);
-        }
-        /* A single delicate gold arc like the Login/Register background. */
-        .sc-home .home-soft-bubbles::after {
-          content:"";
-          position:absolute;
-          top:0; left:0;
-          width:clamp(130px,17vw,200px);
-          height:clamp(90px,11vw,125px);
-          background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 268 162'%3E%3Cpath d='M -24 156 C 28 93 99 91 145 53 S 225 14 285 -28' fill='none' stroke='%23d6b476' stroke-width='1.1' opacity='.65'/%3E%3C/svg%3E") no-repeat left top / 100% 100%;
-          pointer-events:none;
-          z-index:0;
-          opacity:.24;
-        }
-        .sc-home .home-soft-bubbles > * { position:relative; z-index:1; }
-        .sc-home #how-it-works.home-soft-bubbles::before,
-        .sc-home #how-it-works.home-soft-bubbles::after,
-        .sc-home .home-leaderboard.home-soft-bubbles::before,
-        .sc-home .home-leaderboard.home-soft-bubbles::after {
-          left:auto; right:0;
-          transform:scaleX(-1);
-        }
-        @media(max-width:600px) {
-          .sc-home .home-soft-bubbles::before { width:108px;height:78px; }
-          .sc-home .home-soft-bubbles::after { width:115px;height:76px; }
-        }
-                .sc-home .hero-shell {max-width:1200px;margin:0 auto;padding:26px 48px;width:100%;}
-        .sc-home .hero-download-link {display:inline-flex;align-items:center;gap:9px;margin-top:7px;font-size:13px;font-weight:800;color:#168341;text-decoration:none;border-bottom:1px solid transparent;transition:gap .2s,border-color .2s;}
-        .sc-home .hero-download-link:hover {gap:14px;border-color:#168341;}
+        .sc-home .hero-section { position:relative;isolation:isolate;background:radial-gradient(circle at 78% 24%,#e3f2e5 0%,transparent 40%),radial-gradient(circle at 0% 100%,#f3eadd,transparent 40%); }
+        .sc-home .hero-section:before {content:"";position:absolute;inset:0;pointer-events:none;opacity:.2;background-image:radial-gradient(#45845e 0.75px,transparent 0.75px);background-size:24px 24px;mask-image:linear-gradient(90deg,transparent,#000 80%);z-index:-1;}
+        .sc-home .hero-shell {max-width:1200px;margin:0 auto;padding:26px 48px;width:100%;}
+        .sc-home .hero-download-link {display:inline-flex;align-items:center;gap:9px;margin-top:7px;font-size:13px;font-weight:800;color:#2d6a4f;text-decoration:none;border-bottom:1px solid transparent;transition:gap .2s,border-color .2s;}
+        .sc-home .hero-download-link:hover {gap:14px;border-color:#2d6a4f;}
         .sc-home .hero-preview {transform:perspective(1100px) rotateY(-3deg);transition:transform .6s ease,box-shadow .6s ease;}
         .sc-home .hero-preview:hover {transform:perspective(1100px) rotateY(0) translateY(-5px);}
         .sc-home .section-pad h2 {text-wrap:balance;}
         .sc-home .feature-card {position:relative;overflow:hidden;}
-        .sc-home .feature-card:before {content:"";position:absolute;left:0;right:0;top:0;height:3px;background:linear-gradient(90deg,#3caa47,#0b823b);opacity:0;transition:opacity .25s;}
+        .sc-home .feature-card:before {content:"";position:absolute;left:0;right:0;top:0;height:3px;background:linear-gradient(90deg,#2d6a4f,#93c8a5);opacity:0;transition:opacity .25s;}
         .sc-home .feature-card:hover:before {opacity:1;}
         .sc-home .topic-pill:hover {border-color:#9fd5b4!important;}
-
         .sc-home .site-footer a:focus-visible {outline-color:white;}
-        .sc-home .home-anchor {display:inline-flex;gap:7px;align-items:center;text-decoration:none;font-weight:800;color:#168341;font-size:13px;padding:10px 15px;border:1px solid #cfe3d2;border-radius:999px;background:white;transition:transform .2s,box-shadow .2s;}
+        .sc-home .home-anchor {display:inline-flex;gap:7px;align-items:center;text-decoration:none;font-weight:800;color:#297d50;font-size:13px;padding:10px 15px;border:1px solid #cfe3d2;border-radius:999px;background:white;transition:transform .2s,box-shadow .2s;}
         .sc-home .home-anchor:hover {transform:translateY(-3px);box-shadow:0 8px 20px rgba(45,106,79,.1);}
         @media(max-width:768px){.sc-home .hero-shell{padding:24px 22px}.sc-home .hero-section{min-height:unset!important;padding:55px 0 70px!important}.sc-home .hero-preview{transform:none}.sc-home .hero-h1-text{font-size:clamp(40px,9vw,58px)!important}.sc-home .section-pad h2{font-size:clamp(30px,7vw,42px)!important}}
         @media(prefers-reduced-motion:reduce){.sc-home *, .sc-home *:before, .sc-home *:after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}.sc-home .reveal{opacity:1;transform:none}}
@@ -266,11 +218,11 @@ export default function Home() {
         .problem-grid{display:grid;grid-template-columns:1fr auto 1fr;gap:24px;align-items:center;max-width:700px;margin:0 auto}
         /* Premium but restrained Top Rated spotlight — Home only. */
         .sc-home .home-leaderboard-inner{max-width:940px;margin:0 auto}
-        .sc-home .home-leaderboard-kicker{display:inline-flex;align-items:center;gap:7px;color:#168341;font-size:11px;font-weight:800;letter-spacing:.11em;text-transform:uppercase}
+        .sc-home .home-leaderboard-kicker{display:inline-flex;align-items:center;gap:7px;color:#28734f;font-size:11px;font-weight:800;letter-spacing:.11em;text-transform:uppercase}
         .sc-home .home-leaderboard-stage{display:grid;grid-template-columns:minmax(0,1.03fr) minmax(0,.97fr);gap:16px;align-items:stretch}
         .sc-home .home-leaderboard-champion{position:relative;min-width:0;overflow:hidden;border:1px solid #c6dfce;background:linear-gradient(140deg,#f4faf5 0%,#fff 75%);border-radius:23px;padding:26px 27px;box-shadow:0 14px 35px rgba(25,77,47,.07)}
         .sc-home .home-leaderboard-champion:before{content:"";position:absolute;top:-75px;right:-75px;height:225px;width:225px;border-radius:50%;background:radial-gradient(circle,#d5efd9 0%,transparent 70%);pointer-events:none}
-        .sc-home .home-leaderboard-featured-tag{position:relative;z-index:1;display:inline-flex;align-items:center;gap:7px;padding:7px 11px;border-radius:999px;background:#e4f2e9;color:#17643c;font-size:11px;font-weight:800}
+        .sc-home .home-leaderboard-featured-tag{position:relative;z-index:1;display:inline-flex;align-items:center;gap:7px;padding:7px 11px;border-radius:999px;background:#e4f2e9;color:#245a3b;font-size:11px;font-weight:800}
         .sc-home .home-leaderboard-hero-person{position:relative;display:flex;align-items:center;gap:16px;min-width:0;margin:25px 0 22px}
         .sc-home .home-leaderboard-hero-avatar{width:76px;height:76px;flex:0 0 76px;display:grid;place-items:center;overflow:hidden;border:4px solid #fff;border-radius:22px;background:#d7e8dd;color:#275b41;font-size:22px;font-weight:800;box-shadow:0 5px 18px rgba(28,81,51,.10)}
         .sc-home .home-leaderboard-profile-photo{width:100%;height:100%;display:block;object-fit:cover}
@@ -290,7 +242,7 @@ export default function Home() {
         .sc-home .home-leaderboard-score{display:inline-flex;align-items:center;gap:5px;flex-shrink:0;color:#805b23;font-size:14px;font-weight:850;font-variant-numeric:tabular-nums}
         .sc-home .home-leaderboard-footer{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-top:18px}
         .sc-home .home-leaderboard-note{margin:0;color:#718074;font-size:11px;line-height:1.6}
-        .sc-home .home-leaderboard-more{min-height:42px;display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:999px;padding:10px 16px;border:1px solid #b9d7c0;background:#fff;color:#168341;font-size:12px;font-weight:800;text-decoration:none;transition:transform .2s,box-shadow .2s}
+        .sc-home .home-leaderboard-more{min-height:42px;display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:999px;padding:10px 16px;border:1px solid #b9d7c0;background:#fff;color:#2c6e49;font-size:12px;font-weight:800;text-decoration:none;transition:transform .2s,box-shadow .2s}
         .sc-home .home-leaderboard-more:hover{transform:translateY(-2px);box-shadow:0 8px 18px rgba(35,106,68,.09)}
         .sc-home .home-leaderboard-empty{grid-column:1/-1;text-align:center;border:1px dashed #cbdccf;background:#fff;border-radius:22px;padding:28px 20px;color:#728475;font-size:13px;line-height:1.65}
         @media(max-width:680px){
@@ -376,117 +328,31 @@ export default function Home() {
           .sc-home .home-final-cta-btn{font-size:12px!important;padding:11px 12px!important;}
           .sc-home .site-footer{padding-left:16px!important;padding-right:16px!important;}
         }
-        /* HOME BRAND COLOR: same green gradient as the Login button.
-           Only interactive/brand accents, not the page backgrounds or category colors. */
-        .sc-home {
-          --sc-brand-start:#40b343;
-          --sc-brand-end:#07803a;
-          --sc-brand-text:#176a3c;
-          --sc-brand-shadow:rgba(12,124,54,.20);
-        }
-        .sc-home .sc-gradient-btn,
-        .sc-home .sc-download-btn {
-          background:linear-gradient(110deg,var(--sc-brand-start) 0%,#20983d 48%,var(--sc-brand-end) 100%) !important;
-          color:#fff !important;
-          border:1px solid rgba(15,124,58,.13) !important;
-          border-radius:999px !important;
-          box-shadow:0 8px 19px var(--sc-brand-shadow) !important;
-          text-decoration:none;
-          transition:transform .22s ease,box-shadow .22s ease,filter .22s ease;
-        }
-        .sc-home .sc-gradient-btn:hover,
-        .sc-home .sc-download-btn:hover {
-          transform:translateY(-2px);
-          box-shadow:0 12px 24px rgba(12,124,54,.27) !important;
-          filter:brightness(1.035);
-        }
-        .sc-home .sc-gradient-btn:active,
-        .sc-home .sc-download-btn:active { transform:translateY(0); }
-        .sc-home .sc-gradient-btn:focus-visible,
-        .sc-home .sc-outline-btn:focus-visible,
-        .sc-home .sc-download-btn:focus-visible {
-          outline:3px solid #7fcf92;
-          outline-offset:3px;
-        }
-        .sc-home .sc-gradient-btn--inverse {
-          border:1px solid rgba(255,255,255,.55) !important;
-          box-shadow:0 9px 24px rgba(0,0,0,.18) !important;
-        }
-        .sc-home .sc-outline-btn {
-          background:#fff !important;
-          color:var(--sc-brand-text) !important;
-          border:1px solid #cce6d0 !important;
-          border-radius:999px !important;
-          box-shadow:0 2px 10px rgba(13,80,41,.045);
-          text-decoration:none;
-          transition:background .22s ease,transform .22s ease,box-shadow .22s ease,border-color .22s ease;
-        }
-        .sc-home .sc-outline-btn:hover {
-          background:#f2faf3 !important;
-          border-color:#9fd5a9 !important;
-          transform:translateY(-2px);
-          box-shadow:0 7px 16px rgba(15,100,46,.09);
-        }
-        .sc-home .home-leaderboard-featured-tag {
-          background:#ebf8e9;
-          color:var(--sc-brand-text);
-          border:1px solid #d5ecd5;
-        }
-        .sc-home .home-leaderboard-champion {
-          border-color:#cde5ce;
-          background:linear-gradient(145deg,#f7fcf5 0%,#fff 78%);
-        }
-        .sc-home .home-leaderboard-hero-avatar {
-          box-shadow:0 5px 16px rgba(16,132,52,.10);
-        }
-        .sc-home .home-leaderboard-kicker,
-        .sc-home .hero-download-link { color:var(--sc-brand-text); }
-        .sc-home .topic-pill:hover,
-        .sc-home .explore-pill-v1:hover {
-          border-color:#abd7af !important;
-          box-shadow:0 7px 18px rgba(19,122,54,.08) !important;
-        }
-        .sc-home .home-anchor { color:var(--sc-brand-text);border-color:#cce6d0; }
-        .sc-home .home-anchor:hover {background:#f2faf2;box-shadow:0 7px 18px rgba(19,122,54,.1);}
-        .sc-home .sc-download-section .sc-download-btn { border-radius:999px !important; }
-        /* Download area belongs to Home, so harmonize its green UI too. */
-        .sc-home .sc-download-title em { color:var(--sc-brand-text); }
-        .sc-home .sc-download-kicker {color:var(--sc-brand-text);border-color:#c7e6cc;background:#f9fdf8;}
-        .sc-home .sc-download-perk-icon {color:var(--sc-brand-text);border-color:#d5e9d8;background:#fbfefa;}
-        .sc-home .sc-phone-head {background:linear-gradient(120deg,#2ca243,#07803a);}
-        .sc-home .sc-floating-chip {border-color:#d4ead7;color:var(--sc-brand-text);}
-
-        @media(prefers-reduced-motion:reduce) {
-          .sc-home .sc-gradient-btn,.sc-home .sc-outline-btn {transition:none;}
-          .sc-home .sc-gradient-btn:hover,.sc-home .sc-outline-btn:hover {transform:none;}
-        }
-
-
       `}</style>
 
       {/* ── HERO ── */}
-      <section className="hero-section home-soft-bubbles" style={{ minHeight:"calc(100vh - 64px)", display:"flex", alignItems:"center", width:"100%", padding:"40px 0" }}>
+      <section className="hero-section" style={{ minHeight:"calc(100vh - 64px)", display:"flex", alignItems:"center", width:"100%", padding:"40px 0" }}>
         <div className="hero-shell">
           <div className="hero-grid">
             <div>
-              <div className="hero-tag" style={{ display:"inline-flex", alignItems:"center", gap:8, background:"#f0f9ef", border:"1.5px solid #c6e8c9", padding:"6px 16px", borderRadius:999, marginBottom:24 }}>
-                <Rocket size={14} color="#168341" style={{ animation:"pulse 2s infinite" }} />
-                <span style={{ fontSize:12, color:"#168341", fontWeight:700 }}>Learn, teach, and grow</span>
+              <div className="hero-tag" style={{ display:"inline-flex", alignItems:"center", gap:8, background:"#e8f4e8", border:"1.5px solid #b7e4c7", padding:"6px 16px", borderRadius:999, marginBottom:24 }}>
+                <Rocket size={14} color="#2d6a4f" style={{ animation:"pulse 2s infinite" }} />
+                <span style={{ fontSize:12, color:"#2d6a4f", fontWeight:700 }}>Learn, teach, and grow</span>
               </div>
               <h1 className="hero-h1">
                 <span className="hero-h1-text" style={{ fontFamily:"'Fraunces',serif", fontSize:62, fontWeight:900, color:"#111", lineHeight:1.05, display:"block", marginBottom:20, letterSpacing:"-0.02em" }}>
-                  Share skills.<br /><em style={{ color:"#168341", fontStyle:"italic" }}>Earn credits.</em><br />Keep learning.
+                  Share skills.<br /><em style={{ color:"#2d6a4f", fontStyle:"italic" }}>Earn credits.</em><br />Keep learning.
                 </span>
               </h1>
               <p className="hero-p" style={{ fontSize:17, color:"#555", lineHeight:1.75, marginBottom:32, maxWidth:460 }}>
-                Discover skills you can learn with credits, and <strong style={{ color:"#168341" }}>earn credits by teaching what you know</strong>. Optional wallet top-ups are available.
+                Discover skills you can learn with credits, and <strong style={{ color:"#2d6a4f" }}>earn credits by teaching what you know</strong>. Optional wallet top-ups are available.
               </p>
               <div className="hero-btns">
                 <div className="hero-btns-wrap" style={{ display:"flex", gap:12, flexWrap:"wrap", marginBottom:12 }}>
-                  <Link to="/register" className="cta-btn hero-primary-btn sc-gradient-btn" style={{ background:"#168341", color:"#fff", padding:"13px 20px", borderRadius:12, fontWeight:800, fontSize:14, boxShadow:"0 6px 20px rgba(45,106,79,0.2)", display:"inline-flex", alignItems:"center", gap:8 }}>
+                  <Link to="/register" className="cta-btn hero-primary-btn" style={{ background:"#2d6a4f", color:"#fff", padding:"13px 20px", borderRadius:12, fontWeight:800, fontSize:14, boxShadow:"0 6px 20px rgba(45,106,79,0.2)", display:"inline-flex", alignItems:"center", gap:8 }}>
                     Join free · 20 credits
                   </Link>
-                  <Link to="/login" className="hero-secondary-btn sc-outline-btn" style={{ background:"#f0ece4", color:"#444", padding:"13px 18px", borderRadius:12, fontWeight:700, fontSize:14, display:"inline-flex", alignItems:"center", gap:8 }}>
+                  <Link to="/login" className="hero-secondary-btn" style={{ background:"#f0ece4", color:"#444", padding:"13px 18px", borderRadius:12, fontWeight:700, fontSize:14, display:"inline-flex", alignItems:"center", gap:8 }}>
                     Log in
                   </Link>
                 </div>
@@ -496,7 +362,7 @@ export default function Home() {
 
               <div className="hero-proof" style={{ display:"flex", alignItems:"center", gap:12, background:"#fff", border:"1.5px solid #e8e2d9", borderRadius:16, padding:"14px 18px", boxShadow:"0 2px 12px rgba(0,0,0,.04)", maxWidth:420 }}>
                 <div style={{ display:"flex", marginRight:4 }}>
-                  {["#168341","#b45309","#9d174d","#3730a3","#166534"].map((c,i) => (
+                  {["#2d6a4f","#b45309","#9d174d","#3730a3","#166534"].map((c,i) => (
                     <div key={i} style={{ width:28, height:28, borderRadius:"50%", background:c, border:"2px solid #fff", marginLeft:i===0?0:-8, display:"flex", alignItems:"center", justifyContent:"center", fontSize:11, color:"#fff", fontWeight:900 }}>
                       {["M","S","R","J","L"][i]}
                     </div>
@@ -582,9 +448,9 @@ export default function Home() {
       </section>
 
       {/* ── WHAT CAN YOU LEARN (EXPLORE) ── */}
-      <section id="explore" className="section-pad reveal home-soft-bubbles" style={{ background:"transparent", padding:"72px 48px" }}>
+      <section id="explore" className="section-pad reveal" style={{ background:"#faf8f4", padding:"72px 48px" }}>
         <div style={{ maxWidth:1080, margin:"0 auto", textAlign:"center" }}>
-          <span style={{ fontSize:12, fontWeight:800, color:"#168341", letterSpacing:"0.12em", textTransform:"uppercase" }}>Explore by interest · {learnTopics.length} categories</span>
+          <span style={{ fontSize:12, fontWeight:800, color:"#2d6a4f", letterSpacing:"0.12em", textTransform:"uppercase" }}>Explore by interest · {learnTopics.length} categories</span>
           <h2 style={{ fontFamily:"'Fraunces',serif", fontSize:36, fontWeight:900, color:"#111", marginTop:10, marginBottom:8, letterSpacing:"-0.02em" }}>Anything the community knows</h2>
           <p style={{ fontSize:15, color:"#666", marginBottom:32, lineHeight:1.7 }}>From everyday skills to creative work, find a topic you’re excited to learn or teach.</p>
           <div className="explore-pill-cloud-v1">
@@ -602,10 +468,10 @@ export default function Home() {
       </section>
 
       {/* ── HOW IT WORKS ── */}
-      <section id="how-it-works" className="section-pad reveal home-soft-bubbles" style={{ background:"transparent", padding:"80px 48px", borderTop:"1px solid rgba(151,180,158,.18)", borderBottom:"1px solid rgba(151,180,158,.18)" }}>
+      <section id="how-it-works" className="section-pad reveal" style={{ background:"#fff", padding:"80px 48px", borderTop:"1px solid #e8e2d9", borderBottom:"1px solid #e8e2d9" }}>
         <div style={{ maxWidth:1000, margin:"0 auto" }}>
           <div style={{ textAlign:"center", marginBottom:52 }}>
-            <span style={{ fontSize:12, fontWeight:800, color:"#168341", letterSpacing:"0.12em", textTransform:"uppercase" }}>How it works</span>
+            <span style={{ fontSize:12, fontWeight:800, color:"#2d6a4f", letterSpacing:"0.12em", textTransform:"uppercase" }}>How it works</span>
             <h2 style={{ fontFamily:"'Fraunces',serif", fontSize:40, fontWeight:900, color:"#111", marginTop:10, letterSpacing:"-0.02em" }}>Simple. Fair. Powerful.</h2>
           </div>
           <div className="steps-grid">
@@ -617,9 +483,9 @@ export default function Home() {
               <div key={item.num} style={{ background:"#faf8f4", borderRadius:20, padding:"32px 28px", border:"1.5px solid #e8e2d9", position:"relative", overflow:"hidden" }}>
                 <div style={{ position:"absolute", top:-16, right:-16, width:80, height:80, borderRadius:"50%", background:"#e8f4e8", opacity:.7 }} />
                 <span style={{ display:"block", marginBottom:14 }}>
-                  <item.Icon size={32} color="#168341" strokeWidth={1.5} />
+                  <item.Icon size={32} color="#2d6a4f" strokeWidth={1.5} />
                 </span>
-                <span style={{ fontSize:11, fontWeight:900, color:"#168341", letterSpacing:"0.1em" }}>STEP {item.num}</span>
+                <span style={{ fontSize:11, fontWeight:900, color:"#2d6a4f", letterSpacing:"0.1em" }}>STEP {item.num}</span>
                 <h3 style={{ fontFamily:"'Fraunces',serif", fontSize:18, fontWeight:900, color:"#111", margin:"8px 0 10px" }}>{item.title}</h3>
                 <p style={{ fontSize:14, color:"#666", lineHeight:1.7 }}>{item.desc}</p>
               </div>
@@ -629,10 +495,10 @@ export default function Home() {
       </section>
 
       {/* ── FEATURES ── */}
-      <section id="features" className="section-pad reveal home-soft-bubbles" style={{ padding:"80px 48px", background:"transparent" }}>
+      <section id="features" className="section-pad reveal" style={{ padding:"80px 48px", background:"#faf8f4" }}>
         <div style={{ maxWidth:1100, margin:"0 auto" }}>
           <div style={{ textAlign:"center", marginBottom:48 }}>
-            <span style={{ fontSize:12, fontWeight:800, color:"#168341", letterSpacing:"0.12em", textTransform:"uppercase" }}>Platform Features</span>
+            <span style={{ fontSize:12, fontWeight:800, color:"#2d6a4f", letterSpacing:"0.12em", textTransform:"uppercase" }}>Platform Features</span>
             <h2 style={{ fontFamily:"'Fraunces',serif", fontSize:40, fontWeight:900, color:"#111", marginTop:10, letterSpacing:"-0.02em" }}>Tools to learn with confidence</h2>
           </div>
           <div className="features-grid">
@@ -650,7 +516,7 @@ export default function Home() {
       </section>
 
       {/* ── TOP RATED SPOTLIGHT: same 5-question scoring + 3-review minimum ── */}
-      <section className="section-pad reveal home-leaderboard home-soft-bubbles" style={{ background:"transparent", padding:"75px 48px", borderTop:"1px solid rgba(151,180,158,.18)", borderBottom:"1px solid rgba(151,180,158,.18)" }}>
+      <section className="section-pad reveal home-leaderboard" style={{ background:"radial-gradient(circle at 50% 2%,#eef5ed 0%,#faf8f4 68%)", padding:"75px 48px", borderTop:"1px solid #e4e8df", borderBottom:"1px solid #e4e8df" }}>
         <div className="home-leaderboard-inner">
           <div style={{ textAlign:"center", marginBottom:30 }}>
             <span className="home-leaderboard-kicker"><Trophy size={14} /> Community Leaderboard</span>
@@ -710,7 +576,7 @@ export default function Home() {
           </div>
           <div className="home-leaderboard-footer">
             <p className="home-leaderboard-note">5 review criteria · 3+ reviews to qualify{ratingsSource === 'public' ? ' · Public preview' : ' · Global ratings'}</p>
-            <Link to="/login" className="home-leaderboard-more sc-outline-btn">Explore full leaderboard <ArrowRight size={15} aria-hidden="true" /></Link>
+            <Link to="/login" className="home-leaderboard-more">Explore full leaderboard <ArrowRight size={15} aria-hidden="true" /></Link>
           </div>
         </div>
       </section>
@@ -719,7 +585,7 @@ export default function Home() {
       <DownloadAppSection />
 
       {/* ── FINAL CTA ── */}
-      <section className="section-pad reveal home-final-cta" style={{ background:"linear-gradient(135deg,#1a3d2e 0%,#168341 50%,#1a4a35 100%)", padding:"96px 48px", textAlign:"center", position:"relative", overflow:"hidden" }}>
+      <section className="section-pad reveal home-final-cta" style={{ background:"linear-gradient(135deg,#1a3d2e 0%,#2d6a4f 50%,#1a4a35 100%)", padding:"96px 48px", textAlign:"center", position:"relative", overflow:"hidden" }}>
         <div style={{ position:"absolute", top:-60, left:"10%", width:300, height:300, borderRadius:"50%", background:"rgba(255,255,255,0.04)" }} />
         <div style={{ position:"absolute", bottom:-80, right:"15%", width:400, height:400, borderRadius:"50%", background:"rgba(255,255,255,0.03)" }} />
         <div className="home-final-cta-inner" style={{ position:"relative" }}>
@@ -733,7 +599,7 @@ export default function Home() {
             Share what you know, explore skills you want to learn, and connect with the community.
           </p>
           <div className="home-final-cta-actions" style={{ display:"flex", gap:14, justifyContent:"center", flexWrap:"wrap", marginBottom:16 }}>
-            <Link to="/register" className="cta-btn home-final-cta-btn sc-gradient-btn sc-gradient-btn--inverse" style={{ background:"#fff", color:"#168341", padding:"13px 22px", borderRadius:12, fontWeight:800, fontSize:14, display:"inline-flex", alignItems:"center", gap:8 }}>
+            <Link to="/register" className="cta-btn home-final-cta-btn" style={{ background:"#fff", color:"#2d6a4f", padding:"13px 22px", borderRadius:12, fontWeight:800, fontSize:14, display:"inline-flex", alignItems:"center", gap:8 }}>
               Join free · Get 20 credits
             </Link>
           </div>
@@ -745,7 +611,7 @@ export default function Home() {
       <footer className="site-footer" style={{ background:"#111", padding:"32px 48px" }}>
         <div className="footer-inner">
           <div style={{ display:"flex", alignItems:"center" }}>
-            <span style={{ fontFamily:"'Fraunces',serif", fontSize:18, fontWeight:900, color:"#168341" }}>Skill</span>
+            <span style={{ fontFamily:"'Fraunces',serif", fontSize:18, fontWeight:900, color:"#2d6a4f" }}>Skill</span>
             <span style={{ fontFamily:"'Fraunces',serif", fontSize:18, fontWeight:900, color:"#fff" }}>Credit</span>
           </div>
           <div className="footer-signature" style={{ textAlign: "center", transform: "translateX(35px)" }}>
@@ -759,7 +625,7 @@ export default function Home() {
                 display: "inline-flex",
                 alignItems: "center",
                 gap: 20,
-                background: "linear-gradient(135deg,#1a3d2e,#168341)",
+                background: "linear-gradient(135deg,#1a3d2e,#2d6a4f)",
                 border: "1px solid rgba(45,106,79,0.4)",
                 borderRadius: 999,
                 padding: "6px 16px",

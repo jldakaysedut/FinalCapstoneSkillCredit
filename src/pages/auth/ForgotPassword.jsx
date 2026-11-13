@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import supabase from '../../supabaseClient';
-import { Mail, ArrowLeft, CheckCircle2, AlertCircle, Send, Sparkles } from 'lucide-react';
+import { Mail, ArrowLeft, CheckCircle2, AlertCircle } from 'lucide-react';
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState('');
@@ -16,18 +16,20 @@ export default function ForgotPassword() {
     setError('');
 
     try {
+      // 1. Supabase BaaS handles the actual security and email sending
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/reset-password`,
       });
 
       if (error) throw error;
 
+      // 2. Custom Audit Log para sa Capstone Panel Defense
       const { error: dbError } = await supabase
         .from('password_reset_requests')
         .insert([{ email: email, status: 'link_sent' }]);
 
       if (dbError) {
-        console.error('Audit log error:', dbError.message);
+        console.error("Audit log error:", dbError.message);
       }
 
       setMessage('Password reset link sent! Please check your email inbox or spam folder.');
@@ -39,71 +41,58 @@ export default function ForgotPassword() {
   };
 
   return (
-    <div className="auth-shell">
-      <div className="auth-bg auth-bg--top-left" aria-hidden="true" />
-      <div className="auth-bg auth-bg--top-right" aria-hidden="true" />
-      <div className="auth-bg auth-bg--bottom-left" aria-hidden="true" />
-      <div className="auth-bg auth-bg--bottom-right" aria-hidden="true" />
-
-      <Link to="/login" className="auth-back-link">
-        <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-        Back to Login
-      </Link>
-
-      <div className="auth-card">
-        <div className="auth-logo-wrap">
-          <img src="/logo.png" alt="SkillCredit" className="auth-logo" />
-        </div>
-
-        <div className="auth-header">
-          <h1 className="auth-title">
-            Forgot password
-            <Sparkles className="auth-title-accent" aria-hidden="true" />
-          </h1>
-          <p className="auth-subtitle">Enter your registered email and we'll send you a reset link.</p>
+    <div className="flex min-h-screen items-center justify-center bg-[#faf9f6] px-4 sm:px-6 py-12">
+      <div className="w-full max-w-md rounded-2xl border border-gray-200 bg-white p-6 sm:p-8 shadow-[0_12px_34px_rgba(0,0,0,0.055)]">
+        <div className="mb-6 flex flex-col items-center text-center">
+          <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
+            <Mail className="h-6 w-6" />
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900">Forgot Password</h2>
+          <p className="mt-2 text-sm text-gray-500">Enter your registered email address and we'll send you a link to reset your password.</p>
         </div>
 
         {message && (
-          <div className="auth-alert auth-alert--success">
-            <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" />
+          <div className="mb-6 flex items-start gap-2.5 rounded-xl border border-emerald-100 bg-emerald-50 p-4 text-sm text-emerald-800">
+            <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-600" />
             <p>{message}</p>
           </div>
         )}
 
         {error && (
-          <div className="auth-alert auth-alert--error">
-            <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-rose-600" />
+          <div className="mb-6 flex items-start gap-2.5 rounded-xl border border-rose-100 bg-rose-50 p-4 text-sm text-rose-800">
+            <AlertCircle className="h-5 w-5 shrink-0 text-rose-600" />
             <p>{error}</p>
           </div>
         )}
 
-        <form onSubmit={handleReset} className="auth-form">
+        <form onSubmit={handleReset} className="space-y-5">
           <div>
-            <label htmlFor="forgot-email" className="auth-label">Email</label>
+            <label htmlFor="email" className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-gray-600">Email Address</label>
             <input
-              id="forgot-email"
+              id="email"
               type="email"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
-              className="auth-input"
+              className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm outline-none transition focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-100 focus-visible:outline-none"
             />
           </div>
 
-          <button type="submit" disabled={loading || !email} className="auth-primary-btn">
-            {loading ? 'Sending link...' : <><Send className="h-[18px] w-[18px]" /> Send Reset Link</>}
+          <button
+            type="submit"
+            disabled={loading || !email}
+            className="flex w-full items-center justify-center rounded-xl bg-emerald-700 py-3 text-sm font-bold text-white transition-colors duration-150 hover:bg-emerald-800 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-emerald-600/20 disabled:opacity-50"
+          >
+            {loading ? 'Sending Link...' : 'Send Reset Link'}
           </button>
         </form>
 
-        <div className="auth-divider" aria-hidden="true" />
-
-        <p className="auth-footer-text">
-          Remembered your password?{' '}
-          <Link to="/login" className="auth-footer-link">
-            Log In
+        <div className="mt-6 text-center">
+          <Link to="/login" className="inline-flex items-center gap-1.5 text-sm font-semibold text-emerald-700 transition hover:text-emerald-800">
+            <ArrowLeft className="h-4 w-4" /> Back to Login
           </Link>
-        </p>
+        </div>
       </div>
     </div>
   );

@@ -33,17 +33,10 @@ export default function MainLayout() {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,700;0,800;0,900;1,800&family=DM+Sans:wght@400;500;600;700&display=swap');
         
-        /* Match the Home and Login green-gradient accents on public navigation. */
-        .nav-link { transition: color .18s, background-color .18s; }
-        .nav-link:hover { color: #07803a !important; background: #edf8ee !important; }
-        .nav-link:focus-visible,
-        .main-nav-login:focus-visible,
-        .main-nav-signup:focus-visible { outline: 3px solid rgba(64,179,67,.32); outline-offset: 2px; }
-        .main-nav-login { transition: border-color .2s, color .2s, background-color .2s, box-shadow .2s; }
-        .main-nav-login:hover { color: #07803a !important; border-color: #8fd3a0 !important; background: #f0f9f1 !important; }
-        .cta-btn { transition: transform .2s, box-shadow .2s, filter .2s; }
-        .cta-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(21,129,56,.26) !important; filter: saturate(1.08); }
-        .cta-btn:active { transform: translateY(0); }
+        .nav-link { transition: color .15s, background .15s; }
+        .nav-link:hover { color: #2d6a4f !important; background: #eef6ee !important; }
+        .cta-btn { transition: transform .2s, box-shadow .2s; }
+        .cta-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 32px rgba(45,106,79,0.4) !important; }
         .main-nav { box-sizing:border-box; width:100%; gap:12px; }
         .main-nav-logo { flex:0 0 auto; min-width:0; }
         .main-nav-logo a { white-space:nowrap; gap:6px; }
@@ -87,7 +80,7 @@ export default function MainLayout() {
           <a href="/#" style={{ display: "flex", alignItems: "center", textDecoration: "none" }}>
             <span className="main-nav-logo-mark" aria-hidden="true"><img src="/logo.png" alt="" /></span>
             <span className="main-nav-wordmark">
-              <span style={{ fontFamily: "'Fraunces', serif", fontSize: 22, fontWeight: 900, color: "#07803a" }}>Skill</span>
+              <span style={{ fontFamily: "'Fraunces', serif", fontSize: 22, fontWeight: 900, color: "#2d6a4f" }}>Skill</span>
               <span style={{ fontFamily: "'Fraunces', serif", fontSize: 22, fontWeight: 900, color: "#111" }}>Credit</span>
             </span>
           </a>
@@ -105,7 +98,7 @@ export default function MainLayout() {
             const isActive = location.hash === link.path.replace('/', '');
             const isHomeActive = location.pathname === '/' && !location.hash && link.label === "Home";
             const activeStyle = isActive || isHomeActive 
-              ? { color: "#07803a", background: "#edf8ee" } 
+              ? { color: "#2d6a4f", background: "#eef6ee" } 
               : { color: "#555", background: "transparent" };
             
             return (
@@ -126,10 +119,10 @@ export default function MainLayout() {
 
         {/* AUTH BUTTONS */}
         <div className="main-nav-auth" style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          <Link className="main-nav-login" to="/login" style={{ padding: "8px 16px", borderRadius: 999, border: "1.5px solid #bfd9c5", color: "#276945", background: "rgba(255,255,255,0.72)", fontWeight: 600, fontSize: 13, textDecoration: "none" }}>
+          <Link className="main-nav-login" to="/login" style={{ padding: "8px 16px", borderRadius: 10, border: "1.5px solid #ccc", color: "#444", fontWeight: 600, fontSize: 13, textDecoration: "none" }}>
             Log in
           </Link>
-          <Link to="/register" className="cta-btn main-nav-signup" style={{ padding: "8px 18px", borderRadius: 999, background: "linear-gradient(110deg,#40b343 0%,#20983d 48%,#07803a 100%)", color: "#fff", fontWeight: 800, fontSize: 13, boxShadow: "0 4px 14px rgba(21,129,56,0.22)", textDecoration: "none" }}>
+          <Link to="/register" className="cta-btn main-nav-signup" style={{ padding: "8px 18px", borderRadius: 10, background: "#2d6a4f", color: "#fff", fontWeight: 800, fontSize: 13, boxShadow: "0 4px 14px rgba(45,106,79,0.28)", textDecoration: "none" }}>
             Sign up free
           </Link>
         </div>
