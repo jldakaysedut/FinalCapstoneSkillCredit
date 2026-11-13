@@ -166,38 +166,60 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="sc-home" style={{ background:"#faf8f4", fontFamily:"'DM Sans',sans-serif", overflowX:"hidden", width: "100%" }}>
+    <div className="sc-home" style={{ fontFamily:"'DM Sans',sans-serif", overflowX:"hidden", width: "100%" }}>
       <style>{`
         .sc-home { color:#162b21; }
         .sc-home section { scroll-margin-top:75px; }
         .sc-home a:focus-visible { outline:3px solid #66b88d; outline-offset:4px; }
         .sc-home ::selection { background:#c7eed5; color:#10452d; }
-        .sc-home .hero-section { position:relative;isolation:isolate;background:radial-gradient(circle at 78% 24%,#e3f2e5 0%,transparent 40%),radial-gradient(circle at 0% 100%,#f3eadd,transparent 40%); }
-        .sc-home .hero-section:before {content:"";position:absolute;inset:0;pointer-events:none;opacity:.2;background-image:radial-gradient(#45845e 0.75px,transparent 0.75px);background-size:24px 24px;mask-image:linear-gradient(90deg,transparent,#000 80%);z-index:-1;}
-        /* Option D: small elegant curved corner accents, inspired by the supplied reference. */
+        /* Shared soft-green background, visually matching the public auth pages.
+           A single Home canvas keeps section boundaries clean and unbroken. */
+        .sc-home {
+          background:
+            radial-gradient(circle at 0% 0%, rgba(208,234,199,.62) 0%, rgba(208,234,199,0) 29%),
+            radial-gradient(circle at 100% 85%, rgba(214,240,208,.64) 0%, rgba(214,240,208,0) 34%),
+            linear-gradient(180deg,#f3faee 0%,#eef6eb 48%,#f8fbf5 100%);
+        }
+        .sc-home .hero-section { position:relative; isolation:isolate; background:transparent; }
+        /* Download section shares the same pastel canvas while retaining its mock phone/card layout. */
+        .sc-home .sc-download-section { background:transparent; }
         .sc-home .home-soft-bubbles { position:relative; isolation:isolate; overflow:hidden; }
+        /* Keep decorative shapes smaller than the content; they fade within each section. */
         .sc-home .home-soft-bubbles::before {
           content:"";
           position:absolute;
-          z-index:0;
+          top:0; left:0;
+          width:clamp(155px,20vw,250px);
+          height:clamp(108px,14vw,165px);
           pointer-events:none;
-          width:clamp(180px,20vw,265px);
-          aspect-ratio: 14 / 9;
-          top:0;
-          left:0;
-          background: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyODAgMTgwIiB3aWR0aD0iMjgwIiBoZWlnaHQ9IjE4MCI+CjxkZWZzPgogIDxsaW5lYXJHcmFkaWVudCBpZD0ibGVhZiIgeDE9IjAiIHkxPSIwIiB4Mj0iMSIgeTI9IjEiPjxzdG9wIHN0b3AtY29sb3I9IiNkOGVhY2IiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNlOWY0ZGQiLz48L2xpbmVhckdyYWRpZW50PgogIDxsaW5lYXJHcmFkaWVudCBpZD0ib2xpdmUiIHgxPSIwIiB5MT0iMCIgeDI9IjAuOCIgeTI9IjEiPjxzdG9wIHN0b3AtY29sb3I9IiNhZWM5OWIiIHN0b3Atb3BhY2l0eT0iLjg2Ii8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjZDZlNmM0IiBzdG9wLW9wYWNpdHk9Ii41NyIvPjwvbGluZWFyR3JhZGllbnQ+CjwvZGVmcz4KPCEtLSBTb2Z0IHBhbGUtZ3JlZW4gbGVhZi1saWtlIGZvbGQgdGhhdCBmYWRlcyBpbnRvIHRoZSBjcmVhbSBwYWdlIC0tPgo8cGF0aCBkPSJNMCAwIEgyNjYgQzIzMiAxOSAyMjAgNDcgMTg4IDY3IEMxMzcgOTkgNzUgMTIxIDAgMTU3IFoiIGZpbGw9InVybCgjbGVhZikiIG9wYWNpdHk9Ii42NiIvPgo8cGF0aCBkPSJNMCAwIEgxNTcgQzEzOCAyNSAxMjMgNDMgOTQgNTkgQzY1IDc2IDM2IDg0IDAgOTYgWiIgZmlsbD0idXJsKCNvbGl2ZSkiIG9wYWNpdHk9Ii43MiIvPgo8IS0tIFF1aWV0IGNyZWFtIHN3ZWVwLCBrZWVwaW5nIHRoZSBjb2xvcmVkIGNvcm5lciBkZWxpY2F0ZSAtLT4KPHBhdGggZD0iTTAgMTY4IEM1NiAxMjIgMTA3IDExMyAxNTggODYgQzIwMSA2NCAyMjUgMzUgMjYwIDAiIHN0cm9rZT0iI2Q2YjQ3NiIgc3Ryb2tlLXdpZHRoPSIxLjM1IiBmaWxsPSJub25lIiBvcGFjaXR5PSIuODAiLz4KPC9zdmc+") left top / 100% 100% no-repeat;
+          z-index:0;
+          background:
+            radial-gradient(ellipse at -15% -5%,rgba(146,192,126,.26) 0 34%,transparent 69%),
+            radial-gradient(ellipse at 15% -24%,rgba(205,236,193,.51) 0 52%,transparent 79%);
         }
-        .sc-home .home-soft-bubbles::after { display:none; }
+        /* A single delicate gold arc like the Login/Register background. */
+        .sc-home .home-soft-bubbles::after {
+          content:"";
+          position:absolute;
+          top:0; left:0;
+          width:clamp(165px,22vw,268px);
+          height:clamp(105px,13vw,162px);
+          background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 268 162'%3E%3Cpath d='M -24 156 C 28 93 99 91 145 53 S 225 14 285 -28' fill='none' stroke='%23d6b476' stroke-width='1.1' opacity='.65'/%3E%3C/svg%3E") no-repeat left top / 100% 100%;
+          pointer-events:none;
+          z-index:0;
+          opacity:.55;
+        }
         .sc-home .home-soft-bubbles > * { position:relative; z-index:1; }
-        /* Alternate corners; decorative waves stay fully inside their own section. */
         .sc-home #how-it-works.home-soft-bubbles::before,
-        .sc-home .home-leaderboard.home-soft-bubbles::before {
-          left:auto;
-          right:0;
+        .sc-home #how-it-works.home-soft-bubbles::after,
+        .sc-home .home-leaderboard.home-soft-bubbles::before,
+        .sc-home .home-leaderboard.home-soft-bubbles::after {
+          left:auto; right:0;
           transform:scaleX(-1);
         }
         @media(max-width:600px) {
-          .sc-home .home-soft-bubbles::before { width:160px; }
+          .sc-home .home-soft-bubbles::before { width:140px;height:102px; }
+          .sc-home .home-soft-bubbles::after { width:144px;height:94px; }
         }
                 .sc-home .hero-shell {max-width:1200px;margin:0 auto;padding:26px 48px;width:100%;}
         .sc-home .hero-download-link {display:inline-flex;align-items:center;gap:9px;margin-top:7px;font-size:13px;font-weight:800;color:#2d6a4f;text-decoration:none;border-bottom:1px solid transparent;transition:gap .2s,border-color .2s;}
@@ -356,7 +378,7 @@ export default function Home() {
       `}</style>
 
       {/* ── HERO ── */}
-      <section className="hero-section" style={{ minHeight:"calc(100vh - 64px)", display:"flex", alignItems:"center", width:"100%", padding:"40px 0" }}>
+      <section className="hero-section home-soft-bubbles" style={{ minHeight:"calc(100vh - 64px)", display:"flex", alignItems:"center", width:"100%", padding:"40px 0" }}>
         <div className="hero-shell">
           <div className="hero-grid">
             <div>
@@ -473,7 +495,7 @@ export default function Home() {
       </section>
 
       {/* ── WHAT CAN YOU LEARN (EXPLORE) ── */}
-      <section id="explore" className="section-pad reveal home-soft-bubbles" style={{ background:"#faf8f4", padding:"72px 48px" }}>
+      <section id="explore" className="section-pad reveal home-soft-bubbles" style={{ background:"transparent", padding:"72px 48px" }}>
         <div style={{ maxWidth:1080, margin:"0 auto", textAlign:"center" }}>
           <span style={{ fontSize:12, fontWeight:800, color:"#2d6a4f", letterSpacing:"0.12em", textTransform:"uppercase" }}>Explore by interest · {learnTopics.length} categories</span>
           <h2 style={{ fontFamily:"'Fraunces',serif", fontSize:36, fontWeight:900, color:"#111", marginTop:10, marginBottom:8, letterSpacing:"-0.02em" }}>Anything the community knows</h2>
@@ -493,7 +515,7 @@ export default function Home() {
       </section>
 
       {/* ── HOW IT WORKS ── */}
-      <section id="how-it-works" className="section-pad reveal home-soft-bubbles" style={{ background:"#fff", padding:"80px 48px", borderTop:"1px solid #e8e2d9", borderBottom:"1px solid #e8e2d9" }}>
+      <section id="how-it-works" className="section-pad reveal home-soft-bubbles" style={{ background:"transparent", padding:"80px 48px", borderTop:"1px solid rgba(151,180,158,.18)", borderBottom:"1px solid rgba(151,180,158,.18)" }}>
         <div style={{ maxWidth:1000, margin:"0 auto" }}>
           <div style={{ textAlign:"center", marginBottom:52 }}>
             <span style={{ fontSize:12, fontWeight:800, color:"#2d6a4f", letterSpacing:"0.12em", textTransform:"uppercase" }}>How it works</span>
@@ -520,7 +542,7 @@ export default function Home() {
       </section>
 
       {/* ── FEATURES ── */}
-      <section id="features" className="section-pad reveal home-soft-bubbles" style={{ padding:"80px 48px", background:"#faf8f4" }}>
+      <section id="features" className="section-pad reveal home-soft-bubbles" style={{ padding:"80px 48px", background:"transparent" }}>
         <div style={{ maxWidth:1100, margin:"0 auto" }}>
           <div style={{ textAlign:"center", marginBottom:48 }}>
             <span style={{ fontSize:12, fontWeight:800, color:"#2d6a4f", letterSpacing:"0.12em", textTransform:"uppercase" }}>Platform Features</span>
@@ -541,7 +563,7 @@ export default function Home() {
       </section>
 
       {/* ── TOP RATED SPOTLIGHT: same 5-question scoring + 3-review minimum ── */}
-      <section className="section-pad reveal home-leaderboard home-soft-bubbles" style={{ background:"radial-gradient(circle at 50% 2%,#eef5ed 0%,#faf8f4 68%)", padding:"75px 48px", borderTop:"1px solid #e4e8df", borderBottom:"1px solid #e4e8df" }}>
+      <section className="section-pad reveal home-leaderboard home-soft-bubbles" style={{ background:"transparent", padding:"75px 48px", borderTop:"1px solid rgba(151,180,158,.18)", borderBottom:"1px solid rgba(151,180,158,.18)" }}>
         <div className="home-leaderboard-inner">
           <div style={{ textAlign:"center", marginBottom:30 }}>
             <span className="home-leaderboard-kicker"><Trophy size={14} /> Community Leaderboard</span>
