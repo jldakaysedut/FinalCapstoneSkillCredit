@@ -42,3 +42,11 @@ html {
   background-color: #b2d4c9; /* Dito mo palitan yung kulay (Emerald Green to) */
   border-radius: 10px;
 }
+/* Login only: keep browser-autofilled inputs neutral instead of blue. */
+.skillcredit-login-input:-webkit-autofill,
+.skillcredit-login-input:-webkit-autofill:hover,
+.skillcredit-login-input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 1000px #ffffff inset;
+  -webkit-text-fill-color: #1e293b;
+  caret-color: #1e293b;
+}
