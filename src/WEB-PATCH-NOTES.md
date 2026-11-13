@@ -328,3 +328,17 @@ This patch is prepared locally only. No Supabase deployment or live cross-accoun
 - Reduced excess reserved right space for posts with only a Report icon while preserving the space required for owner Edit/Delete icons.
 - Aligned avatars to the top of the author text on mobile; original desktop alignment retained.
 - No changes to database, RLS, Edge Functions, web routes, or business logic.
+
+
+## Admin Ban Sync & Escalations (Nov 13, 2026) — SUPERSEDED (NOT RUN)
+
+An earlier draft patch proposed additional `admin_escalations` columns and a transactional Supabase RPC. **It was not executed and is not part of the current implementation. Do not run `02-centralized-admin-bans.sql`.** The replacement below uses only the original database schema.
+
+
+## 2026-11-13 — Admin ban group: existing tables only (supersedes SQL-based patch)
+
+Earlier centralized-ban SQL migration was NOT run. Do not run `supabase/sql/02-centralized-admin-bans.sql`; it adds columns that the project will not use. The two admin pages now use `user_profiles.is_banned` for current status and merge `admin_logs` direct-ban entries with existing `admin_escalations` moderator cases inside the Admin Banned UI. No new table, field, RLS policy, or RPC is needed. See `SkillCredit-Web-Admin-Ban-No-Schema-Patch-Notes.md` for behavior, tradeoffs, and tests.
+
+## 2026-11-13 — FINAL: Separate direct Admin Bans from genuine Escalations (no schema changes)
+
+Supersedes the **combined display list** described in the preceding Admin Ban Group note. In the final UI, `Escalations.jsx` fetches only actual `admin_escalations` rows. User Management direct bans continue using `user_profiles.is_banned` plus audit history in `admin_logs`, and appear in the **Banned** filter on User Management—not as synthetic Escalations cases. An existing moderator escalation for the same account still shows its current account Banned/Active status from the joined `user_profiles` record without inventing a second case. Escalations' `Admin Banned` metric covers only escalations with `status='admin_banned'` where the account is still banned. Unban from a *pending* escalation that did not enforce the ban is disabled; lift direct bans in User Management. Existing realtime `user_profiles` and `admin_escalations` listeners remain; no new SQL, tables, fields, RLS policies, RPCs, or realtime publications. Previous SQL migration was not run and must not be applied. See `SkillCredit-Web-Admin-Escalations-Clean-NoDB-Patch-Notes.md` for testing and limitations.

@@ -293,6 +293,7 @@ export default function UserManagement() {
   const [savingUserId, setSavingUserId] = useState(null);
   const [pageError, setPageError] = useState('');
   const [notice, setNotice] = useState('');
+  const [banNote, setBanNote] = useState('');
 
   const fetchUsers = useCallback(async () => {
     setLoading(true);
@@ -323,6 +324,7 @@ export default function UserManagement() {
     setActiveModal(null);
     setCreditAmount('');
     setCreditError('');
+    setBanNote('');
   }, []);
 
   const logAdminAction = async (targetUserId, actionType, details) => {
@@ -394,26 +396,71 @@ export default function UserManagement() {
 
   const handleBanToggle = async user => {
     const currentBanStatus = Boolean(user.is_banned);
-    const action = currentBanStatus ? 'UNBAN' : 'BAN';
+    const banning = !currentBanStatus;
+    if (adminUser?.id === user.id) {
+      setNotice('You cannot ban or unban your own admin account.');
+      closeModal();
+      return;
+    }
     setSavingUserId(user.id);
     setNotice('');
-    const { error } = await supabase.from('user_profiles').update({ is_banned: !currentBanStatus }).eq('id', user.id);
-    if (error) {
-      setNotice(`Could not ${currentBanStatus ? 'unban' : 'ban'} ${userName(user)}. Please try again.`);
+
+    // Keep the existing DB schema: user_profiles is the source of account status.
+    // Direct admin-ban history belongs to existing admin_logs.target_user_id.
+    // Only genuine moderator cases belong in the Admin Escalations queue.
+    const { error, data } = await supabase.from('user_profiles')
+      .update({ is_banned: banning })
+      .eq('id', user.id)
+      .select('id');
+    if (error || !data?.length) {
+      setNotice(`Could not ${banning ? 'ban' : 'unban'} ${userName(user)}. Please try again.`);
       setSavingUserId(null);
+      await fetchUsers();
       return;
     }
 
-    updateLocalUser(user.id, { is_banned: !currentBanStatus });
-    await logAdminAction(user.id, 'ACCOUNT_STATUS', `${action}NED user: ${userName(user)}`);
-    if (currentBanStatus) {
-      await supabase.from('notifications').insert({
-        user_id: user.id,
-        type: 'system',
-        content: 'Good news! Your account ban has been lifted by an Admin.',
-      });
+    updateLocalUser(user.id, { is_banned: banning });
+    const actionName = banning ? 'BANNED' : 'UNBANNED';
+    const reason = banNote.trim() || 'No notes provided';
+    const adminId = adminUser?.id || (await supabase.auth.getUser()).data?.user?.id;
+    const { error: logError } = adminId
+      ? await supabase.from('admin_logs').insert({
+      admin_id: adminId,
+      target_user_id: user.id,
+      action_type: 'ACCOUNT_STATUS',
+      details: `${actionName} user: ${userName(user)} | Source: User Management | Notes: ${reason}`,
+    })
+      : { error: new Error('Admin session missing; audit log not recorded.') };
+
+    // Existing moderator escalations are not converted into direct bans.
+    // On unban, close an earlier active moderator-ban decision for the same user.
+    if (!banning) {
+      const { data: cases, error: caseReadError } = await supabase
+        .from('admin_escalations')
+        .select('id, status, repeat_offender:repeat_offenders!inner(user_id)')
+        .eq('status', 'admin_banned')
+        .eq('repeat_offender.user_id', user.id);
+      if (caseReadError) {
+        console.warn('Account unbanned, but could not read existing escalation cases:', caseReadError);
+      } else if (cases?.length) {
+        const { error: caseUpdateError } = await supabase.from('admin_escalations')
+          .update({ status: 'resolved', updated_at: new Date().toISOString() })
+          .in('id', cases.map(record => record.id));
+        if (caseUpdateError) console.warn('Account unbanned, but escalation status could not be synchronized:', caseUpdateError);
+      }
     }
-    setNotice(`${userName(user)} is now ${currentBanStatus ? 'active' : 'banned'}.`);
+
+    const { error: notificationError } = await supabase.from('notifications').insert({
+      user_id: user.id,
+      type: banning ? 'account_banned' : 'system',
+      content: banning
+        ? 'Your account has been banned by an Administrator through User Management.'
+        : 'Good news! Your account ban has been lifted by an Admin.',
+    });
+    if (notificationError) console.warn('Account updated, but notification failed:', notificationError);
+    setNotice(logError
+      ? `${userName(user)} is now ${banning ? 'banned' : 'active'}, but the admin audit log could not be saved. Please verify the record.`
+      : `${userName(user)} is now ${banning ? 'banned' : 'active'}. This direct action is recorded in Admin Logs.`);
     setSavingUserId(null);
     closeModal();
   };
@@ -817,6 +864,20 @@ export default function UserManagement() {
                   )}
                 </p>
               </div>
+
+              {isBan && (
+                <label className="block text-xs font-medium text-gray-700">
+                  Admin remarks (optional)
+                  <textarea
+                    value={banNote}
+                    onChange={event => setBanNote(event.target.value)}
+                    placeholder={isRestoring ? 'Reason for lifting the ban...' : 'Reason for the direct admin ban...'}
+                    maxLength={2000}
+                    rows={3}
+                    className="mt-2 w-full resize-y rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-800 outline-none focus:border-emerald-500"
+                  />
+                </label>
+              )}
 
               {isBan && !isRestoring && (
                 <div className="flex items-start gap-2.5 rounded-xl border border-rose-100 bg-rose-50/60 p-3 text-xs leading-5 text-rose-900">
