@@ -174,7 +174,7 @@ export default function Home() {
         .sc-home ::selection { background:#c7eed5; color:#10452d; }
         .sc-home .hero-section { position:relative;isolation:isolate;background:radial-gradient(circle at 78% 24%,#e3f2e5 0%,transparent 40%),radial-gradient(circle at 0% 100%,#f3eadd,transparent 40%); }
         .sc-home .hero-section:before {content:"";position:absolute;inset:0;pointer-events:none;opacity:.2;background-image:radial-gradient(#45845e 0.75px,transparent 0.75px);background-size:24px 24px;mask-image:linear-gradient(90deg,transparent,#000 80%);z-index:-1;}
-        /* Option A: subtle organic pale-green bubbles on light Home sections only. */
+        /* Option B: softly layered mint-green organic bubbles on light Home sections. */
         .sc-home .home-soft-bubbles { position:relative; isolation:isolate; overflow:hidden; }
         .sc-home .home-soft-bubbles::before,
         .sc-home .home-soft-bubbles::after {
@@ -182,35 +182,44 @@ export default function Home() {
           position:absolute;
           z-index:0;
           pointer-events:none;
-          border-radius:54% 46% 59% 41% / 43% 56% 44% 57%;
-          filter:blur(5px);
+          filter:blur(2px);
         }
         .sc-home .home-soft-bubbles::before {
-          width:clamp(240px,38vw,490px);
-          height:clamp(230px,31vw,410px);
-          top:-155px;
-          left:-205px;
-          transform:rotate(-13deg);
-          background:radial-gradient(ellipse at 45% 48%,rgba(159,215,164,.24) 0%,rgba(201,235,202,.16) 55%,transparent 78%);
+          width:clamp(340px,48vw,650px);
+          height:clamp(280px,36vw,510px);
+          top:-200px;
+          left:-240px;
+          border-radius:61% 39% 62% 38% / 42% 64% 36% 58%;
+          transform:rotate(-16deg);
+          background:linear-gradient(135deg,rgba(177,221,176,.62),rgba(210,238,207,.48) 66%,rgba(235,248,227,.25));
+          box-shadow:0 0 0 36px rgba(191,228,189,.16),0 0 0 84px rgba(216,239,213,.14);
         }
         .sc-home .home-soft-bubbles::after {
-          width:clamp(270px,40vw,530px);
-          height:clamp(220px,32vw,430px);
-          right:-205px;
-          bottom:-180px;
-          transform:rotate(19deg);
-          background:radial-gradient(ellipse at 50% 50%,rgba(180,226,182,.22) 0%,rgba(220,241,213,.13) 54%,transparent 78%);
+          width:clamp(380px,51vw,690px);
+          height:clamp(290px,38vw,540px);
+          right:-255px;
+          bottom:-220px;
+          border-radius:45% 55% 38% 62% / 62% 37% 63% 38%;
+          transform:rotate(14deg);
+          background:linear-gradient(225deg,rgba(170,216,166,.55),rgba(201,236,201,.47) 62%,rgba(237,249,227,.24));
+          box-shadow:0 0 0 35px rgba(187,228,180,.16),0 0 0 79px rgba(220,242,213,.13);
         }
         .sc-home .home-soft-bubbles > * { position:relative; z-index:1; }
-        .sc-home #how-it-works.home-soft-bubbles::before { left:auto; right:-230px; top:-185px; }
-        .sc-home #how-it-works.home-soft-bubbles::after { right:auto; left:-230px; bottom:-190px; }
-        .sc-home .home-leaderboard.home-soft-bubbles::before { opacity:.50; }
-        .sc-home .home-leaderboard.home-soft-bubbles::after { opacity:.50; }
+        /* Alternate the corner shapes, so the sections don't look repetitive. */
+        .sc-home #how-it-works.home-soft-bubbles::before { left:auto; right:-245px; top:-200px; transform:rotate(19deg); }
+        .sc-home #how-it-works.home-soft-bubbles::after { right:auto; left:-260px; bottom:-210px; transform:rotate(-14deg); }
+        .sc-home #features.home-soft-bubbles::before { top:-225px; left:-285px; }
+        .sc-home #features.home-soft-bubbles::after { right:-270px; bottom:-235px; }
+        /* Ratings remain the visual focus in the leaderboard section. */
+        .sc-home .home-leaderboard.home-soft-bubbles::before,
+        .sc-home .home-leaderboard.home-soft-bubbles::after { opacity:.75; }
         @media(max-width:600px) {
-          .sc-home .home-soft-bubbles::before { top:-110px; left:-165px; }
-          .sc-home .home-soft-bubbles::after { right:-170px; bottom:-125px; }
-          .sc-home #how-it-works.home-soft-bubbles::before { right:-175px; top:-135px; }
-          .sc-home #how-it-works.home-soft-bubbles::after { left:-170px; bottom:-130px; }
+          .sc-home .home-soft-bubbles::before { width:350px; height:300px; top:-175px; left:-215px; }
+          .sc-home .home-soft-bubbles::after { width:370px; height:310px; right:-235px; bottom:-190px; }
+          .sc-home #how-it-works.home-soft-bubbles::before { left:auto; right:-225px; top:-178px; }
+          .sc-home #how-it-works.home-soft-bubbles::after { right:auto; left:-230px; bottom:-185px; }
+          .sc-home #features.home-soft-bubbles::before { top:-185px; left:-230px; }
+          .sc-home #features.home-soft-bubbles::after { right:-240px; bottom:-192px; }
         }
         .sc-home .hero-shell {max-width:1200px;margin:0 auto;padding:26px 48px;width:100%;}
         .sc-home .hero-download-link {display:inline-flex;align-items:center;gap:9px;margin-top:7px;font-size:13px;font-weight:800;color:#2d6a4f;text-decoration:none;border-bottom:1px solid transparent;transition:gap .2s,border-color .2s;}
