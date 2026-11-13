@@ -392,30 +392,43 @@ export default function UserManagement() {
     closeModal();
   };
 
+  // One atomic database operation updates account access, linked escalation cases,
+  // audit history and notification. Realtime listeners refresh other open admin tabs.
   const handleBanToggle = async user => {
     const currentBanStatus = Boolean(user.is_banned);
-    const action = currentBanStatus ? 'UNBAN' : 'BAN';
     setSavingUserId(user.id);
     setNotice('');
-    const { error } = await supabase.from('user_profiles').update({ is_banned: !currentBanStatus }).eq('id', user.id);
+
+    const { error } = await supabase.rpc('skillcredit_admin_change_account_ban', {
+      p_target_user_id: user.id,
+      p_is_banned: !currentBanStatus,
+      p_source: 'user_management',
+      p_note: null,
+      p_escalation_id: null,
+    });
+
     if (error) {
-      setNotice(`Could not ${currentBanStatus ? 'unban' : 'ban'} ${userName(user)}. Please try again.`);
+      console.error('Account ban update failed:', error);
+      setNotice(`Could not ${currentBanStatus ? 'lift the ban for' : 'ban'} ${userName(user)}. ${error.message}`);
       setSavingUserId(null);
+      await fetchUsers();
       return;
     }
 
-    updateLocalUser(user.id, { is_banned: !currentBanStatus });
-    await logAdminAction(user.id, 'ACCOUNT_STATUS', `${action}NED user: ${userName(user)}`);
+    // Preserve the original 'ban lifted' system notification behavior.
     if (currentBanStatus) {
-      await supabase.from('notifications').insert({
+      const { error: notificationError } = await supabase.from('notifications').insert({
         user_id: user.id,
         type: 'system',
         content: 'Good news! Your account ban has been lifted by an Admin.',
       });
+      if (notificationError) console.warn('Ban lift saved; notification could not be sent:', notificationError);
     }
-    setNotice(`${userName(user)} is now ${currentBanStatus ? 'active' : 'banned'}.`);
+    updateLocalUser(user.id, { is_banned: !currentBanStatus });
+    setNotice(`${userName(user)} is now ${currentBanStatus ? 'active' : 'banned'}. Linked escalation cases were synchronized.`);
     setSavingUserId(null);
     closeModal();
+    await fetchUsers();
   };
 
   const handleConfirmAction = async () => {
