@@ -484,7 +484,7 @@ export default function Sessions() {
       <div className="mx-auto max-w-[1000px] min-w-0 animate-pulse px-3 py-4 sm:px-6 sm:py-6 md:px-8">
         <div
           className="relative mb-4 sm:mb-5 overflow-hidden rounded-2xl px-3 py-3 sm:px-6 sm:py-5 shadow-md"
-          style={{ background: 'linear-gradient(135deg, #064e3b 0%, #065f46 45%, #047857 100%)' }}
+          style={{ background: 'linear-gradient(110deg, #40b343 0%, #20983d 52%, #07803a 100%)' }}
         >
           <div
             className="pointer-events-none absolute inset-0 opacity-20"
@@ -586,18 +586,18 @@ export default function Sessions() {
       <div className="max-w-[1000px] mx-auto min-w-0 px-3 py-4 sm:px-6 sm:py-6 md:px-8">
 
         {/* ── HEADER BANNER ── */}
-        <div className="rounded-2xl mb-4 sm:mb-5 overflow-hidden shadow-md relative"
-          style={{ background: 'linear-gradient(135deg, #064e3b 0%, #065f46 45%, #047857 100%)' }}>
-          <div className="absolute inset-0 pointer-events-none opacity-20"
+        <div className="rounded-[24px] sm:rounded-[28px] mb-5 sm:mb-7 overflow-hidden shadow-[0_12px_30px_rgba(20,117,50,0.16)] relative"
+          style={{ background: 'linear-gradient(110deg, #40b343 0%, #20983d 52%, #07803a 100%)' }}>
+          <div className="absolute inset-0 pointer-events-none opacity-[0.09]"
             style={{ backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)', backgroundSize: '20px 20px' }} />
 
           <div className="relative flex min-w-0 flex-col gap-3 px-3 py-3 min-[360px]:px-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-6 sm:py-5">
             <div>
-              <p className="text-[9px] sm:text-[10px] font-semibold uppercase tracking-widest text-emerald-400 mb-1">Booking Manager</p>
-              <h1 className="font-bold text-[18px] sm:text-[22px] text-white tracking-tight leading-tight flex items-center gap-1.5 sm:gap-2">
+              <p className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-50 mb-1">Booking Manager</p>
+              <h1 className="font-bold text-[24px] sm:text-[30px] text-white tracking-tight leading-tight flex items-center gap-1.5 sm:gap-2" style={{ fontFamily: "'Fraunces', serif" }}>
                 My Sessions <CalendarDays className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-200" />
               </h1>
-              <p className="text-[11px] sm:text-[12px] text-emerald-300 font-medium mt-0.5">
+              <p className="text-[12px] sm:text-[13px] text-emerald-50 font-medium mt-1">
                 {totalSessions} total · {activeSessions} active · {pendingCount} pending
               </p>
             </div>
@@ -622,7 +622,7 @@ export default function Sessions() {
                 {['All', 'Teaching', 'Learning'].map(role => (
                   <button key={role} onClick={() => setRoleFilter(role)}
                     className={`min-w-0 rounded-full px-1.5 py-1.5 text-center text-[10px] font-bold transition sm:px-3 sm:py-1 sm:text-[11px] ${
-                      roleFilter === role ? 'bg-white text-gray-900' : 'text-emerald-200 hover:text-white'
+                      roleFilter === role ? 'bg-white text-emerald-800 shadow-sm' : 'text-emerald-50 hover:text-white'
                     }`}>{role}</button>
                 ))}
               </div>
@@ -638,7 +638,7 @@ export default function Sessions() {
             return (
               <button key={tab} onClick={() => setStatusTab(tab)}
                 className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[12px] font-bold whitespace-nowrap border transition-all ${
-                  isActive ? 'bg-gray-900 text-white border-gray-900 shadow-sm' : 'bg-white text-gray-500 border-gray-200 hover:border-emerald-300 hover:text-emerald-700'
+                  isActive ? 'bg-gradient-to-r from-[#40b343] via-[#20983d] to-[#07803a] text-white border-emerald-600/40 shadow-[0_6px_16px_rgba(28,139,56,0.15)]' : 'bg-white text-gray-600 border-[#e3e9df] hover:border-emerald-300 hover:text-emerald-700'
                 }`}>
                 {meta && <span className={`w-2 h-2 rounded-full ${isActive ? 'bg-white' : meta.dot}`} />}
                 {tab}
@@ -652,19 +652,19 @@ export default function Sessions() {
 
         {/* ── CARDS ── */}
         {filtered.length === 0 ? (
-          <div className="flex flex-col items-center py-20 bg-white border border-gray-200 rounded-2xl text-center shadow-sm">
+          <div className="flex flex-col items-center py-20 bg-white border border-[#e5ede2] rounded-[24px] text-center shadow-[0_8px_28px_rgba(24,75,42,0.06)]">
             <div className="w-14 h-14 bg-emerald-50 border border-emerald-100 rounded-2xl flex items-center justify-center mb-4"><CalendarDays className="w-6 h-6 text-emerald-600" /></div>
             <p className="text-lg font-bold tracking-tight text-gray-900 mb-1">No sessions here</p>
             <p className="text-[13px] text-gray-400 mb-5">Switch tabs or role filter to see more.</p>
             <button onClick={() => { setStatusTab('All'); setRoleFilter('All'); }}
-              className="px-6 py-2.5 bg-emerald-700 text-white font-bold rounded-xl text-sm shadow-sm">Show all</button>
+              className="px-6 py-2.5 bg-gradient-to-r from-[#40b343] via-[#20983d] to-[#07803a] text-white font-bold rounded-full text-sm shadow-[0_6px_16px_rgba(28,139,56,0.18)]">Show all</button>
           </div>
         ) : (
           <div className="space-y-6 sm:space-y-10">
             {activeGroups.map(group => (
               <div key={group}>
                 <div className="flex items-center gap-2 mb-2 sm:gap-3 sm:mb-4">
-                  <p className="text-[11px] font-semibold uppercase tracking-widest text-gray-400">{group}</p>
+                  <p className="text-[11px] font-semibold uppercase tracking-widest text-emerald-700">{group}</p>
                   <div className="flex-1 h-px bg-gray-200" />
                   <span className="text-[10px] font-bold text-gray-300">{grouped[group].length}</span>
                 </div>
@@ -714,7 +714,7 @@ export default function Sessions() {
                         <div id={`session-${session.id}`} key={session.id} className="relative scroll-mt-24">
                           <div className={`absolute -left-3 min-[360px]:-left-4 sm:-left-6 top-5 w-[18px] h-[18px] rounded-full border-2 border-white ring-2 ${meta.dot} ${meta.ring} shadow-sm z-10`} />
 
-                          <div className={`bg-white border rounded-2xl overflow-hidden transition-all duration-500 relative z-20 ${
+                          <div className={`bg-white border rounded-[22px] overflow-hidden transition-all duration-500 relative z-20 shadow-[0_4px_18px_rgba(24,75,42,0.045)] ${
                             isHighlighted
                               ? 'border-emerald-400 ring-4 ring-emerald-100 shadow-[0_4px_20px_rgba(16,185,129,0.2)] scale-[1.01]'
                               : 'border-gray-200/80 hover:border-emerald-200 hover:shadow-[0_4px_20px_rgba(16,185,129,0.08)]'
@@ -789,7 +789,7 @@ export default function Sessions() {
                                     
                                     {/* MESSAGE BUTTON */}
                                     {canMessage && (
-                                      <button onClick={() => navigate(`/messages?session=${session.id}`)} className="px-3 py-1.5 bg-slate-900 text-white font-semibold rounded-lg text-[11px] hover:bg-slate-800 transition shadow-sm inline-flex items-center gap-1.5 cursor-pointer">
+                                      <button onClick={() => navigate(`/messages?session=${session.id}`)} className="px-3 py-1.5 bg-[#174b36] text-white font-semibold rounded-full text-[11px] hover:bg-[#0e5d3a] transition shadow-sm inline-flex items-center gap-1.5 cursor-pointer">
                                         <MessageSquare className="w-3.5 h-3.5" /> Chat
                                       </button>
                                     )}
@@ -1066,7 +1066,7 @@ export default function Sessions() {
             <div className="flex gap-3 border-t border-gray-100 pt-4">
               <button onClick={() => setRatingModal({ isOpen: false, session: null })} className="flex-1 py-3.5 bg-gray-100 text-gray-600 font-bold rounded-xl hover:bg-gray-200 transition cursor-pointer">Cancel</button>
               <button onClick={handleSubmitRating} disabled={isSubmittingRating || !Object.values(ratings).every(v => v > 0)}
-                className="flex-[2] py-3.5 bg-emerald-700 text-white font-bold rounded-xl hover:bg-emerald-800 disabled:opacity-50 transition shadow-md cursor-pointer">{isSubmittingRating ? 'Submitting…' : 'Submit Evaluation'}</button>
+                className="flex-[2] py-3.5 bg-gradient-to-r from-[#40b343] via-[#20983d] to-[#07803a] text-white font-bold rounded-full hover:brightness-95 disabled:opacity-50 transition shadow-[0_7px_18px_rgba(28,139,56,0.15)] cursor-pointer">{isSubmittingRating ? 'Submitting…' : 'Submit Evaluation'}</button>
             </div>
           </div>
         </div>

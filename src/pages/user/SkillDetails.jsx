@@ -211,16 +211,16 @@ export default function SkillDetails() {
   ];
 
   return (
-    <div className="w-full">
+    <div className="w-full bg-[#faf9f6] min-h-screen">
       <div className="max-w-[1000px] mx-auto min-w-0 px-3 py-4 sm:px-6 sm:py-6 md:px-8">
-        <div className="flex items-center justify-between mb-4">
-          <p className="text-[12px] font-semibold uppercase tracking-widest text-emerald-700">Skill Listing</p>
+        <div className="flex items-center justify-between mb-5 rounded-[22px] border border-[#e4eee1] bg-white px-4 py-3 shadow-[0_6px_20px_rgba(26,80,37,0.04)]">
+          <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-emerald-700">Skill Listing</p>
           <button onClick={() => navigate(-1)} className="flex items-center gap-1 text-[11px] font-semibold text-gray-400 hover:text-emerald-700 transition"><ArrowLeft className="w-3.5 h-3.5" /> Back</button>
         </div>
 
         <div className="flex min-w-0 flex-col lg:flex-row gap-3 sm:gap-6 items-start">
           <div className="grid w-full min-w-0 grid-cols-[minmax(0,0.94fr)_minmax(0,1.06fr)] items-stretch gap-2 lg:sticky lg:top-8 lg:flex lg:w-[260px] lg:shrink-0 lg:flex-col lg:gap-4">
-            <div className="min-w-0 bg-emerald-50 border border-gray-200 rounded-2xl p-2 min-[360px]:p-2.5 lg:p-4 flex flex-col items-center text-center shadow-sm">
+            <div className="min-w-0 bg-white border border-[#e3ecdf] rounded-[22px] p-2 min-[360px]:p-2.5 lg:p-4 flex flex-col items-center text-center shadow-[0_6px_20px_rgba(26,80,37,0.05)]">
               <div onClick={() => navigate(`/user/${instructorId}`)}
                 className="relative w-11 h-11 min-[360px]:w-12 min-[360px]:h-12 lg:w-20 lg:h-20 rounded-xl lg:rounded-2xl bg-emerald-100 border-[3px] lg:border-4 border-white shadow-md overflow-hidden flex items-center justify-center mb-1.5 lg:mb-2 cursor-pointer hover:scale-105 transition">
                 {instructorAvatar
@@ -296,7 +296,7 @@ export default function SkillDetails() {
                 <p className="text-[11px] text-gray-400">Contact information not provided</p>
               )}
             </div>
-            <div className="col-span-2 min-w-0 bg-white border border-gray-200 rounded-2xl p-3 lg:p-4 shadow-sm">
+            <div className="col-span-2 min-w-0 bg-white border border-[#e3ecdf] rounded-[22px] p-3 lg:p-4 shadow-[0_6px_20px_rgba(26,80,37,0.05)]">
               <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-1">Session Cost</p>
               <div className="flex items-end gap-1 mb-3">
                 <span className="text-3xl lg:text-4xl font-bold text-emerald-700">{skill.credit_cost}</span>
@@ -347,7 +347,7 @@ export default function SkillDetails() {
                 </div>
               ) : (
                 <button onClick={() => setShowModal(true)}
-                  className="w-full py-3 bg-emerald-700 hover:bg-emerald-800 text-white text-[12px] font-semibold rounded-xl transition shadow-sm flex items-center justify-center gap-1.5 cursor-pointer">
+                  className="w-full py-3 bg-gradient-to-r from-[#40b343] via-[#20983d] to-[#07803a] hover:brightness-95 text-white text-[12px] font-semibold rounded-full transition shadow-[0_8px_18px_rgba(25,141,52,0.18)] flex items-center justify-center gap-1.5 cursor-pointer">
                   <CalendarDays className="w-4 h-4" /> Book Session
                 </button>
               )}
@@ -356,18 +356,18 @@ export default function SkillDetails() {
 
           <div className="min-w-0 flex-1 space-y-3 sm:space-y-4">
             {skill.cover_image_url && (
-              <div className="w-full h-40 min-[360px]:h-48 sm:h-64 bg-white rounded-2xl overflow-hidden border border-gray-200 shadow-sm">
+              <div className="w-full h-40 min-[360px]:h-48 sm:h-64 bg-white rounded-[24px] overflow-hidden border border-[#e3ecdf] shadow-[0_6px_20px_rgba(26,80,37,0.05)]">
                 <img src={skill.cover_image_url} alt={skill.title} className="w-full h-full object-cover" />
               </div>
             )}
 
-            <div className="bg-white border border-gray-200 rounded-2xl p-3 sm:p-5 shadow-sm">
+            <div className="bg-white border border-[#e3ecdf] rounded-[22px] p-3 sm:p-5 shadow-[0_6px_20px_rgba(26,80,37,0.05)]">
               <div className="flex flex-wrap gap-1.5 mb-3">
                 {skill.format   && <span className="text-[10px] font-semibold uppercase tracking-widest bg-emerald-50 text-emerald-700 border border-emerald-100 px-2.5 py-0.5 rounded-full">{skill.format}</span>}
                 {skill.category && <span className="text-[10px] font-semibold uppercase tracking-widest bg-gray-50 text-gray-500 border border-gray-200 px-2.5 py-0.5 rounded-full">{skill.category}</span>}
                 {skill.duration && <span className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-widest bg-blue-50 text-blue-600 border border-blue-100 px-2.5 py-0.5 rounded-full"><Clock className="w-3 h-3" /> {skill.duration}</span>}
               </div>
-              <h1 className="font-bold text-[22px] text-gray-900 tracking-tight">{skill.title}</h1>
+              <h1 className="font-bold text-[24px] sm:text-[30px] text-gray-900 tracking-tight leading-tight" style={{ fontFamily: "'Fraunces', serif" }}>{skill.title}</h1>
               
               <p className="text-[10px] text-gray-400 font-bold mt-1">
                 Posted on {new Date(skill.created_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
@@ -384,20 +384,20 @@ export default function SkillDetails() {
               )}
             </div>
 
-            <div className="bg-white border border-gray-200 rounded-2xl p-3 sm:p-5 shadow-sm">
+            <div className="bg-white border border-[#e3ecdf] rounded-[22px] p-3 sm:p-5 shadow-[0_6px_20px_rgba(26,80,37,0.05)]">
               <p className="text-sm font-bold tracking-tight text-gray-900 mb-2 sm:mb-3">About This Session</p>
               <p className="text-[12px] sm:text-[13px] text-gray-600 leading-relaxed whitespace-pre-wrap">{skill.description}</p>
             </div>
 
             {skill.outcomes && (
-              <div className="bg-white border border-gray-200 rounded-2xl p-3 sm:p-5 shadow-sm">
+              <div className="bg-white border border-[#e3ecdf] rounded-[22px] p-3 sm:p-5 shadow-[0_6px_20px_rgba(26,80,37,0.05)]">
                 <p className="flex items-center gap-1.5 text-sm font-bold tracking-tight text-gray-900 mb-2 sm:mb-3"><Target className="w-4 h-4 text-emerald-600" /> What You Will Walk Away With</p>
                 <p className="text-[12px] sm:text-[13px] text-gray-600 leading-relaxed whitespace-pre-wrap">{skill.outcomes}</p>
               </div>
             )}
 
             {skill.reviewsList && skill.reviewsList.length > 0 && (
-              <div className="bg-white border border-gray-200 rounded-2xl p-3 sm:p-5 shadow-sm">
+              <div className="bg-white border border-[#e3ecdf] rounded-[22px] p-3 sm:p-5 shadow-[0_6px_20px_rgba(26,80,37,0.05)]">
                 <p className="flex items-center gap-1.5 text-sm font-bold tracking-tight text-gray-900 mb-3 sm:mb-4"><MessageSquare className="w-4 h-4 text-sky-600" /> Student Feedback ({skill.totalReviews})</p>
                 
                 <div className="space-y-2.5 sm:space-y-4">
@@ -497,7 +497,7 @@ export default function SkillDetails() {
                   <button onClick={closeBookingModal} disabled={bookingLoading}
                     className="inline-flex h-11 w-full items-center justify-center rounded-xl bg-gray-100 px-2 text-center text-[11px] font-bold leading-tight text-gray-600 transition hover:bg-gray-200 cursor-pointer">Cancel</button>
                   <button onClick={handleConfirmBooking} disabled={bookingLoading || !hasEnoughCredits}
-                    className="inline-flex h-11 w-full items-center justify-center rounded-xl bg-emerald-700 px-2 text-center text-[11px] font-bold leading-tight text-white transition hover:bg-emerald-800 shadow-sm disabled:opacity-50 cursor-pointer">
+                    className="inline-flex h-11 w-full items-center justify-center rounded-full bg-gradient-to-r from-[#40b343] via-[#20983d] to-[#07803a] px-2 text-center text-[11px] font-bold leading-tight text-white transition hover:brightness-95 shadow-[0_6px_16px_rgba(25,141,52,0.16)] disabled:opacity-50 cursor-pointer">
                     {bookingLoading ? 'Processing...' : 'Confirm and Deduct'}
                   </button>
                 </div>
@@ -527,7 +527,7 @@ export default function SkillDetails() {
                   </div>
                 </div>
                 <button onClick={() => navigate('/sessions')}
-                  className="relative mt-4 w-full rounded-xl bg-emerald-700 py-2.5 text-[12px] font-bold text-white shadow-sm transition hover:bg-emerald-800 cursor-pointer">Manage Bookings</button>
+                  className="relative mt-4 w-full rounded-full bg-gradient-to-r from-[#40b343] via-[#20983d] to-[#07803a] py-2.5 text-[12px] font-bold text-white shadow-sm transition hover:brightness-95 cursor-pointer">Manage Bookings</button>
               </div>
             )}
           </div>
