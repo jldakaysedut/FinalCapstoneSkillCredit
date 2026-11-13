@@ -11,7 +11,7 @@ import {
   Video, Wallet, Briefcase, Layout, Code, UserPlus,
   CalendarCheck, Award, Star, Rocket, Code2, 
   MessageCircleQuestion, Music, Smartphone, Globe, Heart,
-  PenLine, Music2, Film, PiggyBank, Monitor
+  PenLine, Music2, Film, PiggyBank, Monitor, Trophy, ArrowRight, Medal
 } from "lucide-react";
 
 // 🚨 REPLACED emojis with Lucide Icons and added them to data arrays
@@ -56,6 +56,9 @@ function getInitials(name) {
 
 export default function Home() {
   const [topRated, setTopRated] = useState([]);
+  const [ratingsLoading, setRatingsLoading] = useState(true);
+  const [ratingsUnavailable, setRatingsUnavailable] = useState(false);
+  const [ratingsSource, setRatingsSource] = useState("public");
 
   useEffect(() => {
     if (typeof IntersectionObserver === "undefined") {
@@ -72,43 +75,94 @@ export default function Home() {
     return () => observer.disconnect();
   }, []);
 
-  // Public Home preview: recent learner review ratings only.
-  // The authenticated global leaderboard and its Top Rated eligibility are unchanged.
+  // Home Top Rated uses the SAME scoring, 3-review eligibility, and tie-breaks
+  // as Leaderboard.jsx + skillcredit-leaderboard Edge Function.
+  // The global Edge Function requires a logged-in user. For signed-out visitors,
+  // compute the same scoring from publicly readable reviews without relaxing auth/RLS.
   useEffect(() => {
-    const fetchRecentRatings = async () => {
-      try {
-        const sevenDaysAgo = new Date();
-        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-        const isoDate = sevenDaysAgo.toISOString();
+    let cancelled = false;
+    const sortedTopThree = (rows) => [...rows]
+      .filter(user => Number(user.totalReviews) >= 3)
+      .sort((a, b) => b.avgRating - a.avgRating || b.totalReviews - a.totalReviews || a.id.localeCompare(b.id))
+      .slice(0, 3);
 
-        // Recent learner ratings preview only; activity panel is not displayed.
-
-        const { data: reviewData } = await supabase
+    const publicRatingsPreview = async () => {
+      // Read in pages, rather than silently truncating review history at 1,000 rows.
+      const PAGE_SIZE = 750;
+      const MAX_ROWS = 100000;
+      const reviewers = new Map();
+      let offset = 0;
+      while (true) {
+        const { data, error } = await supabase
           .from("reviews")
-          .select("instructor_id, rating, instructor:user_profiles!reviews_instructor_id_fkey(id, full_name, avatar_url)")
-          .gte("created_at", isoDate);
+          .select("id,instructor_id,rating,q1_clarity,q2_patience,q3_relevance,q4_professionalism,instructor:user_profiles!reviews_instructor_id_fkey(id,full_name,avatar_url,is_deleted)")
+          .order("id", { ascending: true })
+          .range(offset, offset + PAGE_SIZE - 1);
+        if (error) throw error;
+        const rows = data || [];
+        for (const review of rows) {
+          const teacher = review.instructor;
+          if (!teacher || teacher.is_deleted || !review.instructor_id) continue;
+          const score = [review.rating, review.q1_clarity, review.q2_patience, review.q3_relevance, review.q4_professionalism]
+            .reduce((total, value) => {
+              const number = Number(value ?? 0);
+              return total + (Number.isFinite(number) ? number : 0);
+            }, 0) / 5;
+          const prev = reviewers.get(review.instructor_id) || { ...teacher, id: review.instructor_id, sum: 0, totalReviews: 0 };
+          prev.sum += score;
+          prev.totalReviews += 1;
+          reviewers.set(review.instructor_id, prev);
+        }
+        offset += rows.length;
+        if (offset > MAX_ROWS) throw new Error("Public review preview exceeds safety limit");
+        if (rows.length < PAGE_SIZE) break;
+      }
+      return sortedTopThree([...reviewers.values()].map(user => ({
+        id: user.id,
+        full_name: user.full_name,
+        avatar_url: user.avatar_url,
+        totalReviews: user.totalReviews,
+        avgRating: Number((user.sum / user.totalReviews).toFixed(1)),
+      })));
+    };
 
-        if (reviewData) {
-          const ratings = {};
-          reviewData.forEach(r => {
-            if (!r.instructor) return;
-            const id = r.instructor.id;
-            if (!ratings[id]) ratings[id] = { ...r.instructor, sum: 0, count: 0 };
-            ratings[id].sum += r.rating;
-            ratings[id].count += 1;
-          });
-          const topR = Object.values(ratings)
-            .map(u => ({ ...u, avg: (u.sum / u.count).toFixed(1) }))
-            .sort((a, b) => b.avg - a.avg)
-            .slice(0, 3)
-            .map(u => ({ ...u, metric_value: `⭐ ${u.avg}` }));
-          setTopRated(topR);
+    const fetchTopRated = async () => {
+      setRatingsLoading(true);
+      setRatingsUnavailable(false);
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        // Reuse the exact global dataset when already signed in.
+        // Public visitors cannot invoke the authenticated function.
+        if (session) {
+          try {
+            const { data, error } = await supabase.functions.invoke("skillcredit-leaderboard", { body: {} });
+            if (error || !Array.isArray(data?.profiles)) throw error || new Error("Invalid global leaderboard payload");
+            if (!cancelled) {
+              setTopRated(sortedTopThree(data.profiles));
+              setRatingsSource("global");
+            }
+            return;
+          } catch (functionError) {
+            console.warn("Home global ratings unavailable; using public review preview", functionError);
+          }
+        }
+        const publicTop = await publicRatingsPreview();
+        if (!cancelled) {
+          setTopRated(publicTop);
+          setRatingsSource("public");
         }
       } catch (error) {
-        console.error("Failed to fetch leaderboards:", error);
+        console.error("Home ratings preview unavailable", error);
+        if (!cancelled) {
+          setTopRated([]);
+          setRatingsUnavailable(true);
+        }
+      } finally {
+        if (!cancelled) setRatingsLoading(false);
       }
     };
-    fetchRecentRatings();
+    fetchTopRated();
+    return () => { cancelled = true; };
   }, []);
 
   return (
@@ -162,17 +216,56 @@ export default function Home() {
         .steps-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
         .community-grid{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:center}
         .problem-grid{display:grid;grid-template-columns:1fr auto 1fr;gap:24px;align-items:center;max-width:700px;margin:0 auto}
-        /* Simple, mobile-friendly public ratings preview (presentation only). */
-        .sc-home .home-leaderboard-inner{max-width:580px;margin:0 auto}
-        .sc-home .home-leaderboard-card{background:#fff;border:1px solid #e2e9e3;border-radius:18px;padding:5px 22px;box-shadow:0 2px 14px rgba(23,59,39,.035)}
-        .sc-home .home-leaderboard-row{display:flex;align-items:center;gap:13px;min-width:0;padding:15px 0}
-        .sc-home .home-leaderboard-row + .home-leaderboard-row{border-top:1px solid #edf1ed}
-        .sc-home .home-leaderboard-rank{flex:0 0 23px;color:#688175;font-size:13px;font-weight:800}
-        .sc-home .home-leaderboard-avatar{flex:0 0 38px;width:38px;height:38px;border-radius:50%;background:#e9f0e9;display:flex;align-items:center;justify-content:center;overflow:hidden;color:#385a49;font-size:12px;font-weight:800}
-        .sc-home .home-leaderboard-name{min-width:0;flex:1;color:#21362a;font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-        .sc-home .home-leaderboard-score{display:inline-flex;align-items:center;gap:5px;flex-shrink:0;color:#8a5b10;font-size:14px;font-weight:800;font-variant-numeric:tabular-nums}
-        .sc-home .home-leaderboard-more{display:inline-flex;align-items:center;justify-content:center;margin-top:22px;color:#2d6a4f;text-decoration:none;font-size:13px;font-weight:800;min-height:44px;gap:7px}
-        .sc-home .home-leaderboard-more:hover{text-decoration:underline}
+        /* Premium but restrained Top Rated spotlight — Home only. */
+        .sc-home .home-leaderboard-inner{max-width:940px;margin:0 auto}
+        .sc-home .home-leaderboard-kicker{display:inline-flex;align-items:center;gap:7px;color:#28734f;font-size:11px;font-weight:800;letter-spacing:.11em;text-transform:uppercase}
+        .sc-home .home-leaderboard-stage{display:grid;grid-template-columns:minmax(0,1.03fr) minmax(0,.97fr);gap:16px;align-items:stretch}
+        .sc-home .home-leaderboard-champion{position:relative;min-width:0;overflow:hidden;border:1px solid #c6dfce;background:linear-gradient(140deg,#f4faf5 0%,#fff 75%);border-radius:23px;padding:26px 27px;box-shadow:0 14px 35px rgba(25,77,47,.07)}
+        .sc-home .home-leaderboard-champion:before{content:"";position:absolute;top:-75px;right:-75px;height:225px;width:225px;border-radius:50%;background:radial-gradient(circle,#d5efd9 0%,transparent 70%);pointer-events:none}
+        .sc-home .home-leaderboard-featured-tag{position:relative;z-index:1;display:inline-flex;align-items:center;gap:7px;padding:7px 11px;border-radius:999px;background:#e4f2e9;color:#245a3b;font-size:11px;font-weight:800}
+        .sc-home .home-leaderboard-hero-person{position:relative;display:flex;align-items:center;gap:16px;min-width:0;margin:25px 0 22px}
+        .sc-home .home-leaderboard-hero-avatar{width:76px;height:76px;flex:0 0 76px;display:grid;place-items:center;overflow:hidden;border:4px solid #fff;border-radius:22px;background:#d7e8dd;color:#275b41;font-size:22px;font-weight:800;box-shadow:0 5px 18px rgba(28,81,51,.10)}
+        .sc-home .home-leaderboard-profile-photo{width:100%;height:100%;display:block;object-fit:cover}
+        .sc-home .home-leaderboard-hero-name{margin:0;color:#1e3d2c;font-size:clamp(19px,2.1vw,24px);font-weight:850;line-height:1.22;overflow-wrap:anywhere}
+        .sc-home .home-leaderboard-role{margin:6px 0 0;color:#6e8775;font-size:12px;font-weight:650}
+        .sc-home .home-leaderboard-rating-panel{position:relative;display:flex;align-items:center;flex-wrap:wrap;gap:6px 11px;padding-top:19px;border-top:1px solid #e0eae2}
+        .sc-home .home-leaderboard-hero-rating{display:inline-flex;align-items:center;gap:7px;color:#244c35;font-size:29px;font-weight:850;font-variant-numeric:tabular-nums;line-height:1}
+        .sc-home .home-leaderboard-review-meta{color:#788879;font-size:12px;font-weight:600}
+        .sc-home .home-leaderboard-others{min-width:0;border-radius:23px;border:1px solid #e2eae1;background:#fff;padding:17px 20px;display:flex;flex-direction:column;box-shadow:0 7px 26px rgba(25,77,47,.045)}
+        .sc-home .home-leaderboard-others-title{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:5px 1px 14px;color:#2d533b;font-size:13px;font-weight:800}
+        .sc-home .home-leaderboard-row{display:flex;align-items:center;gap:12px;min-width:0;flex:1;padding:14px 2px;border-top:1px solid #edf2ed}
+        .sc-home .home-leaderboard-rank{flex:0 0 25px;font-size:19px;color:#9ba99c;font-weight:900;font-variant-numeric:tabular-nums}
+        .sc-home .home-leaderboard-avatar{flex:0 0 49px;width:49px;height:49px;border-radius:15px;background:#ebf2ee;display:grid;place-items:center;overflow:hidden;color:#436b53;font-size:14px;font-weight:800}
+        .sc-home .home-leaderboard-person{flex:1;min-width:0}
+        .sc-home .home-leaderboard-name{display:block;color:#263e30;font-size:14px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .sc-home .home-leaderboard-review-count{display:block;color:#879587;font-size:11px;margin-top:4px}
+        .sc-home .home-leaderboard-score{display:inline-flex;align-items:center;gap:5px;flex-shrink:0;color:#805b23;font-size:14px;font-weight:850;font-variant-numeric:tabular-nums}
+        .sc-home .home-leaderboard-footer{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-top:18px}
+        .sc-home .home-leaderboard-note{margin:0;color:#718074;font-size:11px;line-height:1.6}
+        .sc-home .home-leaderboard-more{min-height:42px;display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:999px;padding:10px 16px;border:1px solid #b9d7c0;background:#fff;color:#2c6e49;font-size:12px;font-weight:800;text-decoration:none;transition:transform .2s,box-shadow .2s}
+        .sc-home .home-leaderboard-more:hover{transform:translateY(-2px);box-shadow:0 8px 18px rgba(35,106,68,.09)}
+        .sc-home .home-leaderboard-empty{grid-column:1/-1;text-align:center;border:1px dashed #cbdccf;background:#fff;border-radius:22px;padding:28px 20px;color:#728475;font-size:13px;line-height:1.65}
+        @media(max-width:680px){
+          .sc-home .home-leaderboard-stage{grid-template-columns:1fr;gap:11px}
+          .sc-home .home-leaderboard-champion{padding:19px 19px 20px;border-radius:19px}
+          .sc-home .home-leaderboard-hero-person{margin:18px 0;gap:13px}
+          .sc-home .home-leaderboard-hero-avatar{width:62px;height:62px;flex-basis:62px;border-radius:19px}
+          .sc-home .home-leaderboard-hero-name{font-size:20px}
+          .sc-home .home-leaderboard-hero-rating{font-size:24px}
+          .sc-home .home-leaderboard-others{padding:9px 15px;border-radius:18px}
+          .sc-home .home-leaderboard-row{padding:13px 0;gap:10px}
+          .sc-home .home-leaderboard-others-title{padding:7px 0 11px}
+          .sc-home .home-leaderboard-footer{align-items:flex-start;flex-direction:column;gap:9px}
+        }
+        @media(max-width:350px){
+          .sc-home .home-leaderboard-champion{padding:17px 14px}
+          .sc-home .home-leaderboard-others{padding:8px 12px}
+          .sc-home .home-leaderboard-avatar{width:39px;height:39px;flex-basis:39px;border-radius:12px}
+          .sc-home .home-leaderboard-row{gap:8px}
+          .sc-home .home-leaderboard-rank{flex-basis:19px}
+          .sc-home .home-leaderboard-name{font-size:12px}
+          .sc-home .home-leaderboard-score{font-size:12px}
+        }
         .footer-inner{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px}
 
         @media(max-width:1024px){
@@ -226,12 +319,6 @@ export default function Home() {
           .sc-home .hero-btns-wrap{align-items:center;justify-content:center;gap:8px!important;}
           .sc-home .hero-btns-wrap a{width:auto!important;flex:0 1 auto;align-self:auto;white-space:nowrap;padding:11px 13px!important;font-size:13px!important;min-height:44px;}
           .sc-home .home-final-cta-actions{gap:10px!important;}
-          .sc-home .home-leaderboard-card{padding:3px 14px;border-radius:14px}
-          .sc-home .home-leaderboard-row{gap:9px;padding:13px 0}
-          .sc-home .home-leaderboard-rank{flex-basis:21px}
-          .sc-home .home-leaderboard-avatar{flex-basis:34px;width:34px;height:34px}
-          .sc-home .home-leaderboard-name{font-size:13px}
-          .sc-home .home-leaderboard-score{font-size:13px}
           .sc-home .home-final-cta-btn{padding:12px 14px!important;}
           .sc-home .footer-team-pill{gap:8px!important;}
         }
@@ -428,37 +515,68 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── SIMPLE PUBLIC LEADERBOARD PREVIEW ── */}
-      <section className="section-pad reveal home-leaderboard" style={{ background:"#faf8f4", padding:"72px 48px", borderTop:"1px solid #e8e2d9", borderBottom:"1px solid #e8e2d9" }}>
+      {/* ── TOP RATED SPOTLIGHT: same 5-question scoring + 3-review minimum ── */}
+      <section className="section-pad reveal home-leaderboard" style={{ background:"radial-gradient(circle at 50% 2%,#eef5ed 0%,#faf8f4 68%)", padding:"75px 48px", borderTop:"1px solid #e4e8df", borderBottom:"1px solid #e4e8df" }}>
         <div className="home-leaderboard-inner">
-          <div style={{ textAlign:"center", marginBottom:25 }}>
-            <span style={{ fontSize:11, fontWeight:800, color:"#2d6a4f", letterSpacing:"0.11em", textTransform:"uppercase" }}>Community Leaderboard</span>
-            <h2 style={{ fontFamily:"'Fraunces',serif", fontSize:34, fontWeight:900, color:"#162b21", marginTop:9, lineHeight:1.18 }}>
-              Recent learner ratings
+          <div style={{ textAlign:"center", marginBottom:30 }}>
+            <span className="home-leaderboard-kicker"><Trophy size={14} /> Community Leaderboard</span>
+            <h2 style={{ fontFamily:"'Fraunces',serif", fontSize:"clamp(28px,4vw,37px)", fontWeight:900, color:"#162b21", marginTop:10, lineHeight:1.18 }}>
+              The people learners rate highest.
             </h2>
-            <p style={{ fontSize:14, color:"#67736a", margin:"10px auto 0", lineHeight:1.6, maxWidth:430 }}>
-              A quick look at instructors reviewed in the past 7 days.
+            <p style={{ fontSize:14, color:"#68796d", margin:"11px auto 0", lineHeight:1.65, maxWidth:540 }}>
+              A spotlight on instructors with at least 3 learner reviews, ranked by their overall review scores.
             </p>
           </div>
 
-          <div className="home-leaderboard-card" aria-label="Recent learner ratings preview">
-            {topRated.length === 0 ? (
-              <p style={{ color:"#748179", fontSize:13, textAlign:"center", padding:"24px 0" }}>Calculating scores...</p>
+          <div className="home-leaderboard-stage" aria-label="Top rated instructors preview" aria-busy={ratingsLoading}>
+            {ratingsLoading ? (
+              <div className="home-leaderboard-empty" role="status">Checking eligible learner ratings…</div>
+            ) : ratingsUnavailable ? (
+              <div className="home-leaderboard-empty" role="status">Ratings are temporarily unavailable. Sign in to view the full leaderboard.</div>
+            ) : topRated.length === 0 ? (
+              <div className="home-leaderboard-empty">No eligible ratings are visible in this preview yet. Sign in to explore the full leaderboard.</div>
             ) : (
-              topRated.map((user, idx) => (
-                <div className="home-leaderboard-row" key={user.id}>
-                  <span className="home-leaderboard-rank">{idx + 1}.</span>
-                  <span className="home-leaderboard-avatar">
-                    {user.avatar_url ? <img src={user.avatar_url} alt="" style={{ width:"100%", height:"100%", objectFit:"cover" }} /> : getInitials(user.full_name)}
-                  </span>
-                  <span className="home-leaderboard-name" title={user.full_name}>{user.full_name}</span>
-                  <span className="home-leaderboard-score"><Star size={15} fill="#e6ad49" stroke="#b7791f" />{user.avg}</span>
+              <>
+                <article className="home-leaderboard-champion">
+                  <div className="home-leaderboard-featured-tag"><Trophy size={13} /> #1 · Top Rated</div>
+                  <div className="home-leaderboard-hero-person">
+                    <div className="home-leaderboard-hero-avatar">
+                      {topRated[0].avatar_url ? <img className="home-leaderboard-profile-photo" src={topRated[0].avatar_url} alt="" /> : getInitials(topRated[0].full_name)}
+                    </div>
+                    <div style={{ minWidth:0 }}>
+                      <h3 className="home-leaderboard-hero-name">{topRated[0].full_name || 'SkillCredit member'}</h3>
+                      <p className="home-leaderboard-role">Top Rated · Community member</p>
+                    </div>
+                  </div>
+                  <div className="home-leaderboard-rating-panel">
+                    <span className="home-leaderboard-hero-rating"><Star size={23} fill="#e4b457" color="#bd872c" aria-hidden="true" />{Number(topRated[0].avgRating).toFixed(1)}</span>
+                    <span className="home-leaderboard-review-meta">/ 5 · {topRated[0].totalReviews} learner {topRated[0].totalReviews === 1 ? 'review' : 'reviews'}</span>
+                  </div>
+                </article>
+
+                <div className="home-leaderboard-others">
+                  <div className="home-leaderboard-others-title"><span>Also leading the way</span><Medal size={17} color="#8b997f" aria-hidden="true" /></div>
+                  {topRated.slice(1).map((user, idx) => (
+                    <div className="home-leaderboard-row" key={user.id}>
+                      <span className="home-leaderboard-rank">{idx + 2}</span>
+                      <span className="home-leaderboard-avatar">
+                        {user.avatar_url ? <img className="home-leaderboard-profile-photo" src={user.avatar_url} alt="" /> : getInitials(user.full_name)}
+                      </span>
+                      <span className="home-leaderboard-person">
+                        <span className="home-leaderboard-name" title={user.full_name || 'SkillCredit member'}>{user.full_name || 'SkillCredit member'}</span>
+                        <span className="home-leaderboard-review-count">{user.totalReviews} learner reviews</span>
+                      </span>
+                      <span className="home-leaderboard-score"><Star size={15} fill="#e4b457" color="#bd872c" aria-hidden="true" />{Number(user.avgRating).toFixed(1)}</span>
+                    </div>
+                  ))}
+                  {topRated.length === 1 && <p style={{ color:'#839184', fontSize:12, padding:'12px 2px' }}>More instructors will appear here as they earn 3 reviews.</p>}
                 </div>
-              ))
+              </>
             )}
           </div>
-          <div style={{ textAlign:"center" }}>
-            <Link to="/login" className="home-leaderboard-more">Sign in to view full leaderboard <span aria-hidden="true">→</span></Link>
+          <div className="home-leaderboard-footer">
+            <p className="home-leaderboard-note">5 review criteria · 3+ reviews to qualify{ratingsSource === 'public' ? ' · Public preview' : ' · Global ratings'}</p>
+            <Link to="/login" className="home-leaderboard-more">Explore full leaderboard <ArrowRight size={15} aria-hidden="true" /></Link>
           </div>
         </div>
       </section>

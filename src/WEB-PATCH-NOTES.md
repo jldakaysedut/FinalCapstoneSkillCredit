@@ -1,3 +1,13 @@
+## 13 November 2026 — Home Top Rated Spotlight redesign + rating parity (Web only)
+
+- Redesigned Home's leaderboard preview into one featured #1 member plus ranked #2/#3 list, with rating and learner-review count, responsive at 320px and above.
+- Fixed public Home preview's **old 7-day / single rating-field** logic. It now computes each review using `(rating + q1_clarity + q2_patience + q3_relevance + q4_professionalism) / 5`, averages those review scores per instructor, rounds to one decimal, and sorts by score descending, review count descending, ID ascending — same as the existing signed-in leaderboard.
+- Enforced the same **minimum 3 reviews** for featured Top Rated positions. No fictitious members are shown and there is a separate loading / empty / error state.
+- For signed-in visitors, the Home preview uses the existing authenticated `skillcredit-leaderboard` Edge Function for the exact global aggregate. Signed-out visitors get a *public preview* from publicly accessible review rows using the same scoring rules; due to RLS/access restrictions this preview may not match the global leaderboard if some reviews are not publicly readable. No auth/RLS weakening or backend changes.
+- No changes to logged-in Leaderboard.jsx, existing Edge Function, Home CTA/header/footer, other screens, database schema or Supabase policies. Patch Only recommended to preserve manual customizations.
+
+---
+
 ## 13 November 2026 — Admin Ban / Ban Lifted / Realtime status sync (Web only)
 
 - Restored the original two admin pages as baseline, then added four Escalations filters (All, Pending, Admin Banned, Ban Lifted), Ban/Lift in Escalations, and a shared atomic ban/unban RPC.
