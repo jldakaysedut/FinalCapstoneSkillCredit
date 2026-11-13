@@ -174,58 +174,32 @@ export default function Home() {
         .sc-home ::selection { background:#c7eed5; color:#10452d; }
         .sc-home .hero-section { position:relative;isolation:isolate;background:radial-gradient(circle at 78% 24%,#e3f2e5 0%,transparent 40%),radial-gradient(circle at 0% 100%,#f3eadd,transparent 40%); }
         .sc-home .hero-section:before {content:"";position:absolute;inset:0;pointer-events:none;opacity:.2;background-image:radial-gradient(#45845e 0.75px,transparent 0.75px);background-size:24px 24px;mask-image:linear-gradient(90deg,transparent,#000 80%);z-index:-1;}
-        /* Option C: compact, feathered mint bubble clusters, kept clear of section dividers. */
+        /* Option D: small elegant curved corner accents, inspired by the supplied reference. */
         .sc-home .home-soft-bubbles { position:relative; isolation:isolate; overflow:hidden; }
-        .sc-home .home-soft-bubbles::before,
-        .sc-home .home-soft-bubbles::after {
+        .sc-home .home-soft-bubbles::before {
           content:"";
           position:absolute;
           z-index:0;
           pointer-events:none;
-          border-radius:50%;
-          filter:blur(2px);
-          background-repeat:no-repeat;
+          width:clamp(180px,20vw,265px);
+          aspect-ratio: 14 / 9;
+          top:0;
+          left:0;
+          background: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyODAgMTgwIiB3aWR0aD0iMjgwIiBoZWlnaHQ9IjE4MCI+CjxkZWZzPgogIDxsaW5lYXJHcmFkaWVudCBpZD0ibGVhZiIgeDE9IjAiIHkxPSIwIiB4Mj0iMSIgeTI9IjEiPjxzdG9wIHN0b3AtY29sb3I9IiNkOGVhY2IiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNlOWY0ZGQiLz48L2xpbmVhckdyYWRpZW50PgogIDxsaW5lYXJHcmFkaWVudCBpZD0ib2xpdmUiIHgxPSIwIiB5MT0iMCIgeDI9IjAuOCIgeTI9IjEiPjxzdG9wIHN0b3AtY29sb3I9IiNhZWM5OWIiIHN0b3Atb3BhY2l0eT0iLjg2Ii8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjZDZlNmM0IiBzdG9wLW9wYWNpdHk9Ii41NyIvPjwvbGluZWFyR3JhZGllbnQ+CjwvZGVmcz4KPCEtLSBTb2Z0IHBhbGUtZ3JlZW4gbGVhZi1saWtlIGZvbGQgdGhhdCBmYWRlcyBpbnRvIHRoZSBjcmVhbSBwYWdlIC0tPgo8cGF0aCBkPSJNMCAwIEgyNjYgQzIzMiAxOSAyMjAgNDcgMTg4IDY3IEMxMzcgOTkgNzUgMTIxIDAgMTU3IFoiIGZpbGw9InVybCgjbGVhZikiIG9wYWNpdHk9Ii42NiIvPgo8cGF0aCBkPSJNMCAwIEgxNTcgQzEzOCAyNSAxMjMgNDMgOTQgNTkgQzY1IDc2IDM2IDg0IDAgOTYgWiIgZmlsbD0idXJsKCNvbGl2ZSkiIG9wYWNpdHk9Ii43MiIvPgo8IS0tIFF1aWV0IGNyZWFtIHN3ZWVwLCBrZWVwaW5nIHRoZSBjb2xvcmVkIGNvcm5lciBkZWxpY2F0ZSAtLT4KPHBhdGggZD0iTTAgMTY4IEM1NiAxMjIgMTA3IDExMyAxNTggODYgQzIwMSA2NCAyMjUgMzUgMjYwIDAiIHN0cm9rZT0iI2Q2YjQ3NiIgc3Ryb2tlLXdpZHRoPSIxLjM1IiBmaWxsPSJub25lIiBvcGFjaXR5PSIuODAiLz4KPC9zdmc+") left top / 100% 100% no-repeat;
         }
-        /* No concentric ring shadows or oversized shapes: the color fades out naturally. */
-        .sc-home .home-soft-bubbles::before {
-          width:clamp(140px,17vw,205px);
-          height:clamp(135px,16vw,195px);
-          left:-46px;
-          top:26%;
-          background:
-            radial-gradient(circle at 42% 49%,rgba(126,197,145,.40) 0 14%,rgba(170,220,178,.23) 31%,transparent 67%),
-            radial-gradient(circle at 77% 23%,rgba(162,215,174,.28) 0 9%,transparent 29%),
-            radial-gradient(circle at 77% 76%,rgba(179,226,181,.29) 0 8%,transparent 28%);
-        }
-        .sc-home .home-soft-bubbles::after {
-          width:clamp(118px,14vw,172px);
-          height:clamp(120px,14vw,170px);
-          right:-36px;
-          bottom:22%;
-          background:
-            radial-gradient(circle at 57% 47%,rgba(132,201,149,.36) 0 15%,rgba(189,227,193,.20) 32%,transparent 65%),
-            radial-gradient(circle at 22% 76%,rgba(166,218,172,.30) 0 10%,transparent 31%),
-            radial-gradient(circle at 20% 21%,rgba(201,233,198,.23) 0 9%,transparent 28%);
-        }
+        .sc-home .home-soft-bubbles::after { display:none; }
         .sc-home .home-soft-bubbles > * { position:relative; z-index:1; }
-        /* Offset bubbles per section, always away from the top/bottom seam. */
-        .sc-home #how-it-works.home-soft-bubbles::before { left:auto;right:-41px;top:24%; }
-        .sc-home #how-it-works.home-soft-bubbles::after { right:auto;left:-30px;bottom:25%; }
-        .sc-home #features.home-soft-bubbles::before { left:-43px;top:38%; }
-        .sc-home #features.home-soft-bubbles::after { right:-38px;bottom:28%; }
-        .sc-home .home-leaderboard.home-soft-bubbles::before { left:auto;right:-34px;top:32%;opacity:.72; }
-        .sc-home .home-leaderboard.home-soft-bubbles::after { right:auto;left:-30px;bottom:23%;opacity:.72; }
-        @media(max-width:600px) {
-          .sc-home .home-soft-bubbles::before { width:146px;height:139px;left:-47px;top:27%; }
-          .sc-home .home-soft-bubbles::after { width:116px;height:120px;right:-39px;bottom:21%; }
-          .sc-home #how-it-works.home-soft-bubbles::before { left:auto;right:-48px;top:30%; }
-          .sc-home #how-it-works.home-soft-bubbles::after { right:auto;left:-36px;bottom:25%; }
-          .sc-home #features.home-soft-bubbles::before { left:-45px;top:35%; }
-          .sc-home #features.home-soft-bubbles::after { right:-36px;bottom:26%; }
-          .sc-home .home-leaderboard.home-soft-bubbles::before { left:auto;right:-50px;top:34%; }
-          .sc-home .home-leaderboard.home-soft-bubbles::after { right:auto;left:-37px;bottom:22%; }
+        /* Alternate corners; decorative waves stay fully inside their own section. */
+        .sc-home #how-it-works.home-soft-bubbles::before,
+        .sc-home .home-leaderboard.home-soft-bubbles::before {
+          left:auto;
+          right:0;
+          transform:scaleX(-1);
         }
-        .sc-home .hero-shell {max-width:1200px;margin:0 auto;padding:26px 48px;width:100%;}
+        @media(max-width:600px) {
+          .sc-home .home-soft-bubbles::before { width:160px; }
+        }
+                .sc-home .hero-shell {max-width:1200px;margin:0 auto;padding:26px 48px;width:100%;}
         .sc-home .hero-download-link {display:inline-flex;align-items:center;gap:9px;margin-top:7px;font-size:13px;font-weight:800;color:#2d6a4f;text-decoration:none;border-bottom:1px solid transparent;transition:gap .2s,border-color .2s;}
         .sc-home .hero-download-link:hover {gap:14px;border-color:#2d6a4f;}
         .sc-home .hero-preview {transform:perspective(1100px) rotateY(-3deg);transition:transform .6s ease,box-shadow .6s ease;}
