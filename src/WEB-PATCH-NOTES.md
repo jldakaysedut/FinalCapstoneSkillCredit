@@ -347,3 +347,13 @@ Supersedes the **combined display list** described in the preceding Admin Ban Gr
 ## 2026-11-13 — FINAL: Linked Admin Ban Decision Sync (no schema changes)
 
 When a user with actual pending moderator escalations is banned through User Management, update only the existing pending `admin_escalations` records to `admin_banned` (and `admin_id`) and log the ban source to `admin_logs`. If no escalations exist, no escalation record is made. Admin Escalations bans now apply to all pending linked cases for that user. Banned Users in User Management shows the verifiable source, and View Record in Escalations gives a source note. Lift Ban occurs in User Management and closes current `admin_banned` case statuses as resolved. Existing realtime subscriptions, notification routines and audit history retained. No SQL migration, table, column or new page. Caveat: multi-request writes are not atomic; review warnings on partial failure. Earlier design notes in this file are superseded by this section.
+
+
+## 2026-11-13 — Preserve Admin Escalation Ban Decisions on Lift (Web)
+
+- User Management Unban now updates **only** `user_profiles.is_banned = false`, existing `admin_logs` audit and existing notification, **not** `admin_escalations.status`. Original `admin_banned` case decisions, their timestamps and case history stay intact.
+- Admin Escalations > Admin Banned now lists all actual `admin_banned` case records, including accounts subsequently reactivated. The list and View Record distinguish **Original Admin Decision: Admin Banned** from **Current Account Status: Active/Banned**.
+- For an account that has been unbanned, View Record shows the latest *verifiable* User Management unban audit note/date if visible; it does not invent missing audit details.
+- Existing escalation bans initiated in User Management continue to link pending genuine moderator cases on **ban**; direct-only bans create no escalation row. No change to ban actions, queries or source UI beyond the historical display and unban branch.
+- This patch is prospective: it does not automatically reconstruct `admin_banned` statuses previously overwritten to `resolved` by older versions. Historical repairs require case-by-case review.
+- No schema/table/RPC/RLS/SQL changes. Realtime subscriptions unchanged; live verification required.

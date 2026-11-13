@@ -495,26 +495,9 @@ export default function UserManagement() {
     })
       : { error: new Error('Admin session missing; audit log not recorded.') };
 
-    // Unban closes actual moderator ban case statuses; direct ban audit history stays intact.
-    if (!banning) {
-      const { data: cases, error: caseReadError } = await supabase
-        .from('admin_escalations')
-        .select('id, status, repeat_offender:repeat_offenders!inner(user_id)')
-        .eq('status', 'admin_banned')
-        .eq('repeat_offender.user_id', user.id);
-      if (caseReadError) {
-        caseSyncError = caseReadError;
-        console.warn('Account unbanned, but could not read existing escalation cases:', caseReadError);
-      } else if (cases?.length) {
-        const { data: closedCases, error: caseUpdateError } = await supabase.from('admin_escalations')
-          .update({ status: 'resolved', updated_at: new Date().toISOString() })
-          .in('id', cases.map(record => record.id)).eq('status', 'admin_banned').select('id');
-        if (caseUpdateError || (closedCases || []).length !== cases.length) {
-          caseSyncError = caseUpdateError || new Error('Some ban case statuses were not resolved.');
-          console.warn('Account unbanned, but escalation status could not be synchronized:', caseSyncError);
-        }
-      }
-    }
+    // Lifting an account ban changes access only, never a historical admin decision.
+    // Keep existing admin_banned escalation records untouched, including timestamps.
+    // The ACCOUNT_STATUS audit entry above records the lift separately.
 
     const { error: notificationError } = await supabase.from('notifications').insert({
       user_id: user.id,
@@ -529,7 +512,9 @@ export default function UserManagement() {
     } else {
       setNotice(banning && linkedCases.length
         ? `${userName(user)} is banned. ${linkedCases.length} linked moderator escalation(s) marked Admin Banned; source: User Management.`
-        : `${userName(user)} is now ${banning ? 'banned' : 'active'}. Action recorded in Admin Logs.`);
+        : banning
+          ? `${userName(user)} is now banned. Action recorded in Admin Logs.`
+          : `${userName(user)} is now active. Original escalation decisions remain in history; lift recorded in Admin Logs.`);
     }
     await fetchUsers();
     setSavingUserId(null);
@@ -936,7 +921,7 @@ export default function UserManagement() {
                   {activeModal.type === 'role' ? (
                     <>Change role for <span className="font-bold text-gray-900">{userName(activeModal.user)}</span> from <span className="font-bold text-gray-900">{activeModal.user.role || 'User'}</span> to <span className="font-bold text-gray-900">{activeModal.newRole}</span>?</>
                   ) : isRestoring ? (
-                    <>Restore full access for <span className="font-bold text-gray-900">{userName(activeModal.user)}</span>? Their account will be reactivated.</>
+                    <>Restore full access for <span className="font-bold text-gray-900">{userName(activeModal.user)}</span>? Their account will be reactivated. Past Admin Escalation ban decisions and reports will remain on record.</>
                   ) : (
                     <>Ban <span className="font-bold text-gray-900">{userName(activeModal.user)}</span>? This will restrict active account access across the platform.</>
                   )}
