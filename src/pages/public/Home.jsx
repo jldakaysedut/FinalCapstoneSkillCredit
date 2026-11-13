@@ -174,6 +174,44 @@ export default function Home() {
         .sc-home ::selection { background:#c7eed5; color:#10452d; }
         .sc-home .hero-section { position:relative;isolation:isolate;background:radial-gradient(circle at 78% 24%,#e3f2e5 0%,transparent 40%),radial-gradient(circle at 0% 100%,#f3eadd,transparent 40%); }
         .sc-home .hero-section:before {content:"";position:absolute;inset:0;pointer-events:none;opacity:.2;background-image:radial-gradient(#45845e 0.75px,transparent 0.75px);background-size:24px 24px;mask-image:linear-gradient(90deg,transparent,#000 80%);z-index:-1;}
+        /* Option A: subtle organic pale-green bubbles on light Home sections only. */
+        .sc-home .home-soft-bubbles { position:relative; isolation:isolate; overflow:hidden; }
+        .sc-home .home-soft-bubbles::before,
+        .sc-home .home-soft-bubbles::after {
+          content:"";
+          position:absolute;
+          z-index:0;
+          pointer-events:none;
+          border-radius:54% 46% 59% 41% / 43% 56% 44% 57%;
+          filter:blur(5px);
+        }
+        .sc-home .home-soft-bubbles::before {
+          width:clamp(240px,38vw,490px);
+          height:clamp(230px,31vw,410px);
+          top:-155px;
+          left:-205px;
+          transform:rotate(-13deg);
+          background:radial-gradient(ellipse at 45% 48%,rgba(159,215,164,.24) 0%,rgba(201,235,202,.16) 55%,transparent 78%);
+        }
+        .sc-home .home-soft-bubbles::after {
+          width:clamp(270px,40vw,530px);
+          height:clamp(220px,32vw,430px);
+          right:-205px;
+          bottom:-180px;
+          transform:rotate(19deg);
+          background:radial-gradient(ellipse at 50% 50%,rgba(180,226,182,.22) 0%,rgba(220,241,213,.13) 54%,transparent 78%);
+        }
+        .sc-home .home-soft-bubbles > * { position:relative; z-index:1; }
+        .sc-home #how-it-works.home-soft-bubbles::before { left:auto; right:-230px; top:-185px; }
+        .sc-home #how-it-works.home-soft-bubbles::after { right:auto; left:-230px; bottom:-190px; }
+        .sc-home .home-leaderboard.home-soft-bubbles::before { opacity:.50; }
+        .sc-home .home-leaderboard.home-soft-bubbles::after { opacity:.50; }
+        @media(max-width:600px) {
+          .sc-home .home-soft-bubbles::before { top:-110px; left:-165px; }
+          .sc-home .home-soft-bubbles::after { right:-170px; bottom:-125px; }
+          .sc-home #how-it-works.home-soft-bubbles::before { right:-175px; top:-135px; }
+          .sc-home #how-it-works.home-soft-bubbles::after { left:-170px; bottom:-130px; }
+        }
         .sc-home .hero-shell {max-width:1200px;margin:0 auto;padding:26px 48px;width:100%;}
         .sc-home .hero-download-link {display:inline-flex;align-items:center;gap:9px;margin-top:7px;font-size:13px;font-weight:800;color:#2d6a4f;text-decoration:none;border-bottom:1px solid transparent;transition:gap .2s,border-color .2s;}
         .sc-home .hero-download-link:hover {gap:14px;border-color:#2d6a4f;}
@@ -448,7 +486,7 @@ export default function Home() {
       </section>
 
       {/* ── WHAT CAN YOU LEARN (EXPLORE) ── */}
-      <section id="explore" className="section-pad reveal" style={{ background:"#faf8f4", padding:"72px 48px" }}>
+      <section id="explore" className="section-pad reveal home-soft-bubbles" style={{ background:"#faf8f4", padding:"72px 48px" }}>
         <div style={{ maxWidth:1080, margin:"0 auto", textAlign:"center" }}>
           <span style={{ fontSize:12, fontWeight:800, color:"#2d6a4f", letterSpacing:"0.12em", textTransform:"uppercase" }}>Explore by interest · {learnTopics.length} categories</span>
           <h2 style={{ fontFamily:"'Fraunces',serif", fontSize:36, fontWeight:900, color:"#111", marginTop:10, marginBottom:8, letterSpacing:"-0.02em" }}>Anything the community knows</h2>
@@ -468,7 +506,7 @@ export default function Home() {
       </section>
 
       {/* ── HOW IT WORKS ── */}
-      <section id="how-it-works" className="section-pad reveal" style={{ background:"#fff", padding:"80px 48px", borderTop:"1px solid #e8e2d9", borderBottom:"1px solid #e8e2d9" }}>
+      <section id="how-it-works" className="section-pad reveal home-soft-bubbles" style={{ background:"#fff", padding:"80px 48px", borderTop:"1px solid #e8e2d9", borderBottom:"1px solid #e8e2d9" }}>
         <div style={{ maxWidth:1000, margin:"0 auto" }}>
           <div style={{ textAlign:"center", marginBottom:52 }}>
             <span style={{ fontSize:12, fontWeight:800, color:"#2d6a4f", letterSpacing:"0.12em", textTransform:"uppercase" }}>How it works</span>
@@ -495,7 +533,7 @@ export default function Home() {
       </section>
 
       {/* ── FEATURES ── */}
-      <section id="features" className="section-pad reveal" style={{ padding:"80px 48px", background:"#faf8f4" }}>
+      <section id="features" className="section-pad reveal home-soft-bubbles" style={{ padding:"80px 48px", background:"#faf8f4" }}>
         <div style={{ maxWidth:1100, margin:"0 auto" }}>
           <div style={{ textAlign:"center", marginBottom:48 }}>
             <span style={{ fontSize:12, fontWeight:800, color:"#2d6a4f", letterSpacing:"0.12em", textTransform:"uppercase" }}>Platform Features</span>
@@ -516,7 +554,7 @@ export default function Home() {
       </section>
 
       {/* ── TOP RATED SPOTLIGHT: same 5-question scoring + 3-review minimum ── */}
-      <section className="section-pad reveal home-leaderboard" style={{ background:"radial-gradient(circle at 50% 2%,#eef5ed 0%,#faf8f4 68%)", padding:"75px 48px", borderTop:"1px solid #e4e8df", borderBottom:"1px solid #e4e8df" }}>
+      <section className="section-pad reveal home-leaderboard home-soft-bubbles" style={{ background:"radial-gradient(circle at 50% 2%,#eef5ed 0%,#faf8f4 68%)", padding:"75px 48px", borderTop:"1px solid #e4e8df", borderBottom:"1px solid #e4e8df" }}>
         <div className="home-leaderboard-inner">
           <div style={{ textAlign:"center", marginBottom:30 }}>
             <span className="home-leaderboard-kicker"><Trophy size={14} /> Community Leaderboard</span>
