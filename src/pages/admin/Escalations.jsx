@@ -1,127 +1,92 @@
-import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import supabase from '../../supabaseClient';
-import { useNavigate } from 'react-router-dom';
 import {
   Search, ShieldCheck, UploadCloud, X, CalendarDays,
   MessageSquareOff, AlertTriangle, Clock, Scale, ArrowRight,
   Ban, RefreshCw, ShieldAlert
 } from 'lucide-react';
 
-// The audit trail records where the most recent ban was applied; case status is separate.
-const auditBanSource = log => {
-  const details = log?.details || '';
-  if (details.includes('UNBANNED user:')) return null;
-  if (details.includes('BANNED user:') && details.includes('Source: User Management')) return 'User Management';
-  if (details.includes('Admin enforced permanent ban on') && details.includes('Source: Admin Escalations')) return 'Admin Escalations';
-  return undefined;
-};
-
 const FOCUS_RING = 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2';
 
 const relation = value => Array.isArray(value) ? value[0] : value;
 
-const getTargetUser = item => {
-  // Escalations are genuine moderator cases linked through repeat_offenders.
-  const offender = relation(item?.repeat_offender);
-  return relation(offender?.user_profiles) || null;
-};
-
 export default function Escalations() {
-  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [escalations, setEscalations] = useState([]);
-  const [banSources, setBanSources] = useState({});
-  const [lastBanLifts, setLastBanLifts] = useState({});
   const [searchQuery, setSearchQuery] = useState('');
-  const latestFetch = useRef(0);
+  const [currentAdminId, setCurrentAdminId] = useState(null);
 
   const [activeTabFilter, setActiveTabFilter] = useState('ALL'); // 'ALL', 'pending', 'admin_banned'
   const [manageModal, setManageModal] = useState({ isOpen: false, item: null });
   const [historyModal, setHistoryModal] = useState({ isOpen: false, user: null, logs: [], loading: false });
-  const [confirmModal, setConfirmModal] = useState({ isOpen: false, item: null, note: '', action: 'ban' });
+  const [confirmModal, setConfirmModal] = useState({ isOpen: false, item: null, note: '' });
   const [isProcessing, setIsProcessing] = useState(false);
   const [notice, setNotice] = useState('');
 
-  // An escalation is an actual moderator-submitted case, not a direct admin ban.
-  // The account's live restriction still comes from user_profiles.is_banned; historical decisions stay in case status.
-  const fetchEscalations = useCallback(async (quiet = false) => {
-    const request = ++latestFetch.current;
-    if (!quiet) setLoading(true);
+  // Fetch all escalations with user profile details
+  const fetchEscalations = useCallback(async () => {
+    setLoading(true);
+    const { data: { user } } = await supabase.auth.getUser();
+    setCurrentAdminId(user?.id);
 
     const { data, error } = await supabase
       .from('admin_escalations')
       .select(`
-        id, status, created_at, updated_at, repeat_offender_id,
-        moderator_id, admin_id,
+        id,
+        status,
+        created_at,
+        updated_at,
+        repeat_offender_id,
+        moderator_id,
+        admin_id,
         repeat_offender:repeat_offenders(
-          id, user_id,
-          user_profiles:user_id(id, full_name, avatar_url, role, is_banned, violation_count)
+          id,
+          user_id,
+          user_profiles:user_id(
+            id,
+            full_name,
+            avatar_url,
+            role,
+            is_banned,
+            violation_count
+          )
         ),
-        moderator:user_profiles!admin_escalations_moderator_id_fkey(full_name)
+        moderator:user_profiles!admin_escalations_moderator_id_fkey(
+          full_name
+        )
       `)
       .order('created_at', { ascending: false });
 
-    if (request !== latestFetch.current) return;
-    if (error) {
-      console.error('Could not load admin escalations:', error);
-      setNotice('Could not load escalation records. Check admin read permissions and try again.');
-    } else {
-      setEscalations(data || []);
-      // Read audit notes for historical bans too, even after the account is active.
-      const ids = [...new Set((data || []).map(getTargetUser).filter(user => user?.id).map(user => user.id))];
-      const origins = {};
-      const lifts = {};
-      for (let index = 0; index < ids.length; index += 100) {
-        const { data: logs, error: logsError } = await supabase.from('admin_logs')
-          .select('target_user_id, details, created_at')
-          .in('target_user_id', ids.slice(index, index + 100))
-          .in('action_type', ['ACCOUNT_STATUS', 'ENFORCE_BAN'])
-          .order('created_at', { ascending: false });
-        if (logsError) {
-          console.warn('Could not load ban origin notes:', logsError);
-          continue;
-        }
-        for (const log of logs || []) {
-          // Logs are newest-first. A lift counts as the latest action only if
-          // there is no newer recorded ban for that account.
-          const source = auditBanSource(log);
-          if (source === null && !Object.prototype.hasOwnProperty.call(lifts, log.target_user_id)) {
-            lifts[log.target_user_id] = { lifted: true, source: 'User Management', at: log.created_at };
-          } else if (source && !Object.prototype.hasOwnProperty.call(lifts, log.target_user_id)) {
-            lifts[log.target_user_id] = { lifted: false };
-          }
-          if (source && !origins[log.target_user_id]) origins[log.target_user_id] = source;
-        }
-      }
-      if (request === latestFetch.current) {
-        setBanSources(origins);
-        setLastBanLifts(lifts);
-      }
+    if (!error && data) {
+      setEscalations(data);
+    } else if (error) {
+      console.error('Error fetching admin_escalations:', error);
     }
-    if (request === latestFetch.current) setLoading(false);
+    setLoading(false);
   }, []);
 
   useEffect(() => {
     fetchEscalations();
 
-    // Existing subscriptions: escalation records and the shared account ban status.
-    // No new database publications or tables are required.
-    const refresh = () => fetchEscalations(true);
     const channel = supabase
-      .channel('admin_escalations_existing_tables_realtime')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'admin_escalations' }, refresh)
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'user_profiles' }, refresh)
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'admin_logs' }, refresh)
+      .channel('admin_escalations_realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'admin_escalations' },
+        () => fetchEscalations()
+      )
       .subscribe();
-    window.addEventListener('focus', refresh);
-    const refreshOnVisibility = () => { if (!document.hidden) refresh(); };
-    document.addEventListener('visibilitychange', refreshOnVisibility);
+
     return () => {
-      window.removeEventListener('focus', refresh);
-      document.removeEventListener('visibilitychange', refreshOnVisibility);
       supabase.removeChannel(channel);
     };
   }, [fetchEscalations]);
+
+  // Helper to extract target user profile
+  const getTargetUser = (item) => {
+    const offenderRelation = relation(item?.repeat_offender);
+    return relation(offenderRelation?.user_profiles) || null;
+  };
 
   // Open Active Reports History modal
   const handleOpenHistoryModal = async (targetUser) => {
@@ -145,85 +110,85 @@ export default function Escalations() {
     }
   };
 
-  // No database migration: use the existing moderator case, account status and audit log.
-  // These are separate client writes, so a partial failure is surfaced for review.
-  // Admin Escalations enforces ban decisions. Lift Ban is centralized in User Management.
-  // All pending moderator ban-review cases for the same account share the decision.
+  // Handle Permanent Ban confirmation
   const confirmBan = async () => {
-    if (isProcessing) return;
     setIsProcessing(true);
     const item = confirmModal.item;
     const targetUser = getTargetUser(item);
+
     if (!targetUser?.id) {
-      setNotice('Target user ID not found.');
+      alert('Target user ID not found.');
       setIsProcessing(false);
       return;
     }
 
     try {
-      const { data: authData } = await supabase.auth.getUser();
-      const adminId = authData?.user?.id;
-      if (!adminId) throw new Error('Admin session expired. Please log in again.');
-      const { data: refreshed, error: userReadError } = await supabase.from('user_profiles')
-        .select('id, is_banned').eq('id', targetUser.id).single();
-      if (userReadError) throw userReadError;
-      if (refreshed.is_banned) throw new Error('Account is already banned. Use User Management to manage this ban.');
-      if (item.status !== 'pending') throw new Error('Only pending escalations can enforce a ban.');
+      // 1. Update user_profiles table -> is_banned = true
+      const { error: banErr } = await supabase
+        .from('user_profiles')
+        .update({ is_banned: true })
+        .eq('id', targetUser.id);
 
-      // Preflight linked escalations to avoid applying a ban if cases are unreadable.
-      const { data: pendingCases, error: casesReadError } = await supabase.from('admin_escalations')
-        .select('id, repeat_offender:repeat_offenders!inner(user_id)')
-        .eq('status', 'pending').eq('repeat_offender.user_id', targetUser.id);
-      if (casesReadError) throw casesReadError;
-      if (!(pendingCases || []).some(record => record.id === item.id)) {
-        throw new Error('This escalation changed since it was opened. Reopen the record and try again.');
+      if (banErr) throw banErr;
+
+      // 2. Update admin_escalations status = 'admin_banned'
+      const { error: escErr } = await supabase
+        .from('admin_escalations')
+        .update({
+          status: 'admin_banned',
+          admin_id: currentAdminId,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', item.id);
+
+      if (escErr) throw escErr;
+
+      // 3. Log action & send notification
+      if (currentAdminId) {
+        await supabase.from('admin_logs').insert([{
+          admin_id: currentAdminId,
+          target_user_id: targetUser.id,
+          action_type: 'ENFORCE_BAN',
+          details: `Admin enforced permanent ban on ${targetUser.full_name}.\nNotes: ${confirmModal.note.trim() || 'No notes provided'}`
+        }]);
       }
 
-      const { data: updated, error: updateError } = await supabase.from('user_profiles')
-        .update({ is_banned: true }).eq('id', targetUser.id).eq('is_banned', false).select('id');
-      if (updateError || !updated?.length) throw updateError || new Error('Account status changed. Please refresh and review.');
-
-      // Updating genuine existing cases only: no new escalation records or schema changes.
-      const { data: markedCases, error: caseUpdateError } = await supabase.from('admin_escalations')
-        .update({ status: 'admin_banned', admin_id: adminId, updated_at: new Date().toISOString() })
-        .in('id', pendingCases.map(record => record.id)).eq('status', 'pending').select('id');
-      const caseSyncError = caseUpdateError || ((markedCases || []).length !== pendingCases.length
-        ? new Error('Some pending cases were not marked Admin Banned.') : null);
-
-      const { error: auditError } = await supabase.from('admin_logs').insert({
-        admin_id: adminId, target_user_id: targetUser.id, action_type: 'ENFORCE_BAN',
-        details: `Admin enforced permanent ban on ${targetUser.full_name || targetUser.id} | Source: Admin Escalations | Notes: ${confirmModal.note.trim() || 'No notes provided'}`,
-      });
-      const { error: notifyError } = await supabase.from('notifications').insert({
+      await supabase.from('notifications').insert([{
         user_id: targetUser.id,
         type: 'account_banned',
-        content: 'Your account has been permanently banned by an Administrator following escalation review.',
-      });
-      if (notifyError) console.warn('Ban updated, notification failed:', notifyError);
+        content: `Your account has been permanently banned by an Administrator following escalation review.`
+      }]);
 
-      if (caseSyncError || auditError) {
-        console.warn('Ban applied, but a related write was incomplete:', { caseSyncError, auditError });
-        setNotice('Account is banned, but some escalation/audit records did not synchronize. Please review the cases.');
-      } else {
-        setNotice(`${targetUser.full_name} is banned. ${pendingCases.length} linked escalation(s) marked Admin Banned. User Management will sync automatically.`);
-      }
-      setConfirmModal({ isOpen: false, item: null, note: '', action: 'ban' });
-      setManageModal({ isOpen: false, item: null });
-      await fetchEscalations(true);
+      setEscalations(prev => prev.map(e => {
+        if (e.id === item.id) {
+          const offender = relation(e.repeat_offender);
+          const profile = relation(offender?.user_profiles);
+          return {
+            ...e,
+            status: 'admin_banned',
+            repeat_offender: {
+              ...offender,
+              user_profiles: { ...profile, is_banned: true }
+            }
+          };
+        }
+        return e;
+      }));
+
+      setNotice(`Successfully banned ${targetUser.full_name} and updated status to admin_banned.`);
+      setConfirmModal({ isOpen: false, item: null, note: '' });
     } catch (err) {
-      console.error('Error changing account ban:', err);
-      setNotice(`Could not ban this user. ${err.message}`);
-      await fetchEscalations(true);
+      console.error(err);
+      alert('Error enforcing ban: ' + err.message);
     } finally {
       setIsProcessing(false);
     }
   };
 
-  // Summary counts refer only to genuine moderator escalation cases.
+  // Summary statistics
   const stats = useMemo(() => {
     const total = escalations.length;
     const pending = escalations.filter(e => e.status === 'pending').length;
-    // This category tracks historical ban decisions, including lifted bans.
     const banned = escalations.filter(e => e.status === 'admin_banned').length;
 
     return { total, pending, banned };
@@ -232,8 +197,7 @@ export default function Escalations() {
   // Filtered escalations list
   const filteredEscalations = useMemo(() => {
     return escalations.filter(item => {
-      if (activeTabFilter === 'admin_banned' && item.status !== 'admin_banned') return false;
-      if (activeTabFilter === 'pending' && item.status !== 'pending') return false;
+      if (activeTabFilter !== 'ALL' && item.status !== activeTabFilter) return false;
 
       const targetUser = getTargetUser(item);
       const modUser = relation(item.moderator);
@@ -242,9 +206,8 @@ export default function Escalations() {
       const userName = targetUser?.full_name?.toLowerCase() || '';
       const modName = modUser?.full_name?.toLowerCase() || '';
       const itemId = item.id.toLowerCase();
-      const sourceName = 'moderator escalation';
 
-      return userName.includes(query) || modName.includes(query) || itemId.includes(query) || sourceName.includes(query);
+      return userName.includes(query) || modName.includes(query) || itemId.includes(query);
     });
   }, [escalations, searchQuery, activeTabFilter]);
 
@@ -269,14 +232,14 @@ export default function Escalations() {
       {/* ── PAGE HEADER ── */}
       <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-gray-900">Admin Escalations</h1>
+          <h1 className="text-2xl font-semibold tracking-tight text-gray-900">Admin escalations queue</h1>
           <p className="mt-1 max-w-xl text-sm text-gray-500">
-            Review cases escalated by moderators. Direct User Management bans are tracked in Admin Logs, not added as escalation cases.
+            Review severe user accounts escalated by moderators for final disciplinary action or ban enforcement.
           </p>
         </div>
         <button
           type="button"
-          onClick={() => fetchEscalations()}
+          onClick={fetchEscalations}
           disabled={loading}
           className={`inline-flex items-center justify-center gap-2 self-start rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-[13px] font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50 disabled:opacity-60 sm:self-auto ${FOCUS_RING}`}
         >
@@ -308,7 +271,7 @@ export default function Escalations() {
         >
           <p className={`text-[13px] font-semibold ${activeTabFilter === 'ALL' ? 'text-emerald-800' : 'text-gray-600'}`}>All Escalations</p>
           <p className={`mt-2 text-3xl font-bold ${activeTabFilter === 'ALL' ? 'text-emerald-900' : 'text-gray-900'}`}>{stats.total}</p>
-          <p className={`mt-1 text-xs ${activeTabFilter === 'ALL' ? 'text-emerald-700' : 'text-gray-500'}`}>Genuine moderator escalation cases only</p>
+          <p className={`mt-1 text-xs ${activeTabFilter === 'ALL' ? 'text-emerald-700' : 'text-gray-500'}`}>Entire escalations queue</p>
         </button>
 
         <button
@@ -336,7 +299,7 @@ export default function Escalations() {
         >
           <p className={`text-[13px] font-semibold ${activeTabFilter === 'admin_banned' ? 'text-emerald-800' : 'text-gray-600'}`}>Admin Banned</p>
           <p className={`mt-2 text-3xl font-bold ${activeTabFilter === 'admin_banned' ? 'text-emerald-900' : 'text-gray-900'}`}>{stats.banned}</p>
-          <p className={`mt-1 text-xs ${activeTabFilter === 'admin_banned' ? 'text-emerald-700' : 'text-gray-500'}`}>Recorded admin ban decisions (including lifted bans)</p>
+          <p className={`mt-1 text-xs ${activeTabFilter === 'admin_banned' ? 'text-emerald-700' : 'text-gray-500'}`}>Permanently restricted</p>
         </button>
       </div>
 
@@ -346,7 +309,7 @@ export default function Escalations() {
           <Search className="h-4 w-4 shrink-0 text-gray-400" aria-hidden="true" />
           <input
             type="text"
-            placeholder="Search user, case ID, or moderator"
+            placeholder="Search by offender name, ID, or moderator"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="min-w-0 flex-1 bg-transparent text-sm font-medium text-gray-800 placeholder-gray-400 outline-none"
@@ -369,7 +332,7 @@ export default function Escalations() {
               </button>
             )}
             <p className="text-xs text-gray-500" role="status">
-              Showing <span className="font-semibold tabular-nums text-gray-900">{filteredEscalations.length}</span> of <span className="tabular-nums">{escalations.length}</span> records
+              Showing <span className="font-semibold tabular-nums text-gray-900">{filteredEscalations.length}</span> of <span className="tabular-nums">{escalations.length}</span> cases
             </p>
           </div>
         )}
@@ -406,7 +369,7 @@ export default function Escalations() {
             ) : (
               filteredEscalations.map(item => {
                 const targetUser = getTargetUser(item);
-                const isBanned = Boolean(targetUser?.is_banned);
+                const isBanned = targetUser?.is_banned || item.status === 'admin_banned';
 
                 return (
                   <tr key={item.id} className="relative hover:bg-gray-50/50 transition-colors">
@@ -421,9 +384,6 @@ export default function Escalations() {
                         </span>
                         <div>
                           <p className="text-[15px] font-bold text-gray-900">{targetUser?.full_name || 'Unknown User'}</p>
-                          <p className="mt-0.5 text-[11px] text-gray-500">
-                            Moderator Escalation
-                          </p>
                           <div className="mt-0.5 flex items-center gap-2">
                             <span className="inline-flex items-center rounded-md bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-gray-700">
                               {targetUser?.role || 'User'}
@@ -444,11 +404,11 @@ export default function Escalations() {
                     <td className="px-6 py-4 whitespace-nowrap">
                       {isBanned ? (
                         <span className="inline-flex items-center gap-1.5 rounded-md bg-rose-50 border border-rose-200 px-2.5 py-1 text-xs font-semibold text-rose-800">
-                          <Ban className="h-3.5 w-3.5" /> {item.status === 'pending' ? 'Account Banned · Case Pending' : item.status === 'admin_banned' ? 'Admin Banned' : 'Account Banned · Case Resolved'}
+                          <Ban className="h-3.5 w-3.5" /> Admin Banned
                         </span>
                       ) : (
                         <span className="inline-flex items-center gap-1.5 rounded-md bg-amber-50 border border-amber-200 px-2.5 py-1 text-xs font-semibold text-amber-800">
-                          <UploadCloud className="h-3.5 w-3.5 text-amber-600" /> {item.status === 'resolved' ? 'Resolved · Active' : item.status === 'admin_banned' ? 'Admin Banned · Now Active' : 'Pending Review'}
+                          <UploadCloud className="h-3.5 w-3.5 text-amber-600" /> Pending Review
                         </span>
                       )}
                     </td>
@@ -463,7 +423,7 @@ export default function Escalations() {
                             : 'text-gray-700 bg-gray-100 hover:bg-gray-200'
                         } ${FOCUS_RING}`}
                       >
-                        {isBanned || item.status !== 'pending' ? 'View record' : 'Manage user'} <ArrowRight className="h-4 w-4" />
+                        {!isBanned ? 'Manage user' : 'View record'} <ArrowRight className="h-4 w-4" />
                       </button>
                     </td>
                   </tr>
@@ -476,11 +436,11 @@ export default function Escalations() {
 
       {/* ── UNIFIED MANAGE MODAL (Without Resolve button) ── */}
       {manageModal.isOpen && manageModal.item && (() => {
-        const item = escalations.find(row => row.id === manageModal.item.id) || manageModal.item;
+        const item = manageModal.item;
         const targetUser = getTargetUser(item);
         if (!targetUser) return null;
 
-        const isBanned = Boolean(targetUser.is_banned);
+        const isBanned = targetUser.is_banned || item.status === 'admin_banned';
 
         return (
           <div
@@ -488,7 +448,7 @@ export default function Escalations() {
             className="fixed inset-0 z-[700] flex items-center justify-center bg-gray-900/60 p-4 backdrop-blur-sm animate-in fade-in duration-200"
             onClick={(e) => e.target === e.currentTarget && setManageModal({ isOpen: false, item: null })}
           >
-            <div className="relative max-h-[90vh] w-full max-w-sm overflow-y-auto rounded-2xl border border-gray-100 bg-white p-6 shadow-2xl">
+            <div className="relative w-full max-w-sm rounded-2xl border border-gray-100 bg-white p-6 shadow-2xl">
               <button
                 type="button"
                 onClick={() => setManageModal({ isOpen: false, item: null })}
@@ -517,45 +477,12 @@ export default function Escalations() {
                     <span className="text-gray-500 font-medium">Policy Strikes:</span>
                     <span className="font-bold text-rose-600 px-2 py-0.5 bg-rose-100 rounded-md">{targetUser.violation_count || 0}</span>
                   </div>
-                  <div className="flex justify-between items-center gap-3 text-sm">
-                    <span className="text-gray-500 font-medium">Account Status:</span>
-                    <span className={`font-semibold ${isBanned ? 'text-rose-700' : 'text-emerald-700'}`}>
-                      {isBanned ? 'Banned' : 'Active'}
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-gray-500 font-medium">Escalation Status:</span>
+                    <span className="font-semibold text-gray-900 capitalize">
+                      {isBanned ? 'Admin Banned' : 'Pending Review'}
                     </span>
                   </div>
-                  <div className="flex justify-between items-center gap-3 text-sm">
-                    <span className="text-gray-500 font-medium">Original Admin Decision:</span>
-                    <span className={`font-semibold text-right ${item.status === 'admin_banned' ? 'text-rose-700' : 'text-gray-900'}`}>
-                      {item.status === 'admin_banned' ? 'Admin Banned' : item.status === 'resolved' ? 'Resolved' : 'Pending Review'}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center gap-3 text-sm">
-                    <span className="text-gray-500 font-medium">Case Origin:</span>
-                    <span className="font-semibold text-gray-900 text-right">Moderator Escalation</span>
-                  </div>
-                  {isBanned && (
-                    <p className="rounded-lg border border-emerald-200 bg-emerald-50 p-2 text-xs leading-5 text-emerald-900">
-                      {banSources[targetUser.id] === 'User Management'
-                        ? 'Ban decision applied through User Management. This existing escalation was linked to that decision; no extra case was created.'
-                        : banSources[targetUser.id] === 'Admin Escalations'
-                          ? 'Ban decision applied through Admin Escalations.'
-                          : 'This account is banned. The origin of its current ban could not be verified from the audit log.'}
-                    </p>
-                  )}
-                  {!isBanned && item.status === 'admin_banned' && (
-                    <p className="rounded-lg border border-emerald-200 bg-emerald-50 p-2 text-xs leading-5 text-emerald-900">
-                      The account is Active, but the original Admin Banned decision stays in this escalation history.
-                      {lastBanLifts[targetUser.id]?.lifted
-                        ? ` Latest recorded action: ban lifted via ${lastBanLifts[targetUser.id].source}${lastBanLifts[targetUser.id].at ? ` on ${new Date(lastBanLifts[targetUser.id].at).toLocaleString()}` : ''}.`
-                        : ' No verified lift action is available in accessible Admin Logs.'}
-                    </p>
-                  )}
-                  {isBanned && item.status === 'pending' && (
-                    <p className="rounded-lg border border-amber-200 bg-amber-50 p-2 text-xs leading-5 text-amber-900">
-                      Account is banned but this case is still pending. Please review the case synchronization before making another decision.
-                    </p>
-                  )}
-                  <p className="text-xs text-gray-500"><strong>Record date:</strong> {item.created_at ? new Date(item.created_at).toLocaleString() : 'Not recorded'}</p>
                 </div>
 
                 <div className="mt-6 w-full flex flex-col gap-2 border-t border-gray-100 pt-5">
@@ -571,19 +498,16 @@ export default function Escalations() {
                     type="button"
                     onClick={() => {
                       setManageModal({ isOpen: false, item: null });
-                      if (isBanned) navigate('/admin/users');
-                      else setConfirmModal({ isOpen: true, item, note: '', action: 'ban' });
+                      setConfirmModal({ isOpen: true, item, note: '' });
                     }}
-                    disabled={!isBanned && item.status !== 'pending'}
+                    disabled={isBanned}
                     className={`w-full flex items-center justify-center gap-2 rounded-xl border py-3 text-[13px] font-semibold transition ${
                       isBanned
-                        ? 'border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
-                        : item.status !== 'pending'
-                          ? 'border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed'
-                          : 'border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100'
+                        ? 'border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed'
+                        : 'border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100'
                     }`}
                   >
-                    <Ban className="h-4 w-4" /> {isBanned ? 'Lift Ban in User Management' : item.status !== 'pending' ? 'Record Resolved' : 'Enforce Permanent Ban'}
+                    <Ban className="h-4 w-4" /> {isBanned ? 'Already Banned' : 'Enforce Permanent Ban'}
                   </button>
                 </div>
               </div>
@@ -750,7 +674,7 @@ export default function Escalations() {
               </div>
 
               <p className="mt-4 text-sm leading-6 text-gray-500">
-                <>Enforce a ban for <span className="font-semibold text-gray-900">{targetUser?.full_name}</span>? This updates all pending moderator escalations for the account and restricts access. Lift Ban is available in User Management.</>
+                You are enforcing a permanent ban for <span className="font-semibold text-gray-900">{targetUser?.full_name}</span>. This will set <code className="text-xs bg-gray-100 px-1 py-0.5 rounded">is_banned = true</code> on their user profile and update status to <code className="text-xs bg-gray-100 px-1 py-0.5 rounded">admin_banned</code>.
               </p>
 
               <div className="mt-5 space-y-3">
@@ -765,7 +689,7 @@ export default function Escalations() {
                 </label>
                 <div className="flex items-start gap-2.5 rounded-xl border p-3 text-xs leading-5 border-rose-100 bg-rose-50/60 text-rose-900">
                   <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-rose-700" aria-hidden="true" />
-                  <p>Uses existing database tables. Account, case, and audit writes are separate; review the status if any step fails.</p>
+                  <p>This action will be securely recorded in system audit logs and sent as a notification to the user.</p>
                 </div>
               </div>
 

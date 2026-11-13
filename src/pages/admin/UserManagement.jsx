@@ -22,15 +22,6 @@ import {
   UserCheck
 } from 'lucide-react';
 
-// The audit trail records where the most recent ban was applied; case status is separate.
-const auditBanSource = log => {
-  const details = log?.details || '';
-  if (details.includes('UNBANNED user:')) return null;
-  if (details.includes('BANNED user:') && details.includes('Source: User Management')) return 'User Management';
-  if (details.includes('Admin enforced permanent ban on') && details.includes('Source: Admin Escalations')) return 'Admin Escalations';
-  return undefined;
-};
-
 const FOCUS_RING = 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2';
 
 const ROW_GRID = 'lg:grid lg:grid-cols-[minmax(0,2.2fr)_minmax(0,0.9fr)_minmax(0,0.9fr)_minmax(0,1fr)_280px] lg:items-center lg:gap-6';
@@ -302,8 +293,6 @@ export default function UserManagement() {
   const [savingUserId, setSavingUserId] = useState(null);
   const [pageError, setPageError] = useState('');
   const [notice, setNotice] = useState('');
-  const [banNote, setBanNote] = useState('');
-  const [banSources, setBanSources] = useState({});
 
   const fetchUsers = useCallback(async () => {
     setLoading(true);
@@ -314,28 +303,6 @@ export default function UserManagement() {
       .order('created_at', { ascending: false });
     if (error) setPageError('Could not load users. Please try again.');
     setUsers(data || []);
-    // Ban origin is shown only when an existing audit entry verifies it.
-    const bannedIds = (data || []).filter(user => user.is_banned).map(user => user.id);
-    const origins = {};
-    if (bannedIds.length) {
-      for (let index = 0; index < bannedIds.length; index += 100) {
-        const { data: logs, error: logsError } = await supabase.from('admin_logs')
-          .select('target_user_id, details, created_at')
-          .in('target_user_id', bannedIds.slice(index, index + 100))
-          .in('action_type', ['ACCOUNT_STATUS', 'ENFORCE_BAN'])
-          .order('created_at', { ascending: false });
-        if (logsError) {
-          console.warn('Could not load ban origins from admin logs:', logsError);
-          continue;
-        }
-        for (const log of logs || []) {
-          if (Object.prototype.hasOwnProperty.call(origins, log.target_user_id)) continue;
-          const source = auditBanSource(log);
-          if (source !== undefined) origins[log.target_user_id] = source;
-        }
-      }
-    }
-    setBanSources(origins);
     setLoading(false);
   }, []);
 
@@ -350,13 +317,12 @@ export default function UserManagement() {
     return () => { isMounted = false; };
   }, [fetchUsers]);
 
-  useRealtimeRefresh(fetchUsers, ['user_profiles', 'admin_logs'], 'web_refresh_admin_users');
+  useRealtimeRefresh(fetchUsers, ['user_profiles'], 'web_refresh_admin_users');
 
   const closeModal = useCallback(() => {
     setActiveModal(null);
     setCreditAmount('');
     setCreditError('');
-    setBanNote('');
   }, []);
 
   const logAdminAction = async (targetUserId, actionType, details) => {
@@ -428,95 +394,26 @@ export default function UserManagement() {
 
   const handleBanToggle = async user => {
     const currentBanStatus = Boolean(user.is_banned);
-    const banning = !currentBanStatus;
-    if (adminUser?.id === user.id) {
-      setNotice('You cannot ban or unban your own admin account.');
-      closeModal();
-      return;
-    }
+    const action = currentBanStatus ? 'UNBAN' : 'BAN';
     setSavingUserId(user.id);
     setNotice('');
-
-    // Check real moderator escalations before a direct ban. No synthetic case is created.
-    // An active ban decision also settles pending ban-review cases for this same account.
-    const adminId = adminUser?.id || (await supabase.auth.getUser()).data?.user?.id;
-    if (!adminId) {
-      setNotice('Your admin session expired. Please log in again.');
+    const { error } = await supabase.from('user_profiles').update({ is_banned: !currentBanStatus }).eq('id', user.id);
+    if (error) {
+      setNotice(`Could not ${currentBanStatus ? 'unban' : 'ban'} ${userName(user)}. Please try again.`);
       setSavingUserId(null);
       return;
     }
-    let linkedCases = [];
-    if (banning) {
-      const { data: cases, error: casesError } = await supabase.from('admin_escalations')
-        .select('id, repeat_offender:repeat_offenders!inner(user_id)')
-        .eq('status', 'pending')
-        .eq('repeat_offender.user_id', user.id);
-      if (casesError) {
-        setNotice('Could not verify existing escalations. Ban was not applied; please try again.');
-        setSavingUserId(null);
-        return;
-      }
-      linkedCases = cases || [];
-    }
-    const { error, data } = await supabase.from('user_profiles')
-      .update({ is_banned: banning })
-      .eq('id', user.id)
-      .eq('is_banned', currentBanStatus)
-      .select('id');
-    if (error || !data?.length) {
-      setNotice(`Could not ${banning ? 'ban' : 'unban'} ${userName(user)}. Please try again.`);
-      setSavingUserId(null);
-      await fetchUsers();
-      return;
-    }
 
-    updateLocalUser(user.id, { is_banned: banning });
-    const actionName = banning ? 'BANNED' : 'UNBANNED';
-    const reason = banNote.trim() || 'No notes provided';
-    let caseSyncError = null;
-    if (banning && linkedCases.length) {
-      // Actual existing escalations only; never create one for a direct-only ban.
-      const { data: markedCases, error: caseError } = await supabase.from('admin_escalations')
-        .update({ status: 'admin_banned', admin_id: adminId, updated_at: new Date().toISOString() })
-        .in('id', linkedCases.map(record => record.id))
-        .eq('status', 'pending')
-        .select('id');
-      if (caseError || (markedCases || []).length !== linkedCases.length) {
-        caseSyncError = caseError || new Error('Some pending cases did not update.');
-        console.warn('User banned, but linked escalations need review:', caseSyncError);
-      }
+    updateLocalUser(user.id, { is_banned: !currentBanStatus });
+    await logAdminAction(user.id, 'ACCOUNT_STATUS', `${action}NED user: ${userName(user)}`);
+    if (currentBanStatus) {
+      await supabase.from('notifications').insert({
+        user_id: user.id,
+        type: 'system',
+        content: 'Good news! Your account ban has been lifted by an Admin.',
+      });
     }
-    const { error: logError } = adminId
-      ? await supabase.from('admin_logs').insert({
-      admin_id: adminId,
-      target_user_id: user.id,
-      action_type: 'ACCOUNT_STATUS',
-      details: `${actionName} user: ${userName(user)} | Source: User Management | Notes: ${reason}`,
-    })
-      : { error: new Error('Admin session missing; audit log not recorded.') };
-
-    // Lifting an account ban changes access only, never a historical admin decision.
-    // Keep existing admin_banned escalation records untouched, including timestamps.
-    // The ACCOUNT_STATUS audit entry above records the lift separately.
-
-    const { error: notificationError } = await supabase.from('notifications').insert({
-      user_id: user.id,
-      type: banning ? 'account_banned' : 'system',
-      content: banning
-        ? 'Your account has been banned by an Administrator through User Management.'
-        : 'Good news! Your account ban has been lifted by an Admin.',
-    });
-    if (notificationError) console.warn('Account updated, but notification failed:', notificationError);
-    if (logError || caseSyncError) {
-      setNotice(`${userName(user)} is now ${banning ? 'banned' : 'active'}, but ${caseSyncError ? 'some escalation records' : 'the audit log'} did not synchronize. Please review the records.`);
-    } else {
-      setNotice(banning && linkedCases.length
-        ? `${userName(user)} is banned. ${linkedCases.length} linked moderator escalation(s) marked Admin Banned; source: User Management.`
-        : banning
-          ? `${userName(user)} is now banned. Action recorded in Admin Logs.`
-          : `${userName(user)} is now active. Original escalation decisions remain in history; lift recorded in Admin Logs.`);
-    }
-    await fetchUsers();
+    setNotice(`${userName(user)} is now ${currentBanStatus ? 'active' : 'banned'}.`);
     setSavingUserId(null);
     closeModal();
   };
@@ -787,14 +684,7 @@ export default function UserManagement() {
                   <dl className="grid grid-cols-2 gap-x-4 gap-y-4 sm:grid-cols-3 lg:contents">
                     <div>
                       <dt className="mb-1 text-[11px] font-medium text-gray-400 lg:sr-only">Status</dt>
-                      <dd>
-                        <StatusBadge isBanned={user.is_banned} isDeleted={user.is_deleted} />
-                        {user.is_banned && !user.is_deleted && (
-                          <span className="mt-1 block text-[10px] text-gray-500">
-                            {banSources[user.id] ? `Via ${banSources[user.id]}` : 'Ban source not verified'}
-                          </span>
-                        )}
-                      </dd>
+                      <dd><StatusBadge isBanned={user.is_banned} isDeleted={user.is_deleted} /></dd>
                     </div>
 
                     <div>
@@ -921,26 +811,12 @@ export default function UserManagement() {
                   {activeModal.type === 'role' ? (
                     <>Change role for <span className="font-bold text-gray-900">{userName(activeModal.user)}</span> from <span className="font-bold text-gray-900">{activeModal.user.role || 'User'}</span> to <span className="font-bold text-gray-900">{activeModal.newRole}</span>?</>
                   ) : isRestoring ? (
-                    <>Restore full access for <span className="font-bold text-gray-900">{userName(activeModal.user)}</span>? Their account will be reactivated. Past Admin Escalation ban decisions and reports will remain on record.</>
+                    <>Restore full access for <span className="font-bold text-gray-900">{userName(activeModal.user)}</span>? Their account will be reactivated.</>
                   ) : (
                     <>Ban <span className="font-bold text-gray-900">{userName(activeModal.user)}</span>? This will restrict active account access across the platform.</>
                   )}
                 </p>
               </div>
-
-              {isBan && (
-                <label className="block text-xs font-medium text-gray-700">
-                  Admin remarks (optional)
-                  <textarea
-                    value={banNote}
-                    onChange={event => setBanNote(event.target.value)}
-                    placeholder={isRestoring ? 'Reason for lifting the ban...' : 'Reason for the direct admin ban...'}
-                    maxLength={2000}
-                    rows={3}
-                    className="mt-2 w-full resize-y rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-800 outline-none focus:border-emerald-500"
-                  />
-                </label>
-              )}
 
               {isBan && !isRestoring && (
                 <div className="flex items-start gap-2.5 rounded-xl border border-rose-100 bg-rose-50/60 p-3 text-xs leading-5 text-rose-900">
