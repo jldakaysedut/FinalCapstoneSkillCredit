@@ -60,16 +60,16 @@ html {
   justify-content: center;
   overflow: hidden;
   background:
-    radial-gradient(circle at top left, rgba(208, 234, 199, 0.62) 0%, rgba(208, 234, 199, 0) 26%),
-    radial-gradient(circle at bottom right, rgba(214, 240, 208, 0.64) 0%, rgba(214, 240, 208, 0) 30%),
-    linear-gradient(180deg, #f3faee 0%, #eef6eb 48%, #f8fbf5 100%);
+    radial-gradient(circle at 4% 5%, rgba(199, 220, 199, 0.13) 0%, transparent 24%),
+    radial-gradient(circle at 96% 92%, rgba(205, 225, 202, 0.11) 0%, transparent 26%),
+    linear-gradient(180deg, #fcfbf9 0%, #fafaf8 50%, #fffdfa 100%);
   padding: 96px 16px 40px;
 }
 
 .auth-bg {
   pointer-events: none;
   position: absolute;
-  opacity: 0.75;
+  opacity: 0.38;
 }
 
 .auth-bg::before,
@@ -83,13 +83,13 @@ html {
 .auth-bg::before {
   width: 240px;
   height: 240px;
-  background: rgba(190, 225, 177, 0.28);
+  background: rgba(190, 225, 177, 0.14);
 }
 
 .auth-bg::after {
   width: 280px;
   height: 160px;
-  border: 1px solid rgba(213, 168, 88, 0.42);
+  border: 1px solid rgba(213, 168, 88, 0.22);
   transform: rotate(-14deg);
 }
 
@@ -207,7 +207,7 @@ html {
   border-top-right-radius: 26px;
   border-top-left-radius: 42px;
   border-bottom-left-radius: 56px;
-  background: rgba(224, 241, 214, 0.7);
+  background: rgba(224, 241, 214, 0.26);
 }
 
 .auth-logo-wrap {

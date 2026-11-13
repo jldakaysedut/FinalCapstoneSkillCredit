@@ -172,13 +172,13 @@ export default function Home() {
         .sc-home section { scroll-margin-top:75px; }
         .sc-home a:focus-visible { outline:3px solid #66b88d; outline-offset:4px; }
         .sc-home ::selection { background:#c7eed5; color:#10452d; }
-        /* Shared soft-green background, visually matching the public auth pages.
-           A single Home canvas keeps section boundaries clean and unbroken. */
+        /* Warm off-white canvas with barely visible mint highlights.
+           Keep the same quiet background rhythm as the four auth pages. */
         .sc-home {
           background:
-            radial-gradient(circle at 0% 0%, rgba(208,234,199,.62) 0%, rgba(208,234,199,0) 29%),
-            radial-gradient(circle at 100% 85%, rgba(214,240,208,.64) 0%, rgba(214,240,208,0) 34%),
-            linear-gradient(180deg,#f3faee 0%,#eef6eb 48%,#f8fbf5 100%);
+            radial-gradient(circle at 4% 5%, rgba(199,220,199,.13) 0%, transparent 24%),
+            radial-gradient(circle at 96% 92%, rgba(205,225,202,.11) 0%, transparent 26%),
+            linear-gradient(180deg,#fcfbf9 0%,#fafaf8 50%,#fffdfa 100%);
         }
         .sc-home .hero-section { position:relative; isolation:isolate; background:transparent; }
         /* Download section shares the same pastel canvas while retaining its mock phone/card layout. */
@@ -189,25 +189,25 @@ export default function Home() {
           content:"";
           position:absolute;
           top:0; left:0;
-          width:clamp(155px,20vw,250px);
-          height:clamp(108px,14vw,165px);
+          width:clamp(125px,16vw,190px);
+          height:clamp(82px,10vw,130px);
           pointer-events:none;
           z-index:0;
           background:
-            radial-gradient(ellipse at -15% -5%,rgba(146,192,126,.26) 0 34%,transparent 69%),
-            radial-gradient(ellipse at 15% -24%,rgba(205,236,193,.51) 0 52%,transparent 79%);
+            radial-gradient(ellipse at -15% -5%,rgba(146,192,126,.09) 0 34%,transparent 69%),
+            radial-gradient(ellipse at 15% -24%,rgba(205,236,193,.16) 0 52%,transparent 79%);
         }
         /* A single delicate gold arc like the Login/Register background. */
         .sc-home .home-soft-bubbles::after {
           content:"";
           position:absolute;
           top:0; left:0;
-          width:clamp(165px,22vw,268px);
-          height:clamp(105px,13vw,162px);
+          width:clamp(130px,17vw,200px);
+          height:clamp(90px,11vw,125px);
           background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 268 162'%3E%3Cpath d='M -24 156 C 28 93 99 91 145 53 S 225 14 285 -28' fill='none' stroke='%23d6b476' stroke-width='1.1' opacity='.65'/%3E%3C/svg%3E") no-repeat left top / 100% 100%;
           pointer-events:none;
           z-index:0;
-          opacity:.55;
+          opacity:.24;
         }
         .sc-home .home-soft-bubbles > * { position:relative; z-index:1; }
         .sc-home #how-it-works.home-soft-bubbles::before,
@@ -218,8 +218,8 @@ export default function Home() {
           transform:scaleX(-1);
         }
         @media(max-width:600px) {
-          .sc-home .home-soft-bubbles::before { width:140px;height:102px; }
-          .sc-home .home-soft-bubbles::after { width:144px;height:94px; }
+          .sc-home .home-soft-bubbles::before { width:108px;height:78px; }
+          .sc-home .home-soft-bubbles::after { width:115px;height:76px; }
         }
                 .sc-home .hero-shell {max-width:1200px;margin:0 auto;padding:26px 48px;width:100%;}
         .sc-home .hero-download-link {display:inline-flex;align-items:center;gap:9px;margin-top:7px;font-size:13px;font-weight:800;color:#2d6a4f;text-decoration:none;border-bottom:1px solid transparent;transition:gap .2s,border-color .2s;}
