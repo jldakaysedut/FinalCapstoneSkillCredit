@@ -96,7 +96,7 @@ function SkillCard({ skill, isSaved, onSave, onView, width = 260 }) {
     <article
       onClick={() => onView(skill.id)}
       style={width === 260 ? undefined : { width }}
-      className="group shrink-0 min-w-0 w-[min(222px,calc(100vw-64px))] sm:w-[260px] bg-white rounded-2xl overflow-hidden flex flex-col border border-gray-200/70
+      className="sc-dashboard-skill-card group shrink-0 min-w-0 w-[min(222px,calc(100vw-64px))] sm:w-[260px] bg-white rounded-2xl overflow-hidden flex flex-col border border-gray-200/70
         hover:shadow-[0_10px_32px_rgba(16,185,129,0.10)] hover:border-emerald-200 transition-all duration-300 cursor-pointer snap-start"
     >
       <div className="relative h-[122px] sm:h-[158px] overflow-hidden bg-emerald-900">
@@ -192,10 +192,10 @@ function Swimlane({ icon: SectionIcon, iconColor, title, subtitle, skills, saved
   };
 
   return (
-    <section className="mb-4 sm:mb-10">
+    <section className="sc-dashboard-lane mb-5 sm:mb-10">
       <div className="flex min-w-0 flex-wrap items-center justify-between gap-2 mb-2.5 sm:mb-4">
         <div>
-          <h2 className="text-[16px] sm:text-[18px] font-bold text-gray-900 tracking-tight flex items-center gap-2">
+          <h2 className="sc-dashboard-section-title text-[17px] sm:text-[20px] font-bold text-gray-900 tracking-tight flex items-center gap-2">
             {SectionIcon && <SectionIcon className={`w-5 h-5 ${iconColor || 'text-emerald-600'}`} />}
             {title}
           </h2>
@@ -220,7 +220,7 @@ function Swimlane({ icon: SectionIcon, iconColor, title, subtitle, skills, saved
           )}
           {showSeeAll && (
             <button onClick={() => { onSeeAll(); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-              className="flex items-center gap-1 px-3 sm:px-4 py-1.5 text-[12px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-full hover:bg-emerald-600 hover:text-white hover:border-emerald-600 transition-all cursor-pointer">
+              className="sc-dashboard-view-all flex items-center gap-1 px-3 sm:px-4 py-1.5 text-[12px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-full hover:bg-emerald-600 hover:text-white hover:border-emerald-600 transition-all cursor-pointer">
               View all <ChevronRight className="w-3.5 h-3.5" />
             </button>
           )}
@@ -248,7 +248,7 @@ function HeroBanner({ skill, isSaved, onSave, onView }) {
 
   return (
     <div onClick={() => onView(skill.id)}
-      className="relative w-full h-[210px] min-[390px]:h-[225px] sm:h-[280px] rounded-2xl overflow-hidden cursor-pointer group mb-6 sm:mb-10">
+      className="sc-dashboard-featured relative w-full h-[210px] min-[390px]:h-[225px] sm:h-[280px] rounded-2xl overflow-hidden cursor-pointer group mb-6 sm:mb-10">
       {skill.cover_image_url ? (
         <img src={skill.cover_image_url} alt={skill.title}
           className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.04] transition-transform duration-700" />
@@ -260,7 +260,7 @@ function HeroBanner({ skill, isSaved, onSave, onView }) {
       <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/30 to-transparent" />
 
       <div className="absolute top-3 left-3 sm:top-5 sm:left-6 flex min-w-0 gap-2">
-        <span className="flex items-center gap-1.5 bg-emerald-500 text-white text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-full">
+        <span className="sc-dashboard-green-tag flex items-center gap-1.5 bg-emerald-500 text-white text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-full">
           <Flame className="w-3 h-3" /> Top Pick
         </span>
         <span className="hidden sm:flex items-center gap-1.5 bg-white/20 backdrop-blur-sm text-white text-[10px] font-medium px-3 py-1.5 rounded-full border border-white/25">
@@ -295,7 +295,7 @@ function HeroBanner({ skill, isSaved, onSave, onView }) {
             <span className="flex items-center gap-1 bg-amber-400 text-amber-900 text-[11px] sm:text-[13px] font-bold px-2 sm:px-4 py-1.5 rounded-full shadow">
               <Coins className="w-3.5 h-3.5" /> {skill.credit_cost} CR
             </span>
-            <span className="bg-white text-emerald-800 text-[11px] sm:text-[12px] font-bold px-2 sm:px-4 py-1.5 rounded-full shadow group-hover:bg-emerald-50 transition">
+            <span className="sc-dashboard-book-btn bg-white text-emerald-800 text-[11px] sm:text-[12px] font-bold px-2 sm:px-4 py-1.5 rounded-full shadow group-hover:bg-emerald-50 transition">
               Book Now
             </span>
           </div>
@@ -476,16 +476,16 @@ export default function UserDashboard() {
   const ActiveSortIcon = activeSortOption.icon;
 
   return (
-    <div className="min-h-full" style={{ background: '#faf9f6' }}>
+    <div className="sc-dashboard-root min-h-full">
       <div className="max-w-[1440px] mx-auto flex min-w-0 gap-0">
 
-        <aside className="hidden lg:flex flex-col w-[240px] shrink-0 border-r border-gray-200/80 min-h-full bg-white">
+        <aside className="sc-dashboard-sidebar hidden lg:flex flex-col w-[240px] shrink-0 border-r border-gray-200/80 min-h-full bg-white">
           <div className="custom-sidebar-scroll sticky top-[64px] pt-6 pb-4 px-4 flex flex-col gap-1 overflow-y-auto" style={{ height: 'calc(100vh - 64px)' }}>
 
             {profile && (
               <div className="mb-4 pb-4 border-b border-gray-100">
                 <p className="text-[10px] font-semibold uppercase tracking-widest text-emerald-600">Welcome back</p>
-                <p className="font-bold text-[15px] text-gray-900 mt-0.5 tracking-tight flex items-center gap-1.5">
+                <p className="sc-dashboard-sidebar-title font-bold text-[17px] text-gray-900 mt-0.5 tracking-tight flex items-center gap-1.5">
                   {firstName} <Hand className="w-4 h-4 text-amber-400" />
                 </p>
               </div>
@@ -495,7 +495,7 @@ export default function UserDashboard() {
 
             <button onClick={handleReset}
               className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-left transition ${
-                activeCategory === 'All' && !showSaved ? 'bg-emerald-700 text-white' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                activeCategory === 'All' && !showSaved ? 'sc-dashboard-category-active text-white' : 'text-gray-600 hover:bg-emerald-50/70 hover:text-[#168341]'
               }`}>
               <span className="flex items-center gap-2 text-[13px] font-medium">
                 <Globe className="w-4 h-4" /> All Skills
@@ -508,7 +508,7 @@ export default function UserDashboard() {
             {currentUser && (
               <button onClick={() => { setShowSaved(v => !v); setActiveCategory('All'); setSearchQuery(''); setSortBy('default'); }}
                 className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-left transition ${
-                  showSaved ? 'bg-emerald-700 text-white' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  showSaved ? 'sc-dashboard-category-active text-white' : 'text-gray-600 hover:bg-emerald-50/70 hover:text-[#168341]'
                 }`}>
                 <span className="flex items-center gap-2 text-[13px] font-medium">
                   <Bookmark className="w-4 h-4" /> Saved
@@ -527,7 +527,7 @@ export default function UserDashboard() {
               return (
                 <button key={cat.name} onClick={() => jumpTo(cat.name)}
                   className={`flex items-center justify-between px-3 py-2 rounded-xl text-left transition ${
-                    isActive ? 'bg-emerald-700 text-white' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                    isActive ? 'sc-dashboard-category-active text-white' : 'text-gray-600 hover:bg-emerald-50/70 hover:text-[#168341]'
                   }`}>
                   <span className="flex items-center gap-2 text-[12px] font-medium truncate">
                     <Icon className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-white' : cat.color}`} />
@@ -544,8 +544,22 @@ export default function UserDashboard() {
 
         <main className="flex-1 min-w-0 px-3 py-4 sm:px-6 sm:py-6 md:px-8">
 
-          <div className="grid grid-cols-[minmax(0,1fr)_112px] sm:flex sm:flex-wrap sm:items-center gap-2 sm:gap-3 mb-3 sm:mb-6">
-            <label className="col-span-2 sm:col-auto flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-3 sm:px-4 py-2 sm:py-2.5 flex-1 min-w-0 w-full sm:w-auto sm:min-w-[200px] shadow-sm focus-within:border-emerald-400 focus-within:ring-2 focus-within:ring-emerald-100 transition cursor-text">
+          <section className="sc-dashboard-welcome relative mb-4 overflow-hidden rounded-[24px] border px-4 py-4 sm:mb-6 sm:rounded-[28px] sm:px-7 sm:py-6">
+            <div className="relative z-10">
+              <div className="mb-2 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.16em] text-[#218642]">
+                <Sparkles className="h-3.5 w-3.5" aria-hidden="true" /> YOUR LEARNING SPACE
+              </div>
+              <h1 className="sc-dashboard-welcome-title text-[27px] sm:text-[36px] font-black leading-tight tracking-tight text-[#183c28]">
+                {profile?.full_name ? `Welcome back, ${firstName}!` : 'Discover something new.'}
+              </h1>
+              <p className="mt-2 max-w-lg text-[13px] sm:text-[14px] leading-relaxed text-slate-600">
+                Explore skills, connect with people, and keep growing at your own pace.
+              </p>
+            </div>
+          </section>
+
+          <div className="sc-dashboard-toolbar grid grid-cols-[minmax(0,1fr)_112px] sm:flex sm:flex-wrap sm:items-center gap-2 sm:gap-3 mb-3 sm:mb-6">
+            <label className="sc-dashboard-search col-span-2 sm:col-auto flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-3 sm:px-4 py-2 sm:py-2.5 flex-1 min-w-0 w-full sm:w-auto sm:min-w-[200px] shadow-sm focus-within:border-emerald-400 focus-within:ring-2 focus-within:ring-emerald-100 transition cursor-text">
               <Search className="w-4 h-4 text-gray-400 shrink-0" />
               <input type="text" value={searchQuery}
                 onChange={e => { setSearchQuery(e.target.value); if (e.target.value) setShowSaved(false); setSortBy('default'); }}
@@ -562,7 +576,7 @@ export default function UserDashboard() {
               {/* ✨ LARGER CREATE SKILL BUTTON ✨ */}
               <button
                 onClick={() => navigate('/create-skill')}
-                className="flex min-h-[40px] w-full sm:w-auto min-w-0 sm:min-w-[140px] shrink-0 items-center justify-center gap-2 rounded-xl bg-emerald-700 px-3 sm:px-4 text-[12px] sm:text-[13px] font-bold text-white shadow-sm transition hover:bg-emerald-800 cursor-pointer"
+                className="sc-dashboard-create flex min-h-[40px] w-full sm:w-auto min-w-0 sm:min-w-[140px] shrink-0 items-center justify-center gap-2 rounded-xl bg-emerald-700 px-3 sm:px-4 text-[12px] sm:text-[13px] font-bold text-white shadow-sm transition hover:bg-emerald-800 cursor-pointer"
               >
                 <Plus className="h-4 w-4" />
                 <span>Create Skill</span>
@@ -575,7 +589,7 @@ export default function UserDashboard() {
               >
                 <summary
                   aria-label="Sort listings"
-                  className="flex min-h-[40px] sm:min-h-11 w-full cursor-pointer list-none items-center gap-1 rounded-xl border border-gray-200 bg-white px-2.5 sm:px-3.5 text-[11px] sm:text-[12px] font-medium text-gray-700 shadow-sm transition hover:border-emerald-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-100 [&::-webkit-details-marker]:hidden"
+                  className="sc-dashboard-sort flex min-h-[40px] sm:min-h-11 w-full cursor-pointer list-none items-center gap-1 rounded-xl border border-gray-200 bg-white px-2.5 sm:px-3.5 text-[11px] sm:text-[12px] font-medium text-gray-700 shadow-sm transition hover:border-emerald-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-100 [&::-webkit-details-marker]:hidden"
                 >
                   <ActiveSortIcon className={`h-4 w-4 shrink-0 ${activeSortOption.color}`} aria-hidden="true" />
                   <span className="flex-1 text-left">{activeSortOption.label}</span>
@@ -611,14 +625,14 @@ export default function UserDashboard() {
           <div className="lg:hidden flex gap-1.5 sm:gap-2 overflow-x-auto overscroll-x-contain scrollbar-hide pb-2 mb-3 sm:pb-3 sm:mb-4">
             <button onClick={handleReset}
               className={`flex items-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 rounded-full text-[11px] sm:text-[12px] font-medium whitespace-nowrap border transition ${
-                activeCategory === 'All' && !showSaved ? 'bg-emerald-700 text-white border-emerald-700' : 'bg-white text-gray-600 border-gray-200'
+                activeCategory === 'All' && !showSaved ? 'sc-dashboard-category-active text-white border-emerald-700' : 'bg-white text-gray-600 border-gray-200'
               }`}>
               <Globe className="w-3 h-3" /> All
             </button>
             {currentUser && (
               <button onClick={() => { setShowSaved(v => !v); setActiveCategory('All'); setSortBy('default'); }}
                 className={`flex items-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 rounded-full text-[11px] sm:text-[12px] font-medium whitespace-nowrap border transition ${
-                  showSaved ? 'bg-emerald-700 text-white border-emerald-700' : 'bg-white text-gray-600 border-gray-200'
+                  showSaved ? 'sc-dashboard-category-active text-white border-emerald-700' : 'bg-white text-gray-600 border-gray-200'
                 }`}>
                 <Bookmark className="w-3 h-3" /> Saved ({savedList.length})
               </button>
@@ -629,7 +643,7 @@ export default function UserDashboard() {
               return (
                 <button key={cat.name} onClick={() => jumpTo(cat.name)}
                   className={`flex items-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 rounded-full text-[11px] sm:text-[12px] font-medium whitespace-nowrap border transition ${
-                    isActive ? 'bg-emerald-700 text-white border-emerald-700' : 'bg-white text-gray-600 border-gray-200'
+                    isActive ? 'sc-dashboard-category-active text-white border-emerald-700' : 'bg-white text-gray-600 border-gray-200'
                   }`}>
                   <Icon className={`w-3 h-3 ${isActive ? 'text-white' : cat.color}`} />
                   {cat.name}
@@ -706,7 +720,7 @@ export default function UserDashboard() {
                   <p className="text-[13px] text-gray-400 mb-6 max-w-xs font-medium">
                     {showSaved ? 'Tap the bookmark on any skill card to save it.' : 'Try different keywords or browse a category.'}
                   </p>
-                  <button onClick={handleReset} className="px-6 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white font-semibold rounded-xl text-sm transition shadow-sm">
+                  <button onClick={handleReset} className="sc-dashboard-create px-6 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white font-semibold rounded-xl text-sm transition shadow-sm">
                     Back to home
                   </button>
                 </div>

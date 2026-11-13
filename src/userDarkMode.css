@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:wght@700;800;900&family=DM+Sans:wght@400;500;600;700&display=swap');
+
 /* SkillCredit User-only dark appearance. No DB, page logic, or staff styling changes. */
 [data-sc-user-theme="dark"] {
   --sc-page-bg: #1b2b33;
@@ -290,4 +292,131 @@ body[data-skillcredit-user-dark="true"] [role="alertdialog"] .bg-slate-100 { bac
 }
 [data-sc-user-theme="dark"] .sc-create-skill [class~="text-gray-300"] {
   color: #c0d0d7;
+}
+
+
+/* ── SkillCredit User Layout + Browse Dashboard design alignment ───────────
+   Scoped to logged-in user pages only. Light theme follows the public
+   green-gradient/cream styling; the existing dark theme stays readable. */
+[data-sc-user-theme="light"].sc-user-shell {
+  background: radial-gradient(ellipse at 2% 2%, #eff7eb 0%, transparent 28%),
+              linear-gradient(180deg, #fcfbf8 0%, #faf9f6 58%, #fcfbf8 100%);
+  font-family: 'DM Sans', sans-serif;
+}
+[data-sc-user-theme="light"] .sc-user-navbar {
+  background: rgba(255, 255, 255, 0.94);
+  border-bottom: 1px solid #e8ede5;
+  box-shadow: 0 4px 22px rgba(28, 77, 42, 0.035);
+}
+.sc-user-wordmark, .sc-dashboard-welcome-title, .sc-dashboard-section-title, .sc-dashboard-sidebar-title {
+  font-family: 'Fraunces', Georgia, serif;
+  letter-spacing: -0.025em;
+}
+.sc-user-nav-active,
+.sc-dashboard-category-active,
+.sc-dashboard-create,
+.sc-dashboard-green-tag {
+  background: linear-gradient(105deg, #40b343 0%, #20983d 48%, #07803a 100%);
+  color: #fff;
+  box-shadow: 0 5px 15px rgba(20, 133, 52, 0.16);
+}
+.sc-user-nav-active:hover,
+.sc-dashboard-category-active:hover,
+.sc-dashboard-create:hover {
+  color: #fff;
+  filter: brightness(0.98);
+}
+[data-sc-user-theme="light"] .sc-dashboard-root {
+  background: transparent;
+}
+[data-sc-user-theme="light"] .sc-dashboard-sidebar {
+  border-right-color: #e8ede5;
+  background: linear-gradient(180deg, #fffefb 0%, #fbfaf6 100%);
+}
+[data-sc-user-theme="light"] .sc-dashboard-welcome {
+  background: radial-gradient(circle at 96% 3%, rgba(183, 224, 165, 0.20), transparent 35%),
+              linear-gradient(112deg, #ffffff 4%, #f7fcf4 100%);
+  border-color: #e1eee0;
+  box-shadow: 0 12px 34px rgba(28, 77, 42, 0.045);
+}
+[data-sc-user-theme="light"] .sc-dashboard-welcome::after {
+  content: '';
+  pointer-events: none;
+  position: absolute;
+  width: 180px;
+  height: 180px;
+  right: -72px;
+  top: -112px;
+  border-radius: 50%;
+  border: 1px solid rgba(225, 185, 93, 0.22);
+  box-shadow: 0 0 0 18px rgba(200, 231, 187, 0.08);
+}
+[data-sc-user-theme="light"] .sc-dashboard-search,
+[data-sc-user-theme="light"] .sc-dashboard-sort {
+  border-color: #e0e9df;
+  border-radius: 999px;
+  box-shadow: 0 3px 16px rgba(28, 77, 42, 0.045);
+}
+.sc-dashboard-create {
+  border-radius: 999px;
+  box-shadow: 0 8px 19px rgba(23, 138, 57, 0.20);
+}
+.sc-dashboard-create:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 11px 24px rgba(23, 138, 57, 0.23);
+}
+.sc-dashboard-skill-card {
+  border-radius: 22px;
+}
+[data-sc-user-theme="light"] .sc-dashboard-skill-card {
+  border-color: #e5eae1;
+  box-shadow: 0 4px 18px rgba(21, 62, 37, 0.045);
+}
+[data-sc-user-theme="light"] .sc-dashboard-skill-card:hover {
+  border-color: #a4d8b0;
+  box-shadow: 0 12px 27px rgba(21, 110, 51, 0.12);
+}
+.sc-dashboard-featured { border-radius: 25px; }
+[data-sc-user-theme="light"] .sc-dashboard-featured {
+  box-shadow: 0 10px 30px rgba(18, 65, 36, 0.13);
+}
+[data-sc-user-theme="light"] .sc-dashboard-book-btn {
+  color: #176932;
+  box-shadow: 0 5px 14px rgba(0, 0, 0, .10);
+}
+[data-sc-user-theme="light"] .sc-dashboard-view-all {
+  background: #edf9ed;
+  border-color: #d9edda;
+  color: #16783b;
+}
+[data-sc-user-theme="light"] .sc-dashboard-view-all:hover {
+  background: #128642;
+  color: #fff;
+}
+
+/* Make dark-mode banners and accent pills respect the existing user dark theme. */
+[data-sc-user-theme="dark"].sc-user-shell { background: var(--sc-page-bg); }
+[data-sc-user-theme="dark"] .sc-user-navbar { background: #263b45; border-color: var(--sc-border); }
+[data-sc-user-theme="dark"] .sc-dashboard-root { background: transparent; }
+[data-sc-user-theme="dark"] .sc-dashboard-sidebar { background: var(--sc-panel); border-color: var(--sc-border); }
+[data-sc-user-theme="dark"] .sc-dashboard-welcome {
+  background: linear-gradient(120deg, #284338 0%, #263b45 100%);
+  border-color: #3c6d58;
+  box-shadow: none;
+}
+[data-sc-user-theme="dark"] .sc-dashboard-welcome-title { color: #f2f8f3; }
+[data-sc-user-theme="dark"] .sc-dashboard-welcome p { color: #c6d5dc; }
+[data-sc-user-theme="dark"] .sc-dashboard-skill-card { border-color: var(--sc-border); box-shadow: none; }
+[data-sc-user-theme="dark"] .sc-dashboard-search,
+[data-sc-user-theme="dark"] .sc-dashboard-sort { border-color: var(--sc-border); background: var(--sc-panel); }
+[data-sc-user-theme="dark"] .sc-user-nav-active,
+[data-sc-user-theme="dark"] .sc-dashboard-category-active { background: #206a4d; box-shadow: none; color: #fff; }
+
+@media (max-width: 390px) {
+  .sc-dashboard-welcome-title { font-size: 25px; }
+  .sc-dashboard-welcome { padding: 15px 14px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sc-dashboard-create { transition: none; }
+  .sc-dashboard-create:hover { transform: none; }
 }
