@@ -1,3 +1,12 @@
+## 13 November 2026 — Admin Ban / Ban Lifted / Realtime status sync (Web only)
+
+- Restored the original two admin pages as baseline, then added four Escalations filters (All, Pending, Admin Banned, Ban Lifted), Ban/Lift in Escalations, and a shared atomic ban/unban RPC.
+- Realtime refresh on existing `user_profiles`, `admin_escalations`, and `repeat_offenders` tables, subject to publication and RLS; local Web source uses existing `useRealtimeRefresh` hook.
+- New SQL migration script changes only the existing escalation status CHECK, adds an admin-only RPC, and enables existing tables for Realtime when needed; **no new database tables/columns**. Historical actions remain in existing `admin_logs`.
+- Moderator source and all other business logic unchanged. Full installation, testing, and known limitations are documented in `SkillCredit-Web-Admin-3Status-Realtime-Notes.md`.
+
+---
+
 ## 2026-11-13 — Public-page navigation scroll reset (Web only)
 
 - **Fixed**: Clicking **Privacy**, **Terms**, or **Contact** in the Home footer now opens the destination from the **top of the page**, rather than retaining the Home footer scroll position. The same reset applies when moving between public pages without a URL hash.
@@ -357,3 +366,10 @@ When a user with actual pending moderator escalations is banned through User Man
 - Existing escalation bans initiated in User Management continue to link pending genuine moderator cases on **ban**; direct-only bans create no escalation row. No change to ban actions, queries or source UI beyond the historical display and unban branch.
 - This patch is prospective: it does not automatically reconstruct `admin_banned` statuses previously overwritten to `resolved` by older versions. Historical repairs require case-by-case review.
 - No schema/table/RPC/RLS/SQL changes. Realtime subscriptions unchanged; live verification required.
+
+
+---
+
+## 13 November 2026 — Simplified public Home leaderboard (Web only)
+
+Redesigned the recent learner ratings preview into a compact Top 3 list. Removed duplicate panel heading and individual card backgrounds; added a small sign-in link to `/login`. Responsive spacing for narrow mobile screens. **No changes to Supabase queries, rating calculations, signed-in global leaderboard, routes, or other Home sections.** No SQL or schema changes. See `SkillCredit-Web-Home-Leaderboard-Simplified-Notes.md` for details.

@@ -162,7 +162,17 @@ export default function Home() {
         .steps-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
         .community-grid{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:center}
         .problem-grid{display:grid;grid-template-columns:1fr auto 1fr;gap:24px;align-items:center;max-width:700px;margin:0 auto}
-        .leaderboard-display-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:24px;max-width:560px;margin:0 auto}
+        /* Simple, mobile-friendly public ratings preview (presentation only). */
+        .sc-home .home-leaderboard-inner{max-width:580px;margin:0 auto}
+        .sc-home .home-leaderboard-card{background:#fff;border:1px solid #e2e9e3;border-radius:18px;padding:5px 22px;box-shadow:0 2px 14px rgba(23,59,39,.035)}
+        .sc-home .home-leaderboard-row{display:flex;align-items:center;gap:13px;min-width:0;padding:15px 0}
+        .sc-home .home-leaderboard-row + .home-leaderboard-row{border-top:1px solid #edf1ed}
+        .sc-home .home-leaderboard-rank{flex:0 0 23px;color:#688175;font-size:13px;font-weight:800}
+        .sc-home .home-leaderboard-avatar{flex:0 0 38px;width:38px;height:38px;border-radius:50%;background:#e9f0e9;display:flex;align-items:center;justify-content:center;overflow:hidden;color:#385a49;font-size:12px;font-weight:800}
+        .sc-home .home-leaderboard-name{min-width:0;flex:1;color:#21362a;font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .sc-home .home-leaderboard-score{display:inline-flex;align-items:center;gap:5px;flex-shrink:0;color:#8a5b10;font-size:14px;font-weight:800;font-variant-numeric:tabular-nums}
+        .sc-home .home-leaderboard-more{display:inline-flex;align-items:center;justify-content:center;margin-top:22px;color:#2d6a4f;text-decoration:none;font-size:13px;font-weight:800;min-height:44px;gap:7px}
+        .sc-home .home-leaderboard-more:hover{text-decoration:underline}
         .footer-inner{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px}
 
         @media(max-width:1024px){
@@ -173,7 +183,7 @@ export default function Home() {
           .steps-grid{grid-template-columns:1fr;gap:14px}
           .community-grid{grid-template-columns:1fr;gap:32px}
           .problem-grid{grid-template-columns:1fr;gap:16px}
-          .leaderboard-display-grid{grid-template-columns:1fr;gap:20px}
+
           .preview-col{display:none}
           .section-pad{padding:60px 20px!important}
           .footer-inner{flex-direction:column;text-align:center}
@@ -216,6 +226,12 @@ export default function Home() {
           .sc-home .hero-btns-wrap{align-items:center;justify-content:center;gap:8px!important;}
           .sc-home .hero-btns-wrap a{width:auto!important;flex:0 1 auto;align-self:auto;white-space:nowrap;padding:11px 13px!important;font-size:13px!important;min-height:44px;}
           .sc-home .home-final-cta-actions{gap:10px!important;}
+          .sc-home .home-leaderboard-card{padding:3px 14px;border-radius:14px}
+          .sc-home .home-leaderboard-row{gap:9px;padding:13px 0}
+          .sc-home .home-leaderboard-rank{flex-basis:21px}
+          .sc-home .home-leaderboard-avatar{flex-basis:34px;width:34px;height:34px}
+          .sc-home .home-leaderboard-name{font-size:13px}
+          .sc-home .home-leaderboard-score{font-size:13px}
           .sc-home .home-final-cta-btn{padding:12px 14px!important;}
           .sc-home .footer-team-pill{gap:8px!important;}
         }
@@ -283,7 +299,7 @@ export default function Home() {
                   <div style={{ display:"flex", gap:5 }}>
                     {["#fc605b","#fdbc40","#34c84a"].map(c => <div key={c} style={{ width:11, height:11, borderRadius:"50%", background:c }} />)}
                   </div>
-                  <div style={{ flex:1, background:"#fff", borderRadius:6, padding:"4px 12px", fontSize:11, color:"#aaa", fontWeight:600 }}>Skillcredit-ph.vercel.app</div>
+                  <div style={{ flex:1, background:"#fff", borderRadius:6, padding:"4px 12px", fontSize:11, color:"#aaa", fontWeight:600 }}>SkillCredit · Illustrative preview</div>
                 </div>
 
                 {/* Container for Cards */}
@@ -412,54 +428,37 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── PUBLIC RECENT-RATINGS PREVIEW ── */}
-      <section className="section-pad reveal" style={{ background:"#ffffff", padding:"80px 48px", borderTop:"1px solid #e8e2d9", borderBottom:"1px solid #e8e2d9" }}>
-        <div style={{ maxWidth:960, margin:"0 auto" }}>
-          <div style={{ textAlign:"center", marginBottom:48 }}>
-            <span style={{ fontSize:12, fontWeight:800, color:"#2d6a4f", letterSpacing:"0.12em", textTransform:"uppercase" }}>Community Excellence</span>
-            <h2 style={{ fontFamily:"'Fraunces',serif", fontSize:38, fontWeight:900, color:"#111", marginTop:10, lineHeight:1.15 }}>
-              Recent Learner Ratings
+      {/* ── SIMPLE PUBLIC LEADERBOARD PREVIEW ── */}
+      <section className="section-pad reveal home-leaderboard" style={{ background:"#faf8f4", padding:"72px 48px", borderTop:"1px solid #e8e2d9", borderBottom:"1px solid #e8e2d9" }}>
+        <div className="home-leaderboard-inner">
+          <div style={{ textAlign:"center", marginBottom:25 }}>
+            <span style={{ fontSize:11, fontWeight:800, color:"#2d6a4f", letterSpacing:"0.11em", textTransform:"uppercase" }}>Community Leaderboard</span>
+            <h2 style={{ fontFamily:"'Fraunces',serif", fontSize:34, fontWeight:900, color:"#162b21", marginTop:9, lineHeight:1.18 }}>
+              Recent learner ratings
             </h2>
-            <p style={{ fontSize:15, color:"#666", marginTop:12 }}>A preview of learner ratings submitted recently. The full leaderboard is available after login.</p>
+            <p style={{ fontSize:14, color:"#67736a", margin:"10px auto 0", lineHeight:1.6, maxWidth:430 }}>
+              A quick look at instructors reviewed in the past 7 days.
+            </p>
           </div>
 
-          <div className="leaderboard-display-grid">
-            {/* Recent learner ratings preview (not the authenticated global leaderboard) */}
-
-            <div style={{ background:"#fff", borderRadius:20, padding:"28px", border:"1px solid #e2e8f0", boxShadow:"0 4px 20px rgba(0,0,0,0.03)" }}>
-              <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:24, paddingBottom:16, borderBottom:"1px solid #f1f5f9" }}>
-                <div style={{ width:48, height:48, borderRadius:14, background:"#fef3c7", display:"flex", alignItems:"center", justifyContent:"center" }}>
-                  <Star size={24} color="#d97706" fill="#f59e0b" strokeWidth={1} />
+          <div className="home-leaderboard-card" aria-label="Recent learner ratings preview">
+            {topRated.length === 0 ? (
+              <p style={{ color:"#748179", fontSize:13, textAlign:"center", padding:"24px 0" }}>Calculating scores...</p>
+            ) : (
+              topRated.map((user, idx) => (
+                <div className="home-leaderboard-row" key={user.id}>
+                  <span className="home-leaderboard-rank">{idx + 1}.</span>
+                  <span className="home-leaderboard-avatar">
+                    {user.avatar_url ? <img src={user.avatar_url} alt="" style={{ width:"100%", height:"100%", objectFit:"cover" }} /> : getInitials(user.full_name)}
+                  </span>
+                  <span className="home-leaderboard-name" title={user.full_name}>{user.full_name}</span>
+                  <span className="home-leaderboard-score"><Star size={15} fill="#e6ad49" stroke="#b7791f" />{user.avg}</span>
                 </div>
-                <div>
-                  <div style={{ fontSize:18, fontWeight:800, color:"#0f172a", fontFamily:"'Fraunces',serif" }}>Student Ratings</div>
-                  <div style={{ fontSize:12, color:"#64748b", fontWeight:600 }}>Average ratings from learner reviews in the past 7 days</div>
-                </div>
-              </div>
-
-              <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
-                {topRated.length === 0 ? (
-                  <p style={{ color:"#94a3b8", fontSize:13, textAlign:"center", padding:"20px 0" }}>Calculating scores...</p>
-                ) : (
-                  topRated.map((user, idx) => (
-                    <div key={user.id} style={{ display:"flex", alignItems:"center", justifyContent:"space-between", background:"#f8fafc", padding:"14px 16px", borderRadius:14, border:"1px solid #f1f5f9", transition:"background 0.2s" }} onMouseEnter={e => e.currentTarget.style.background="#f1f5f9"} onMouseLeave={e => e.currentTarget.style.background="#f8fafc"}>
-                      <div style={{ display:"flex", alignItems:"center", gap:12 }}>
-                        <div style={{ fontSize:15, fontWeight:900, color:idx === 0 ? "#d97706" : idx === 1 ? "#64748b" : "#b45309", width: 24 }}>
-                          #{idx + 1}
-                        </div>
-                        <div style={{ width:36, height:36, borderRadius:10, background:"#e2e8f0", display:"flex", alignItems:"center", justifyContent:"center", color:"#475569", fontSize:12, fontWeight:900, overflow:"hidden" }}>
-                          {user.avatar_url ? <img src={user.avatar_url} alt="" style={{ width:"100%", height:"100%", objectFit:"cover" }} /> : getInitials(user.full_name)}
-                        </div>
-                        <div style={{ fontSize:14, fontWeight:700, color:"#334155" }}>{user.full_name}</div>
-                      </div>
-                      <div style={{ fontSize:12, fontWeight:800, color:"#d97706", background:"#fef3c7", padding:"4px 10px", borderRadius:8 }}>
-                        {user.metric_value}
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
+              ))
+            )}
+          </div>
+          <div style={{ textAlign:"center" }}>
+            <Link to="/login" className="home-leaderboard-more">Sign in to view full leaderboard <span aria-hidden="true">→</span></Link>
           </div>
         </div>
       </section>
