@@ -55,6 +55,7 @@ export default function Sessions() {
   const location = useLocation();
 
   const [sessions,           setSessions]           = useState([]);
+  const [nowMs,              setNowMs]              = useState(() => Date.now());
   const [loading,            setLoading]            = useState(true);
   const [processingId,       setProcessingId]       = useState(null);
   const [currentUserId,      setCurrentUserId]      = useState(null);
@@ -81,6 +82,12 @@ export default function Sessions() {
   const [submittedReports,   setSubmittedReports]   = useState([]);
 
   const [disputeModal,       setDisputeModal]       = useState({ isOpen: false, session: null, reportInfo: null });
+
+  // Refresh time-sensitive button visibility even when the user keeps this page open.
+  useEffect(() => {
+    const timerId = window.setInterval(() => setNowMs(Date.now()), 30_000);
+    return () => window.clearInterval(timerId);
+  }, []);
 
   const focusSessionId = new URLSearchParams(location.search).get('session');
 
@@ -164,22 +171,18 @@ export default function Sessions() {
     setProcessingId(session.id);
     try {
       if (action === 'cancel' || action === 'decline' || action === 'cancel_no_show') {
-        // One server-side transaction: verify participants/status, lock the session,
-        // cancel it and refund the learner exactly once. Do not refund via browser.
+        // Cancellation and refund must succeed together in Supabase; do not perform
+        // separate browser-side wallet and session updates (they can lose credits).
         const { data: cancellationResult, error: cancellationError } = await supabase.rpc(
           'skillcredit_secure_cancel_session',
           { p_session_id: session.id, p_action: action }
         );
         if (cancellationError) throw cancellationError;
         if (cancellationResult?.state === 'already_cancelled') {
-          // Older cancellations may have missed a refund. Replaying one here could
-          // also duplicate a real refund. Do not assume an old refund occurred.
-          alert('This session was already cancelled. If the credits did not return, contact support for a wallet review.');
-          await fetchSessions(currentUserId);
-          return;
+          throw new Error('This booking was already cancelled. Check the learner wallet or contact support before attempting another refund.');
         }
         if (cancellationResult?.state !== 'cancelled' || cancellationResult?.refunded !== true) {
-          throw new Error('Refund could not be verified. Please refresh and contact support.');
+          throw new Error('Cancellation refund could not be confirmed. The booking was not marked cancelled by this page.');
         }
         window.dispatchEvent(new Event('credit_updated'));
 
@@ -336,14 +339,12 @@ export default function Sessions() {
     setIsSubmittingPropose(true);
     const s = proposeModal.session;
     try {
-      const { data: proposedSession, error: proposalError } = await supabase.from('sessions').update({
+      const { error: proposalError } = await supabase.from('sessions').update({
         status: 'reschedule_proposed',
         scheduled_date: newDate,
         scheduled_time: newTime
-      }).eq('id', s.id).select('id').maybeSingle();
-      if (proposalError || !proposedSession) {
-        throw proposalError || new Error('Proposed schedule was not saved.');
-      }
+      }).eq('id', s.id);
+      if (proposalError) throw proposalError;
 
       await supabase.from('notifications').insert([{
         user_id: s.student_id,
@@ -717,7 +718,7 @@ export default function Sessions() {
                       const disputeUnlockTime  = sessionDateObj.getTime() + durationMs;
                       const isSessionFinished  = Date.now() > disputeUnlockTime;
                       
-                      const isExpired          = Date.now() > sessionDateObj.getTime();
+                      const isExpired          = nowMs > sessionDateObj.getTime();
                       const gracePeriodMs      = 30 * 60 * 1000; 
                       const isNoShow           = Date.now() > (sessionDateObj.getTime() + gracePeriodMs);
                       
@@ -794,9 +795,9 @@ export default function Sessions() {
                                   
                                   {/* STATUS TEXT MESSAGES */}
                                   <div className="mr-auto text-[10px] font-bold italic">
-                                    {isExpired && session.status === 'pending' && <span className="text-rose-500">⏰ Schedule Expired</span>}
-                                    {session.status === 'reschedule_proposed' && isInstructor && <span className="text-purple-600">⏳ Waiting for Learner to confirm new time</span>}
-                                    {session.status === 'reschedule_proposed' && !isInstructor && <span className="text-purple-600">📅 Teacher proposed a new schedule</span>}
+                                    {isExpired && ['pending', 'reschedule_proposed'].includes(session.status) && <span className="text-rose-500">⏰ Schedule Expired</span>}
+                                    {!isExpired && session.status === 'reschedule_proposed' && isInstructor && <span className="text-purple-600">⏳ Waiting for Learner to confirm new time</span>}
+                                    {!isExpired && session.status === 'reschedule_proposed' && !isInstructor && <span className="text-purple-600">📅 Teacher proposed a new schedule</span>}
                                     {session.status === 'upcoming' && <span className="text-indigo-600">📅 Schedule confirmed. Wait for the day.</span>}
                                     {session.status === 'active' && !isSessionFinished && <span className="text-gray-400 hidden sm:block">Dispute unlocks after session</span>}
                                   </div>
@@ -812,7 +813,7 @@ export default function Sessions() {
                                     )}
 
                                     {/* PENDING (INSTRUCTOR) */}
-                                    {session.status === 'pending' && isInstructor && (
+                                    {session.status === 'pending' && isInstructor && !isExpired && (
                                       <>
                                         <button onClick={async () => { if (await confirmDialog('Decline?')) handleUpdateStatus(session, 'decline'); }} disabled={isProcessing} className="px-3 py-1.5 bg-rose-50 text-rose-600 border border-rose-200 font-bold rounded-lg text-[11px] transition cursor-pointer">Decline</button>
                                         <button onClick={() => { setProposeModal({ isOpen: true, session }); setNewDate(session.scheduled_date); setNewTime(session.scheduled_time); }} disabled={isProcessing} className="px-3 py-1.5 bg-purple-50 text-purple-700 border border-purple-200 font-bold rounded-lg text-[11px] transition cursor-pointer hover:bg-purple-100">Propose Time</button>
@@ -825,12 +826,12 @@ export default function Sessions() {
                                       <>
                                         {!isExpired
                                           ? <button onClick={async () => { if (await confirmDialog('Cancel?')) handleUpdateStatus(session, 'cancel'); }} disabled={isProcessing} className="px-3 py-1.5 bg-rose-50 text-rose-600 border border-rose-200 font-bold rounded-lg text-[11px] transition cursor-pointer">Cancel & Refund</button>
-                                          : <button onClick={async () => { if (await confirmDialog('Session expired. Cancel to refund?')) handleUpdateStatus(session, 'cancel'); }} disabled={isProcessing} className="px-3 py-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 font-semibold rounded-lg text-[11px] hover:bg-emerald-100 transition shadow-sm inline-flex items-center gap-1.5 cursor-pointer"><RefreshCw className="w-3.5 h-3.5" /> Claim Refund</button>}
+                                          : <button onClick={async () => { if (await confirmDialog('Schedule expired. Cancel this booking and refund your credits?')) handleUpdateStatus(session, 'cancel'); }} disabled={isProcessing} className="px-3 py-1.5 bg-rose-50 text-rose-600 border border-rose-200 font-bold rounded-lg text-[11px] transition cursor-pointer">Cancel</button>}
                                       </>
                                     )}
 
                                     {/* PROPOSED (INSTRUCTOR) */}
-                                    {session.status === 'reschedule_proposed' && isInstructor && (
+                                    {session.status === 'reschedule_proposed' && isInstructor && !isExpired && (
                                       <>
                                         <button onClick={async () => { if (await confirmDialog('Cancel booking entirely?')) handleUpdateStatus(session, 'decline'); }} disabled={isProcessing} className="px-3 py-1.5 bg-rose-50 text-rose-600 border border-rose-200 font-bold rounded-lg text-[11px] transition cursor-pointer">Decline</button>
                                         <button onClick={() => { setProposeModal({ isOpen: true, session }); setNewDate(session.scheduled_date); setNewTime(session.scheduled_time); }} disabled={isProcessing} className="px-3 py-1.5 bg-purple-50 text-purple-700 border border-purple-200 font-bold rounded-lg text-[11px] transition cursor-pointer hover:bg-purple-100">Edit Proposed Time</button>
@@ -841,8 +842,8 @@ export default function Sessions() {
                                     {/* PROPOSED (LEARNER) */}
                                     {session.status === 'reschedule_proposed' && !isInstructor && (
                                       <>
-                                        <button onClick={async () => { if (await confirmDialog('Decline and cancel session?')) handleUpdateStatus(session, 'cancel'); }} disabled={isProcessing} className="px-3 py-1.5 bg-rose-50 text-rose-600 border border-rose-200 font-bold rounded-lg text-[11px] transition cursor-pointer">Cancel & Refund</button>
-                                        <button onClick={() => handleUpdateStatus(session, 'accept_schedule')} disabled={isProcessing} className="px-3 py-1.5 bg-indigo-700 hover:bg-indigo-800 text-white font-bold rounded-lg text-[11px] shadow-sm transition cursor-pointer">Accept Schedule</button>
+                                        <button onClick={async () => { if (await confirmDialog(isExpired ? 'Proposed schedule expired. Cancel this booking and refund your credits?' : 'Decline and cancel session?')) handleUpdateStatus(session, 'cancel'); }} disabled={isProcessing} className="px-3 py-1.5 bg-rose-50 text-rose-600 border border-rose-200 font-bold rounded-lg text-[11px] transition cursor-pointer">{isExpired ? 'Cancel' : 'Cancel & Refund'}</button>
+                                        {!isExpired && <button onClick={() => handleUpdateStatus(session, 'accept_schedule')} disabled={isProcessing} className="px-3 py-1.5 bg-indigo-700 hover:bg-indigo-800 text-white font-bold rounded-lg text-[11px] shadow-sm transition cursor-pointer">Accept Schedule</button>}
                                       </>
                                     )}
 
@@ -961,7 +962,6 @@ export default function Sessions() {
           <div className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 w-full max-w-sm max-h-[calc(100dvh-1rem)] overflow-y-auto relative z-10 shadow-[0_8px_30px_rgb(0,0,0,0.12)] animate-in zoom-in-95 duration-200">
             <h2 className="text-xl font-bold tracking-tight text-gray-900 mb-1">Propose New Time</h2>
             <p className="text-[12px] text-gray-500 mb-5">Offer a new schedule to <span className="font-bold text-gray-800">{proposeModal.session.student?.full_name}</span>.</p>
-            <p className="text-[11px] text-gray-500 mb-3">Credits remain in escrow while the learner considers your proposed time. A refund happens only when the booking is cancelled.</p>
             <form onSubmit={handleProposeTime} className="space-y-4">
               <div>
                 <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-2">New Date</p>
