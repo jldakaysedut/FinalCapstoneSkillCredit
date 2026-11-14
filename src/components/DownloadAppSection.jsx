@@ -2,7 +2,7 @@ import { ArrowDownToLine, ArrowUpRight, Check, Download, GraduationCap, MessageC
 
 // Update this link when you publish a new production APK or a permanent download URL.
 // This currently opens the previously supplied Expo EAS build page, not a direct APK binary.
-const ANDROID_BUILD_URL = 'https://expo.dev/accounts/jldakay/projects/skillcredit-mobile/builds/a379df5c-aa87-4be3-9649-c23bb8a892c4';
+const ANDROID_BUILD_URL = 'https://expo.dev/accounts/jldakay/projects/skillcredit-mobile/builds/55b17488-a1a4-4ad5-8bdc-923ec6b1d90b';
 
 const perks = [
   { Icon: MessageCircle, label: 'Stay connected', detail: 'Keep up with your learning community.' },

@@ -26,7 +26,7 @@ export default function PublicProfile() {
   const [reviews,        setReviews]        = useState([]);
   const [userSkills,     setUserSkills]     = useState([]);
   const [portfolioItems, setPortfolioItems] = useState([]);
-  const [stats,          setStats]          = useState({ avgRating:0,totalReviews:0,sessionsTaught:0,avgClarity:0,avgPatience:0,avgRelevance:0,avgProfessionalism:0 });
+  const [stats,          setStats]          = useState({ avgRating:0,totalReviews:0,sessionsTaught:null,avgClarity:0,avgPatience:0,avgRelevance:0,avgProfessionalism:0 });
   const [activeTab,      setActiveTab]      = useState('Listings');
   const [selectedProject,setSelectedProject]= useState(null);
 
@@ -69,7 +69,27 @@ export default function PublicProfile() {
       }
       const tc = reviewData?.length || 0;
 
-      const { count: taughtCount } = await supabase.from('sessions').select('*', { count: 'exact', head: true }).eq('instructor_id', id).eq('status', 'completed');
+      // A different signed-in user may not be allowed to read this instructor's
+      // private session rows through RLS. Use the same authorized aggregate as
+      // the universal leaderboard so this count is consistent for all viewers.
+      // The function exposes counts, not other members' private session records.
+      let taughtCount = null;
+      try {
+        const { data: leaderboardData, error: leaderboardError } = await supabase.functions.invoke('skillcredit-leaderboard', {
+          body: {},
+        });
+        if (leaderboardError) throw leaderboardError;
+
+        const instructor = leaderboardData?.profiles?.find(member => member.id === id);
+        if (!instructor || !Number.isSafeInteger(instructor.sessionsCompleted) || instructor.sessionsCompleted < 0) {
+          throw new Error('Completed-session total is unavailable for this member.');
+        }
+        taughtCount = instructor.sessionsCompleted;
+      } catch (sessionCountError) {
+        // Do not silently show zero when RLS or a function error prevents a
+        // reliable public count. Other public-profile data can still render.
+        console.warn('Public profile completed-session count unavailable:', sessionCountError);
+      }
       
       // 🚨 FIX: Ipakita lang ang mga Active at Approved na skills
       const { data: skillsData } = await supabase.from('skills')
@@ -84,7 +104,7 @@ export default function PublicProfile() {
       if (portfolioData) setPortfolioItems(portfolioData);
 
       setStats({
-        avgRating: avgR, totalReviews: tc, sessionsTaught: taughtCount || 0,
+        avgRating: avgR, totalReviews: tc, sessionsTaught: taughtCount,
         avgClarity:        tc > 0 ? (sC   / tc).toFixed(1) : '0.0',
         avgPatience:       tc > 0 ? (sP   / tc).toFixed(1) : '0.0',
         avgRelevance:      tc > 0 ? (sRel / tc).toFixed(1) : '0.0',
@@ -101,7 +121,7 @@ export default function PublicProfile() {
 
   const statValues = {
     credits_balance: profile.credits_balance,
-    sessionsTaught:  stats.sessionsTaught,
+    sessionsTaught:  stats.sessionsTaught ?? '—',
     skillsCount:     userSkills.length,
     avgRating:       stats.avgRating > 0 ? stats.avgRating : '0.0',
   };
