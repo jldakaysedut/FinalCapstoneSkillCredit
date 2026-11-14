@@ -296,7 +296,20 @@ export default function Notifications() {
   const handleClick = async (notif) => {
     if (!notif.is_read) {
       setNotifications(prev => prev.map(n => n.id === notif.id ? { ...n, is_read: true } : n));
-      supabase.from('notifications').update({ is_read: true }).eq('id', notif.id).catch(err => console.error("Mark read failed:", err));
+      // Marking a notification read must never block its deep link. Supabase
+      // query builders are thenable, but are not guaranteed to expose .catch().
+      void (async () => {
+        try {
+          const { error: markReadError } = await supabase
+            .from('notifications')
+            .update({ is_read: true })
+            .eq('id', notif.id);
+          if (markReadError) throw markReadError;
+        } catch (markReadError) {
+          console.error('Mark read failed:', markReadError);
+          setNotifications(prev => prev.map(n => n.id === notif.id ? { ...n, is_read: false } : n));
+        }
+      })();
     }
 
     const type = notif.type?.toLowerCase() || '';

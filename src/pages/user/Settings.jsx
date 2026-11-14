@@ -61,33 +61,47 @@ export default function Settings() {
   };
 
   const handleInitiateDelete = async () => {
+    if (!currentUser || isValidating) return;
     setIsValidating(true);
     setValidationMessage('');
     
     try {
       // 1. Check Active Sessions
-      const { data: sessions } = await supabase
+      const { data: sessions, error: sessionsError } = await supabase
         .from('sessions')
         .select('id, status')
         .or(`student_id.eq.${currentUser.id},instructor_id.eq.${currentUser.id}`);
-      
-      const hasActiveSessions = sessions?.some(s => 
-        ['pending', 'scheduled', 'accepted', 'ongoing'].includes(s.status?.toLowerCase())
+      if (sessionsError || !Array.isArray(sessions)) {
+        throw sessionsError || new Error('Could not verify session status.');
+      }
+
+      const blockingStatuses = new Set([
+        'pending', 'reschedule_proposed', 'upcoming', 'active',
+        'scheduled', 'accepted', 'ongoing', 'confirmed', 'disputed'
+      ]);
+      const hasActiveSessions = sessions.some(s =>
+        blockingStatuses.has(s.status?.toLowerCase())
       );
 
       // 2. Check Pending Reports (User is reported)
-      const { data: reports } = await supabase
+      const { data: reports, error: reportsError } = await supabase
         .from('reports')
         .select('id')
         .eq('reported_user_id', currentUser.id)
         .eq('status', 'pending');
+      if (reportsError || !Array.isArray(reports)) {
+        throw reportsError || new Error('Could not verify pending reports.');
+      }
 
       // 3. Check Open Support Tickets
-      const { data: tickets } = await supabase
+      const { data: tickets, error: ticketsError } = await supabase
         .from('support_tickets')
         .select('id')
         .eq('user_id', currentUser.id)
         .eq('status', 'open');
+      if (ticketsError || !Array.isArray(tickets)) {
+        throw ticketsError || new Error('Could not verify support tickets.');
+      }
 
       if (hasActiveSessions) {
         setValidationMessage('You cannot delete your account while you have active, pending, or scheduled sessions.');

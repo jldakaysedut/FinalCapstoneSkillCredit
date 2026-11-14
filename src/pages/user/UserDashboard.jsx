@@ -331,6 +331,7 @@ export default function UserDashboard() {
 
   const [skills,         setSkills]        = useState([]);
   const [savedSkills,    setSavedSkills]   = useState([]);
+  const savingSkillIds = useRef(new Set());
   const [loading,        setLoading]       = useState(true);
   const [currentUser,    setCurrentUser]   = useState(null);
   const [profile,        setProfile]       = useState(null);
@@ -381,7 +382,7 @@ export default function UserDashboard() {
       .from('skills')
       .select(`id, title, category, format, duration, credit_cost, cover_image_url, description, created_at,
         user_profiles!instructor_id ( id, full_name, avatar_url ),
-        reviews ( rating ),
+        reviews ( rating, q1_clarity, q2_patience, q3_relevance, q4_professionalism ),
         sessions ( id, student_completed, instructor_completed )`)
       .eq('is_active', true)
       .or('status.eq.approved,status.is.null') 
@@ -395,7 +396,11 @@ export default function UserDashboard() {
     setSkills(data.map(s => {
       const rv = s.reviews  || [];
       const ss = s.sessions || [];
-      const avgRating = rv.length ? parseFloat((rv.reduce((a, r) => a + (Number(r.rating) || 0), 0) / rv.length).toFixed(1)) : 0;
+      const avgRating = rv.length ? parseFloat((rv.reduce((a, r) => a + (
+        (Number(r.rating || 0) + Number(r.q1_clarity || 0) +
+         Number(r.q2_patience || 0) + Number(r.q3_relevance || 0) +
+         Number(r.q4_professionalism || 0)) / 5
+      ), 0) / rv.length).toFixed(1)) : 0;
       const completedSessions = ss.filter(x => x.student_completed && x.instructor_completed).length;
       return { ...s, avgRating, totalReviews: rv.length, totalSessions: completedSessions };
     }));
@@ -413,12 +418,23 @@ export default function UserDashboard() {
 
   const toggleSave = async skillId => {
     if (!currentUser) { alert('Please log in to save skills.'); return; }
+    if (savingSkillIds.current.has(skillId)) return; // Prevent overlapping writes per skill.
     const already = savedSkills.includes(skillId);
+    savingSkillIds.current.add(skillId);
     setSavedSkills(p => already ? p.filter(id => id !== skillId) : [...p, skillId]);
-    if (already) {
-      await supabase.from('saved_skills').delete().match({ user_id: currentUser.id, skill_id: skillId });
-    } else {
-      await supabase.from('saved_skills').insert({ user_id: currentUser.id, skill_id: skillId });
+    try {
+      const { error } = already
+        ? await supabase.from('saved_skills').delete().match({ user_id: currentUser.id, skill_id: skillId })
+        : await supabase.from('saved_skills').insert({ user_id: currentUser.id, skill_id: skillId });
+      if (error) throw error;
+    } catch (error) {
+      console.error('Could not update saved skill:', error);
+      setSavedSkills(p => already
+        ? (p.includes(skillId) ? p : [...p, skillId])
+        : p.filter(id => id !== skillId));
+      alert('Could not update bookmark. Please try again.');
+    } finally {
+      savingSkillIds.current.delete(skillId);
     }
   };
 

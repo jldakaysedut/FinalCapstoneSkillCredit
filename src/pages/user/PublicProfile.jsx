@@ -59,11 +59,16 @@ export default function PublicProfile() {
         }));
         setReviews(enriched);
         reviewData.forEach(r => {
-          avgR += Number(r.rating || 0);
-          sC   += Number(r.q1_clarity || 0);
-          sP   += Number(r.q2_patience || 0);
-          sRel += Number(r.q3_relevance || 0);
-          sPro += Number(r.q4_professionalism || 0);
+          const base = Number(r.rating || 0);
+          const q1 = Number(r.q1_clarity || 0);
+          const q2 = Number(r.q2_patience || 0);
+          const q3 = Number(r.q3_relevance || 0);
+          const q4 = Number(r.q4_professionalism || 0);
+          avgR += (base + q1 + q2 + q3 + q4) / 5;
+          sC   += q1;
+          sP   += q2;
+          sRel += q3;
+          sPro += q4;
         });
         avgR = parseFloat((avgR / reviewData.length).toFixed(1));
       }

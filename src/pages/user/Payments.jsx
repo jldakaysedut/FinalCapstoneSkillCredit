@@ -365,11 +365,16 @@ export default function Payments() {
                 </div>
               </div>
               <div className="max-w-[43%] shrink-0 break-words text-right">
-                <p className={`break-words text-[10px] sm:text-[12px] font-bold ${tx.isPositive ? 'text-emerald-600' : 'text-gray-900'}`}>
-                  {tx.isPositive ? '+' : '-'}{tx.amount} credits
+                <p className={`break-words text-[10px] sm:text-[12px] font-bold ${tx.type === 'TOPUP' && tx.status !== 'paid' ? 'text-gray-500' : tx.isPositive ? 'text-emerald-600' : 'text-gray-900'}`}>
+                  {tx.type === 'TOPUP' && tx.status !== 'paid' ? '' : tx.isPositive ? '+' : '-'}{tx.amount} credits
                 </p>
-                {tx.status === 'pending' && <span className="text-[9px] font-semibold uppercase tracking-wider text-amber-600">Pending</span>}
-                {tx.status === 'failed' && <span className="text-[9px] font-semibold uppercase tracking-wider text-rose-600">Failed</span>}
+                {tx.type === 'TOPUP' && tx.status !== 'paid' && (
+                  <span className="block text-[9px] font-semibold uppercase tracking-wider text-amber-700">
+                    {tx.status === 'pending' ? 'Pending — not credited' : tx.status === 'failed' ? 'Failed — not credited' : `${tx.status || 'Unconfirmed'} — not credited`}
+                  </span>
+                )}
+                {tx.type !== 'TOPUP' && tx.status === 'pending' && <span className="text-[9px] font-semibold uppercase tracking-wider text-amber-600">Pending</span>}
+                {tx.type !== 'TOPUP' && tx.status === 'failed' && <span className="text-[9px] font-semibold uppercase tracking-wider text-rose-600">Failed</span>}
               </div>
             </div>
           );

@@ -81,7 +81,12 @@ export default function Profile() {
       }
 
       const totalRevCount = reviewData?.length || 0;
-      const { count: taughtCount } = await supabase.from('sessions').select('*', { count: 'exact', head: true }).eq('instructor_id', currentUser.id).eq('status', 'completed');
+      const { count: taughtCount, error: taughtCountError } = await supabase
+        .from('sessions')
+        .select('*', { count: 'exact', head: true })
+        .eq('instructor_id', currentUser.id)
+        .eq('status', 'completed');
+      if (taughtCountError) console.warn('Own completed sessions count unavailable:', taughtCountError);
       
       // 🚨 UPDATED QUERY: Added .eq('is_active', true) and .eq('status', 'approved')
       const { data: skillsData } = await supabase
@@ -97,7 +102,7 @@ export default function Profile() {
       const { data: portfolioData } = await supabase.from('portfolio_items').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false });
       if (portfolioData) setPortfolioItems(portfolioData);
 
-      setStats({ avgRating: calculatedAvg, totalReviews: totalRevCount, sessionsTaught: taughtCount || 0, avgClarity: totalRevCount > 0 ? (sumClarity / totalRevCount).toFixed(1) : '0.0', avgPatience: totalRevCount > 0 ? (sumPatience / totalRevCount).toFixed(1) : '0.0', avgRelevance: totalRevCount > 0 ? (sumRelevance / totalRevCount).toFixed(1) : '0.0', avgProfessionalism: totalRevCount > 0 ? (sumProfessionalism / totalRevCount).toFixed(1) : '0.0' });
+      setStats({ avgRating: calculatedAvg, totalReviews: totalRevCount, sessionsTaught: taughtCountError ? null : (taughtCount ?? null), avgClarity: totalRevCount > 0 ? (sumClarity / totalRevCount).toFixed(1) : '0.0', avgPatience: totalRevCount > 0 ? (sumPatience / totalRevCount).toFixed(1) : '0.0', avgRelevance: totalRevCount > 0 ? (sumRelevance / totalRevCount).toFixed(1) : '0.0', avgProfessionalism: totalRevCount > 0 ? (sumProfessionalism / totalRevCount).toFixed(1) : '0.0' });
       setLoading(false);
 
       profileChannel = supabase.channel(`profile_page_${currentUser.id}`);
@@ -218,7 +223,7 @@ export default function Profile() {
 
   const statValues = {
     credits_balance: profile.credits_balance,
-    sessionsTaught:  stats.sessionsTaught,
+    sessionsTaught:  stats.sessionsTaught ?? '—',
     skillsCount:     mySkills.length,
     avgRating:       stats.avgRating > 0 ? stats.avgRating : '0.0',
   };
