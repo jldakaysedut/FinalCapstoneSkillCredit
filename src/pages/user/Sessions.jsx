@@ -1,13 +1,4 @@
-import { confirmDialog } from '../../components/confirmDialog';
-import { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import {
-  AlertTriangle, ArrowRight, Briefcase, CalendarDays, ChevronDown,
-  Heart, MessageCircle, MessageSquare, PenLine, RefreshCw, Star, Target, ShieldCheck, Scale, PlayCircle, CheckCircle2
-} from 'lucide-react';
-import supabase from '../../supabaseClient';
-
-// ─────────────────────────────────────────────────────────────────
+───────────────────────────────────────────────────
 // SESSIONS V4 — "Upcoming State" + Formal Start & Cancelled Chat
 // ─────────────────────────────────────────────────────────────────
 
