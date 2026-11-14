@@ -164,9 +164,23 @@ export default function Sessions() {
     setProcessingId(session.id);
     try {
       if (action === 'cancel' || action === 'decline' || action === 'cancel_no_show') {
-        const { data: sd } = await supabase.from('user_profiles').select('credits_balance').eq('id', session.student_id).single();
-        await supabase.from('user_profiles').update({ credits_balance: Number(sd?.credits_balance || 0) + Number(session.credit_amount || 0) }).eq('id', session.student_id);
-        const { error: cancellationError } = await supabase.from('sessions').update({ status: 'cancelled' }).eq('id', session.id);
+        // One server-side transaction: verify participants/status, lock the session,
+        // cancel it and refund the learner exactly once. Do not refund via browser.
+        const { data: cancellationResult, error: cancellationError } = await supabase.rpc(
+          'skillcredit_secure_cancel_session',
+          { p_session_id: session.id, p_action: action }
+        );
+        if (cancellationError) throw cancellationError;
+        if (cancellationResult?.state === 'already_cancelled') {
+          // Older cancellations may have missed a refund. Replaying one here could
+          // also duplicate a real refund. Do not assume an old refund occurred.
+          alert('This session was already cancelled. If the credits did not return, contact support for a wallet review.');
+          await fetchSessions(currentUserId);
+          return;
+        }
+        if (cancellationResult?.state !== 'cancelled' || cancellationResult?.refunded !== true) {
+          throw new Error('Refund could not be verified. Please refresh and contact support.');
+        }
         window.dispatchEvent(new Event('credit_updated'));
 
         // Inform the other participant about normal cancellations/declines.
@@ -322,11 +336,14 @@ export default function Sessions() {
     setIsSubmittingPropose(true);
     const s = proposeModal.session;
     try {
-      await supabase.from('sessions').update({
+      const { data: proposedSession, error: proposalError } = await supabase.from('sessions').update({
         status: 'reschedule_proposed',
         scheduled_date: newDate,
         scheduled_time: newTime
-      }).eq('id', s.id);
+      }).eq('id', s.id).select('id').maybeSingle();
+      if (proposalError || !proposedSession) {
+        throw proposalError || new Error('Proposed schedule was not saved.');
+      }
 
       await supabase.from('notifications').insert([{
         user_id: s.student_id,
@@ -349,39 +366,24 @@ export default function Sessions() {
     if (!Object.values(ratings).every(v => v > 0)) { alert('Please rate all categories.'); return; }
     setIsSubmittingRating(true);
     const s = ratingModal.session;
-    let reviewSaved = false;
     try {
-      const { error: reviewError } = await supabase.from('reviews').insert([{ session_id: s.id, skill_id: s.skill_id, instructor_id: s.instructor_id, student_id: s.student_id, rating: ratings.overall, q1_clarity: ratings.clarity, q2_patience: ratings.patience, q3_relevance: ratings.relevance, q4_professionalism: ratings.professionalism, feedback }]);
-      if (reviewError) throw reviewError;
-      reviewSaved = true;
+      await supabase.from('reviews').insert([{ session_id: s.id, skill_id: s.skill_id, instructor_id: s.instructor_id, student_id: s.student_id, rating: ratings.overall, q1_clarity: ratings.clarity, q2_patience: ratings.patience, q3_relevance: ratings.relevance, q4_professionalism: ratings.professionalism, feedback }]);
+      await supabase.from('sessions').update({ is_rated: true }).eq('id', s.id);
 
-      const { data: ratedSession, error: ratedError } = await supabase.from('sessions').update({ is_rated: true }).eq('id', s.id).select('id').maybeSingle();
-      if (ratedError || !ratedSession) throw ratedError || new Error('Session rating status did not update.');
-
-      // A notification is informational; it must not invalidate a saved review.
-      const { error: noticeError } = await supabase.from('notifications').insert([{
+      await supabase.from('notifications').insert([{
         user_id: s.instructor_id,
         type: 'new_rating',
         content: `${s.student?.full_name || 'A learner'} evaluated your session and left a rating!`,
         link_url: `/sessions?session=${s.id}`
       }]);
-      if (noticeError) console.warn('Rating notification failed:', noticeError);
 
       setRatingModal({ isOpen: false, session: null });
       setRatings({ overall: 0, clarity: 0, patience: 0, relevance: 0, professionalism: 0 });
       setFeedback('');
       fetchSessions(currentUserId);
       alert('Evaluation submitted!');
-    } catch (error) {
-      console.error('Evaluation submission failed:', error);
-      if (reviewSaved) {
-        setRatingModal({ isOpen: false, session: null });
-        fetchSessions(currentUserId);
-        alert('Your review was saved, but the session could not be marked as rated. Do not submit it again; please contact support.');
-      } else {
-        alert('Could not confirm the evaluation was saved. Refresh the session before trying again to avoid duplicate reviews.');
-      }
-    } finally { setIsSubmittingRating(false); }
+    } catch { alert('Failed to submit.'); }
+    finally { setIsSubmittingRating(false); }
   };
 
   const handleSubmitReport = async (e) => {
@@ -390,44 +392,28 @@ export default function Sessions() {
     setIsSubmittingReport(true);
     const s = reportModal.session;
     const reportedUserId = s.instructor_id === currentUserId ? s.student_id : s.instructor_id;
-    let reportSaved = false;
     try {
-      const { error: reportError } = await supabase.from('reports').insert([{ reporter_id: currentUserId, reported_user_id: reportedUserId, reason: reportReason, details: reportDetails, reference_type: 'session', reference_id: s.id }]);
-      if (reportError) throw reportError;
-      reportSaved = true;
-      setSubmittedReports(p => p.includes(s.id) ? p : [...p, s.id]);
-
-      const { data: disputedSession, error: disputeError } = await supabase.from('sessions').update({ status: 'disputed' }).eq('id', s.id).select('id').maybeSingle();
-      if (disputeError || !disputedSession) throw disputeError || new Error('Session dispute status did not update.');
+      await supabase.from('reports').insert([{ reporter_id: currentUserId, reported_user_id: reportedUserId, reason: reportReason, details: reportDetails, reference_type: 'session', reference_id: s.id }]);
+      await supabase.from('sessions').update({ status: 'disputed' }).eq('id', s.id);
       
       const isInstructorAction = s.instructor_id === currentUserId;
       const targetUserId = isInstructorAction ? s.student_id : s.instructor_id;
       const actorName = isInstructorAction ? s.instructor?.full_name || 'The teacher' : s.student?.full_name || 'The learner';
 
-      // Notification failure should not turn a successfully submitted report
-      // into an apparent failure and tempt another report submission.
-      const { error: noticeError } = await supabase.from('notifications').insert([{
+      await supabase.from('notifications').insert([{
         user_id: targetUserId,
         type: 'session_disputed',
         content: `${actorName} has filed a dispute regarding your session. A moderator will review the case.`,
         link_url: `/sessions?session=${s.id}`
       }]);
-      if (noticeError) console.warn('Dispute notification failed:', noticeError);
 
       alert('Issue reported. A moderator will review this case and decide on the credit refund.');
+      setSubmittedReports(p => [...p, s.id]);
       setReportModal({ isOpen: false, session: null });
       setReportDetails(''); setReportReason('No-Show / Unresponsive');
       fetchSessions(currentUserId);
-    } catch (error) {
-      console.error('Session report submission failed:', error);
-      if (reportSaved) {
-        setReportModal({ isOpen: false, session: null });
-        fetchSessions(currentUserId);
-        alert('Your report was saved, but the session status could not be updated. Do not report again; please contact support.');
-      } else {
-        alert('Could not confirm the report was saved. Refresh the session before trying again to avoid duplicate reports.');
-      }
-    } finally { setIsSubmittingReport(false); }
+    } catch { alert('Failed to submit report.'); }
+    finally { setIsSubmittingReport(false); }
   };
 
   const handleOpenDisputeModal = async (session) => {
@@ -975,6 +961,7 @@ export default function Sessions() {
           <div className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 w-full max-w-sm max-h-[calc(100dvh-1rem)] overflow-y-auto relative z-10 shadow-[0_8px_30px_rgb(0,0,0,0.12)] animate-in zoom-in-95 duration-200">
             <h2 className="text-xl font-bold tracking-tight text-gray-900 mb-1">Propose New Time</h2>
             <p className="text-[12px] text-gray-500 mb-5">Offer a new schedule to <span className="font-bold text-gray-800">{proposeModal.session.student?.full_name}</span>.</p>
+            <p className="text-[11px] text-gray-500 mb-3">Credits remain in escrow while the learner considers your proposed time. A refund happens only when the booking is cancelled.</p>
             <form onSubmit={handleProposeTime} className="space-y-4">
               <div>
                 <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-2">New Date</p>
