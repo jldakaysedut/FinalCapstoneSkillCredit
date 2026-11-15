@@ -70,7 +70,7 @@ export default function SetupInterests() {
       // 1. Kunin muna ang current data para sure
       const { data: profile } = await supabase
         .from('user_profiles')
-        .select('credits_balance, has_set_interests')
+        .select('has_set_interests')
         .eq('id', user.id)
         .single();
         
@@ -80,19 +80,13 @@ export default function SetupInterests() {
         return;
       }
 
-      const currentBalance = profile?.credits_balance || 0;
-      
-      // ✨ BULLETPROOF FIX: Para iwas maging 40
-      // Kung 0 pa lang, gawing 20. Kung may 20 na dahil sa default sa DB mo, 20 pa rin.
-      const finalBalance = currentBalance === 0 ? 20 : currentBalance;
-
-      // 2. Isang bagsakan na Update (Interests, Flag, at Balance)
+      // Save interests only. Starter credits are assigned at registration.
+      // Never overwrite wallet credits during onboarding.
       const { error } = await supabase
         .from('user_profiles')
-        .update({ 
-          interests: selected, 
-          has_set_interests: true,
-          credits_balance: finalBalance
+        .update({
+          interests: selected,
+          has_set_interests: true
         })
         .eq('id', user.id);
 
