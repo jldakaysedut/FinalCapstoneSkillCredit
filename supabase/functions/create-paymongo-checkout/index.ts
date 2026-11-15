@@ -62,6 +62,75 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
+    if (payload.action === "check_checkout_status") {
+      const txId = payload.transaction_id;
+      if (typeof txId !== "string" || !/^[0-9a-f-]{36}$/i.test(txId)) {
+        return json({ error: "Invalid transaction id" }, 400);
+      }
+      // Access is scoped to the currently authenticated owner.
+      const { data: tx, error: lookupError } = await admin
+        .from("topup_transactions")
+        .select("id, status, paymongo_checkout_id")
+        .eq("id", txId)
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (lookupError) throw lookupError;
+      if (!tx) return json({ error: "Transaction not found" }, 404);
+      if (tx.status === "paid" || !tx.paymongo_checkout_id) {
+        return json({ status: tx.status });
+      }
+
+      // Query PayMongo directly. Never label failed/expired from a browser
+      // Back action, query parameter, or an unverified client response.
+      const check = await fetch(
+        `https://api.paymongo.com/v1/checkout_sessions/${encodeURIComponent(tx.paymongo_checkout_id)}`,
+        { headers: { Authorization: "Basic " + btoa(Deno.env.get("PAYMONGO_SECRET_KEY")! + ":") } },
+      );
+      if (!check.ok) {
+        // A temporary provider/API error must not turn Pending into Failed.
+        console.warn("Unable to confirm checkout status:", check.status);
+        return json({ status: tx.status, verified: false });
+      }
+      const provider = await check.json();
+      const attrs = provider?.data?.attributes ?? {};
+      const sessionState = String(attrs.status ?? "").toLowerCase();
+      const payments: unknown[] = Array.isArray(attrs.payments) ? attrs.payments : [];
+      const paymentStates = payments.map((p: any) =>
+        String(p?.attributes?.status ?? p?.status ?? "").toLowerCase()
+      );
+      // Only explicit provider terminal states qualify. Paid wallet credit is
+      // still handled exclusively by the signed payment webhook.
+      const providerPaid = sessionState === "paid" ||
+        paymentStates.some((s) => ["paid", "succeeded"].includes(s));
+      const terminal = providerPaid ? null
+        : sessionState === "expired" ? "expired"
+        : ["failed", "canceled", "cancelled"].includes(sessionState)
+          ? (sessionState === "failed" ? "failed" : "cancelled")
+        : paymentStates.includes("failed") && !paymentStates.some((s) =>
+          ["pending", "processing", "awaiting_payment_method", "awaiting_next_action"].includes(s))
+          ? "failed"
+        : null;
+      if (terminal && tx.status === "pending") {
+        const { data: marked, error: markError } = await admin
+          .from("topup_transactions")
+          .update({ status: terminal, updated_at: new Date().toISOString() })
+          .eq("id", tx.id)
+          .eq("user_id", user.id)
+          .eq("status", "pending")
+          .select("status")
+          .maybeSingle();
+        if (markError) throw markError;
+        if (marked) return json({ status: marked.status, verified: true });
+      }
+      const { data: latest, error: latestError } = await admin
+        .from("topup_transactions")
+        .select("status")
+        .eq("id", tx.id)
+        .single();
+      if (latestError) throw latestError;
+      return json({ status: latest.status, verified: terminal != null });
+    }
+
     if (payload.action === "cancel_checkout") {
       const txId = payload.transaction_id;
       if (typeof txId !== "string" || !/^[0-9a-f-]{36}$/i.test(txId)) {

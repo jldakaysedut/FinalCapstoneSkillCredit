@@ -37,6 +37,30 @@ Deno.serve(async (req) => {
   const event = JSON.parse(raw);
   const type = event?.data?.attributes?.type;
 
+  // A verified PayMongo failure/expiry event updates display status only.
+  // It never credits or debits the wallet. Some payment methods may not emit
+  // these events; in that case the status remains Pending until verified.
+  if (type === "checkout_session.payment.failed" || type === "checkout_session.payment.expired") {
+    const checkoutId = event?.data?.attributes?.data?.id;
+    if (typeof checkoutId === "string" && checkoutId) {
+      const admin = createClient(
+        Deno.env.get("SUPABASE_URL")!,
+        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+      );
+      const { error } = await admin.from("topup_transactions")
+        .update({
+          status: type.endsWith(".expired") ? "expired" : "failed",
+          updated_at: new Date().toISOString(),
+        })
+        .eq("paymongo_checkout_id", checkoutId)
+        .in("status", ["pending", "cancelled"]);
+      if (error) {
+        console.error("Unable to record PayMongo failure:", error);
+        return new Response("DB error", { status: 500 });
+      }
+    }
+  }
+
   if (type === "checkout_session.payment.paid") {
     const checkoutId = event.data.attributes.data.id;
 
@@ -65,7 +89,7 @@ Deno.serve(async (req) => {
         ...(method ? { payment_method: method } : {}),
       })
       .eq("paymongo_checkout_id", checkoutId)
-      .in("status", ["pending", "cancelled"])
+      .in("status", ["pending", "cancelled", "failed", "expired"])
       .select("id, user_id, credits_added")
       .maybeSingle();
 

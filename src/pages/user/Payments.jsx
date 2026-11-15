@@ -22,6 +22,14 @@ import {
  
 const CHECKOUT_ATTEMPT_KEY = 'skillcredit_pending_paymongo_checkout';
 
+const checkoutResultNotice = (status) => {
+  if (status === 'paid') return { kind: 'success', text: 'Payment verified. Credits were added to your wallet.' };
+  if (status === 'failed') return { kind: 'failed', text: 'Payment failed. No credits were added.' };
+  if (status === 'expired') return { kind: 'expired', text: 'Payment expired. No credits were added.' };
+  if (status === 'cancelled') return { kind: 'cancelled', text: 'Checkout cancelled. No credits were added.' };
+  return { kind: 'pending', text: 'Payment is still being verified. No credits have been added yet.' };
+};
+
 const TOPUP_PACKAGES = [
   { phpAmount: 100,  bonusCredits: 0 },
   { phpAmount: 500,  bonusCredits: 5 },
@@ -227,19 +235,23 @@ export default function Payments() {
       setPaymentNotice({ kind: 'pending', text: 'Checking your cancelled checkout…' });
       const confirmCancellation = async () => {
         try {
-          const { data, error } = await supabase.functions.invoke('create-paymongo-checkout', {
-            body: { action: 'cancel_checkout', transaction_id: txId },
+          // Verify a provider-confirmed failed/expired state BEFORE recording
+          // an ordinary checkout cancellation. A URL alone is not a payment result.
+          const checked = await supabase.functions.invoke('create-paymongo-checkout', {
+            body: { action: 'check_checkout_status', transaction_id: txId },
           });
           if (stopped) return;
-          if (error || data?.error) throw error || new Error(data.error);
-
-          if (data?.status === 'paid') {
-            setPaymentNotice({ kind: 'success', text: 'Payment already confirmed. Your credits are being reflected in your wallet.' });
-          } else if (data?.status === 'cancelled') {
-            setPaymentNotice({ kind: 'cancelled', text: 'Checkout cancelled. No credits were added.' });
-          } else {
-            setPaymentNotice({ kind: 'pending', text: 'Payment is still pending verification. No credits have been added yet.' });
+          if (checked.error || checked.data?.error) throw checked.error || new Error(checked.data.error);
+          let finalStatus = checked.data?.status;
+          if (finalStatus === 'pending') {
+            const cancelled = await supabase.functions.invoke('create-paymongo-checkout', {
+              body: { action: 'cancel_checkout', transaction_id: txId },
+            });
+            if (stopped) return;
+            if (cancelled.error || cancelled.data?.error) throw cancelled.error || new Error(cancelled.data.error);
+            finalStatus = cancelled.data?.status;
           }
+          setPaymentNotice(checkoutResultNotice(finalStatus));
           refreshLedger();
           clearReturnParams();
         } catch (error) {
@@ -265,8 +277,8 @@ export default function Payments() {
           setPaymentNotice({ kind: 'success', text: 'Payment confirmed! Your credits will appear in your wallet shortly.' });
           refreshLedger();
           clearReturnParams();
-        } else if (!error && ['failed', 'cancelled'].includes(data?.status)) {
-          setPaymentNotice({ kind: 'cancelled', text: data.status === 'failed' ? 'Payment failed. No credits were added.' : 'Checkout cancelled. No credits were added.' });
+        } else if (!error && ['failed', 'expired', 'cancelled'].includes(data?.status)) {
+          setPaymentNotice(checkoutResultNotice(data.status));
           refreshLedger();
           clearReturnParams();
         } else if (tries >= 12) {
@@ -305,8 +317,24 @@ export default function Payments() {
       setIsProcessing(false);
       setPaymentNotice({
         kind: 'pending',
-        text: 'You returned from PayMongo before payment was confirmed. No credits are counted yet. You can check Transactions for any later payment confirmation.',
+        text: 'Checking this checkout with PayMongo. No credits are counted until verified.',
       });
+      if (attempt.transactionId) {
+        // Back/refresh cannot prove a payment failed; only server-side
+        // provider verification may settle Failed or Expired.
+        void supabase.functions.invoke('create-paymongo-checkout', {
+          body: { action: 'check_checkout_status', transaction_id: attempt.transactionId },
+        }).then(({ data, error }) => {
+          if (!error && !data?.error) {
+            setPaymentNotice(checkoutResultNotice(data?.status));
+            setLiveRefreshKey(key => key + 1);
+          } else {
+            setPaymentNotice({ kind: 'pending', text: 'Could not check payment status yet. No credits were added. Please check again later.' });
+          }
+        }).catch(() => {
+          setPaymentNotice({ kind: 'pending', text: 'Could not check payment status yet. No credits were added. Please check again later.' });
+        });
+      }
       setLiveRefreshKey(key => key + 1);
     };
 
@@ -424,7 +452,7 @@ export default function Payments() {
             bgClass = 'bg-amber-50 border-amber-100';
             textClass = 'text-amber-600';
             iconRender = <Clock className="h-4 w-4" />;
-          } else if (tx.type === 'TOPUP' && ['failed', 'cancelled'].includes(tx.status)) {
+          } else if (tx.type === 'TOPUP' && ['failed', 'expired', 'cancelled'].includes(tx.status)) {
             bgClass = 'bg-rose-50 border-rose-100';
             textClass = 'text-rose-600';
             iconRender = <XCircle className="h-4 w-4" />;
@@ -466,11 +494,12 @@ export default function Payments() {
                   {tx.type === 'TOPUP' && tx.status !== 'paid' ? '' : tx.isPositive ? '+' : '-'}{tx.amount} credits
                 </p>
                 {tx.type === 'TOPUP' && (
-                  <span className={`block text-[9px] font-semibold uppercase tracking-wider ${tx.status === 'paid' ? 'text-emerald-700' : ['cancelled', 'failed'].includes(tx.status) ? 'text-rose-700' : 'text-amber-700'}`}>
+                  <span className={`block text-[9px] font-semibold uppercase tracking-wider ${tx.status === 'paid' ? 'text-emerald-700' : ['cancelled', 'failed', 'expired'].includes(tx.status) ? 'text-rose-700' : 'text-amber-700'}`}>
                     {tx.status === 'paid' ? 'Success — credited'
                       : tx.status === 'pending' ? 'Pending — not credited'
                       : tx.status === 'cancelled' ? 'Cancelled — not credited'
                       : tx.status === 'failed' ? 'Failed — not credited'
+                      : tx.status === 'expired' ? 'Expired — not credited'
                       : `${tx.status || 'Unconfirmed'} — not credited`}
                   </span>
                 )}
@@ -519,7 +548,7 @@ export default function Payments() {
         </header>
  
         {paymentNotice && (
-          <div role="status" className={`rounded-xl border px-4 py-3 text-[12px] font-semibold ${paymentNotice.kind === 'success' ? 'border-emerald-100 bg-emerald-50 text-emerald-800' : paymentNotice.kind === 'cancelled' ? 'border-rose-100 bg-rose-50 text-rose-800' : 'border-amber-100 bg-amber-50 text-amber-800'}`}>
+          <div role="status" className={`rounded-xl border px-4 py-3 text-[12px] font-semibold ${paymentNotice.kind === 'success' ? 'border-emerald-100 bg-emerald-50 text-emerald-800' : ['cancelled', 'failed', 'expired'].includes(paymentNotice.kind) ? 'border-rose-100 bg-rose-50 text-rose-800' : 'border-amber-100 bg-amber-50 text-amber-800'}`}>
             {paymentNotice.text}
           </div>
         )}
