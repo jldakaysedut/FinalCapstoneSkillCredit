@@ -203,39 +203,80 @@ export default function Payments() {
     fetchPaymentData();
   }, [navigate, liveRefreshKey]);
  
-  // Handles the redirect back from PayMongo (?status=success&tx=...)
+  // A PayMongo return URL is NOT proof of payment. Only the signed webhook
+  // can credit wallets. On cancel, ask our authenticated server function to
+  // record the abandoned checkout for THIS user; a late paid webhook can win.
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const status = params.get('status');
+    const returnedStatus = params.get('status');
     const txId = params.get('tx');
-    if (!status || !txId) return;
- 
-    if (status === 'cancelled') {
-      setPaymentNotice('Payment cancelled. No credits were added.');
-      return;
+    if (!txId || !['success', 'cancelled'].includes(returnedStatus)) return;
+
+    let stopped = false;
+    let timerId;
+    setActivePaymentTab('history');
+    const clearReturnParams = () => {
+      window.history.replaceState(window.history.state, '', window.location.pathname + window.location.hash);
+    };
+    const refreshLedger = () => setLiveRefreshKey((key) => key + 1);
+
+    if (returnedStatus === 'cancelled') {
+      setPaymentNotice({ kind: 'pending', text: 'Checking your cancelled checkout…' });
+      const confirmCancellation = async () => {
+        try {
+          const { data, error } = await supabase.functions.invoke('create-paymongo-checkout', {
+            body: { action: 'cancel_checkout', transaction_id: txId },
+          });
+          if (stopped) return;
+          if (error || data?.error) throw error || new Error(data.error);
+
+          if (data?.status === 'paid') {
+            setPaymentNotice({ kind: 'success', text: 'Payment already confirmed. Your credits are being reflected in your wallet.' });
+          } else if (data?.status === 'cancelled') {
+            setPaymentNotice({ kind: 'cancelled', text: 'Checkout cancelled. No credits were added.' });
+          } else {
+            setPaymentNotice({ kind: 'pending', text: 'Payment is still pending verification. No credits have been added yet.' });
+          }
+          refreshLedger();
+          clearReturnParams();
+        } catch (error) {
+          if (stopped) return;
+          console.error('Could not confirm checkout cancellation:', error);
+          setPaymentNotice({ kind: 'pending', text: 'Could not confirm cancellation. This top-up is still pending; please refresh to check its status.' });
+        }
+      };
+      confirmCancellation();
+    } else {
+      // A success URL can arrive before the signed PayMongo webhook.
+      setPaymentNotice({ kind: 'pending', text: 'Confirming payment with PayMongo…' });
+      let tries = 0;
+      const checkPayment = async () => {
+        tries += 1;
+        const { data, error } = await supabase
+          .from('topup_transactions')
+          .select('status')
+          .eq('id', txId)
+          .maybeSingle();
+        if (stopped) return;
+        if (!error && data?.status === 'paid') {
+          setPaymentNotice({ kind: 'success', text: 'Payment confirmed! Your credits will appear in your wallet shortly.' });
+          refreshLedger();
+          clearReturnParams();
+        } else if (!error && ['failed', 'cancelled'].includes(data?.status)) {
+          setPaymentNotice({ kind: 'cancelled', text: data.status === 'failed' ? 'Payment failed. No credits were added.' : 'Checkout cancelled. No credits were added.' });
+          refreshLedger();
+          clearReturnParams();
+        } else if (tries >= 12) {
+          setPaymentNotice({ kind: 'pending', text: 'Payment is still pending confirmation. No credits are counted until the payment is verified. Refresh later.' });
+          refreshLedger();
+          clearReturnParams();
+        } else {
+          timerId = setTimeout(checkPayment, 1500);
+        }
+      };
+      checkPayment();
     }
- 
-    // The webhook can arrive a few seconds after the redirect, so we poll.
-    setPaymentNotice('Confirming your payment…');
-    let tries = 0;
-    const timer = setInterval(async () => {
-      tries++;
-      const { data } = await supabase
-        .from('topup_transactions')
-        .select('status')
-        .eq('id', txId)
-        .single();
- 
-      if (data?.status === 'paid') {
-        clearInterval(timer);
-        window.location.replace(window.location.pathname); // reload balance + ledger
-      } else if (tries >= 12) {
-        clearInterval(timer);
-        setPaymentNotice('Payment is still processing. Your credits will appear shortly. Refresh in a minute.');
-      }
-    }, 1500);
- 
-    return () => clearInterval(timer);
+    return () => { stopped = true; clearTimeout(timerId); };
   }, []);
  
   const getActiveAmountPHP = () => {
@@ -335,6 +376,14 @@ export default function Payments() {
             bgClass = 'bg-amber-50 border-amber-100';
             textClass = 'text-amber-600';
             iconRender = <Clock className="h-4 w-4" />;
+          } else if (tx.type === 'TOPUP' && ['failed', 'cancelled'].includes(tx.status)) {
+            bgClass = 'bg-rose-50 border-rose-100';
+            textClass = 'text-rose-600';
+            iconRender = <XCircle className="h-4 w-4" />;
+          } else if (tx.type === 'TOPUP' && tx.status === 'paid') {
+            bgClass = 'bg-emerald-50 border-emerald-100';
+            textClass = 'text-emerald-600';
+            iconRender = <CheckCircle2 className="h-4 w-4" />;
           } else if (tx.status === 'failed') {
             bgClass = 'bg-rose-50 border-rose-100';
             textClass = 'text-rose-600';
@@ -368,9 +417,13 @@ export default function Payments() {
                 <p className={`break-words text-[10px] sm:text-[12px] font-bold ${tx.type === 'TOPUP' && tx.status !== 'paid' ? 'text-gray-500' : tx.isPositive ? 'text-emerald-600' : 'text-gray-900'}`}>
                   {tx.type === 'TOPUP' && tx.status !== 'paid' ? '' : tx.isPositive ? '+' : '-'}{tx.amount} credits
                 </p>
-                {tx.type === 'TOPUP' && tx.status !== 'paid' && (
-                  <span className="block text-[9px] font-semibold uppercase tracking-wider text-amber-700">
-                    {tx.status === 'pending' ? 'Pending — not credited' : tx.status === 'failed' ? 'Failed — not credited' : `${tx.status || 'Unconfirmed'} — not credited`}
+                {tx.type === 'TOPUP' && (
+                  <span className={`block text-[9px] font-semibold uppercase tracking-wider ${tx.status === 'paid' ? 'text-emerald-700' : ['cancelled', 'failed'].includes(tx.status) ? 'text-rose-700' : 'text-amber-700'}`}>
+                    {tx.status === 'paid' ? 'Success — credited'
+                      : tx.status === 'pending' ? 'Pending — not credited'
+                      : tx.status === 'cancelled' ? 'Cancelled — not credited'
+                      : tx.status === 'failed' ? 'Failed — not credited'
+                      : `${tx.status || 'Unconfirmed'} — not credited`}
                   </span>
                 )}
                 {tx.type !== 'TOPUP' && tx.status === 'pending' && <span className="text-[9px] font-semibold uppercase tracking-wider text-amber-600">Pending</span>}
@@ -418,8 +471,8 @@ export default function Payments() {
         </header>
  
         {paymentNotice && (
-          <div role="status" className="rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-[12px] font-semibold text-emerald-800">
-            {paymentNotice}
+          <div role="status" className={`rounded-xl border px-4 py-3 text-[12px] font-semibold ${paymentNotice.kind === 'success' ? 'border-emerald-100 bg-emerald-50 text-emerald-800' : paymentNotice.kind === 'cancelled' ? 'border-rose-100 bg-rose-50 text-rose-800' : 'border-amber-100 bg-amber-50 text-amber-800'}`}>
+            {paymentNotice.text}
           </div>
         )}
  

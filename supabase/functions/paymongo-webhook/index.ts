@@ -54,7 +54,9 @@ Deno.serve(async (req) => {
       null;
     console.log("payment method used:", method);
 
-    // 3. Mark as paid (only if still pending, so no double credit)
+    // 3. A signed paid event is authoritative even if the user previously
+    // abandoned the checkout. Only pending/cancelled can transition to paid;
+    // the status filter ensures the same checkout cannot credit twice.
     const { data: tx, error: txErr } = await admin
       .from("topup_transactions")
       .update({
@@ -63,7 +65,7 @@ Deno.serve(async (req) => {
         ...(method ? { payment_method: method } : {}),
       })
       .eq("paymongo_checkout_id", checkoutId)
-      .eq("status", "pending")
+      .in("status", ["pending", "cancelled"])
       .select("id, user_id, credits_added")
       .maybeSingle();
 

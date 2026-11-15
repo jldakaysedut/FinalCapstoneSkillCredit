@@ -53,8 +53,54 @@ Deno.serve(async (req) => {
       return json({ error: "Mobile checkout requires an HTTPS site in ALLOWED_ORIGINS" }, 500);
     }
 
-    // 3. Check the amount
-    const { amount, return_path } = await req.json();
+    // 3. Parse the request. Cancellation is authenticated and scoped to the
+    // logged-in user's OWN pending top-up. This is an abandoned checkout label,
+    // not a financial settlement; a later signed paid webhook overrides it.
+    const payload = await req.json();
+    const admin = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    );
+
+    if (payload.action === "cancel_checkout") {
+      const txId = payload.transaction_id;
+      if (typeof txId !== "string" || !/^[0-9a-f-]{36}$/i.test(txId)) {
+        return json({ error: "Invalid transaction id" }, 400);
+      }
+      const { data: tx, error: lookupError } = await admin
+        .from("topup_transactions")
+        .select("id, status")
+        .eq("id", txId)
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (lookupError) throw lookupError;
+      if (!tx) return json({ error: "Transaction not found" }, 404);
+      if (tx.status !== "pending") return json({ status: tx.status });
+
+      // Conditional update prevents a cancellation from undoing a paid event.
+      const { data: cancelled, error: cancelError } = await admin
+        .from("topup_transactions")
+        .update({ status: "cancelled", updated_at: new Date().toISOString() })
+        .eq("id", tx.id)
+        .eq("user_id", user.id)
+        .eq("status", "pending")
+        .select("id")
+        .maybeSingle();
+      if (cancelError) throw cancelError;
+      if (cancelled) return json({ status: "cancelled" });
+      const { data: latest, error: latestError } = await admin
+        .from("topup_transactions")
+        .select("status")
+        .eq("id", tx.id)
+        .eq("user_id", user.id)
+        .single();
+      if (latestError) throw latestError;
+      return json({ status: latest.status });
+    }
+
+    if (payload.action != null) return json({ error: "Unsupported action" }, 400);
+    // 4. Check the amount (existing checkout path)
+    const { amount, return_path } = payload;
     if (!Number.isInteger(amount) || amount < 10 || amount % 10 !== 0 || amount > 50000) {
       return json({ error: "Invalid amount" }, 400);
     }
@@ -67,11 +113,6 @@ Deno.serve(async (req) => {
 
     // 4. The server decides how many credits (not the browser)
     const credits = calcCredits(amount);
-
-    const admin = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-    );
 
     // 5. Save the pending transaction
     const { data: tx, error: txErr } = await admin
