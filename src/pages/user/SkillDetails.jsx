@@ -46,7 +46,7 @@ export default function SkillDetails() {
           setBookingRestrictedUntil(profileData.booking_restricted_until);
         }
         
-        const { data: sessionData } = await supabase.from('sessions').select('status, id').eq('skill_id', id).eq('student_id', user.id).in('status', ['pending', 'active', 'upcoming', 'confirmed']).limit(1);
+        const { data: sessionData } = await supabase.from('sessions').select('status, id').eq('skill_id', id).eq('student_id', user.id).in('status', ['pending', 'reschedule_proposed', 'active', 'upcoming', 'confirmed']).limit(1);
         if (sessionData && sessionData.length > 0) setExistingSession(sessionData[0]);
       }
       
@@ -103,54 +103,73 @@ export default function SkillDetails() {
     }
     
     try {
-      const { data: newSession, error: sessionError } = await supabase.from('sessions')
-        .insert([{ 
-          skill_id: skill.id, 
-          student_id: currentUserId, 
-          instructor_id: skill.instructor_id, 
-          credit_amount: skill.credit_cost, 
-          scheduled_date: preferredDate, 
-          scheduled_time: preferredTime, 
-          message: bookingMessage.trim(), 
-          status: 'pending' 
-        }])
-        .select()
-        .single();
-        
-      if (sessionError) throw sessionError;
-      
+      // Secure server-side booking: create the session and deduct credits atomically.
+      // Do not write credits_balance from the browser after a successful RPC.
+      const { data: bookedRows, error: bookingRpcError } = await supabase.rpc(
+        'skillcredit_secure_book_session',
+        {
+          p_skill_id: skill.id,
+          p_scheduled_date: preferredDate,
+          p_scheduled_time: preferredTime,
+          p_message: bookingMessage.trim()
+        }
+      );
+      if (bookingRpcError) throw bookingRpcError;
+
+      // Postgres RETURNS TABLE typically produces a single-item array.
+      const booked = Array.isArray(bookedRows) ? bookedRows[0] : bookedRows;
+      if (!booked?.session_id || typeof booked.remaining_credits !== 'number') {
+        throw new Error('Booking RPC did not return the expected confirmation.');
+      }
+      const newSession = { id: booked.session_id };
+      const newBalance = booked.remaining_credits;
+      const bookedCost = booked.credit_amount;
+      setCurrentUserCredits(newBalance);
+      setExistingSession({ id: newSession.id, status: 'pending' });
+      window.dispatchEvent(new Event('credit_updated'));
+
       // ✨ ADDED: image to the payload
       const bookingSysContent = `__BOOKING_REQUEST__::${JSON.stringify({
         skill_id: skill.id,
         title: skill.title,
         image: skill.cover_image_url || null,
-        cost: skill.credit_cost,
+        cost: bookedCost,
         date: preferredDate,
         time: preferredTime,
         userMsg: bookingMessage.trim()
       })}`;
 
-      const { error: msgError } = await supabase.from('messages').insert([{
-        session_id: newSession.id,
-        sender_id: currentUserId,
-        receiver_id: skill.instructor_id,
-        content: bookingSysContent,
-        is_deleted: false
-      }]);
-      if (msgError) console.error("Failed to save initial message:", msgError);
-      
-      await supabase.from('notifications').insert([{ user_id: skill.instructor_id, type: 'booking', content: `New booking request for "${skill.title}" worth ${skill.credit_cost} CR.`, link_url: '/sessions' }]);
-      
-      const newBalance = latestBalance - skill.credit_cost;
-      const { error: profileError } = await supabase.from('user_profiles').update({ credits_balance: newBalance }).eq('id', currentUserId);
-      if (profileError) throw profileError;
-      
-      window.dispatchEvent(new Event('credit_updated'));
-      
-      setBookingSuccess(true); 
-      setCurrentUserCredits(newBalance);
+      // Chat and notification are non-financial side effects. A failure here
+      // must never make an already-paid booking look like a failed transaction.
+      try {
+        const { error: msgError } = await supabase.from('messages').insert([{
+          session_id: newSession.id,
+          sender_id: currentUserId,
+          receiver_id: skill.instructor_id,
+          content: bookingSysContent,
+          is_deleted: false
+        }]);
+        if (msgError) console.error('Failed to save initial booking message:', msgError);
+      } catch (messageError) {
+        console.error('Failed to save initial booking message:', messageError);
+      }
+
+      try {
+        const { error: notificationError } = await supabase.from('notifications').insert([{
+          user_id: skill.instructor_id,
+          type: 'booking',
+          content: `New booking request for "${skill.title}" worth ${bookedCost} CR.`,
+          link_url: '/sessions'
+        }]);
+        if (notificationError) console.error('Failed to save booking notification:', notificationError);
+      } catch (notificationError) {
+        console.error('Failed to save booking notification:', notificationError);
+      }
+
+      setBookingSuccess(true);
     } catch (error) {
-      setBookingError('An error occurred while booking. Please try again.');
+      console.error('Booking failed:', error);
+      setBookingError(error?.message || 'An error occurred while booking. Please try again.');
     } finally { setBookingLoading(false); }
   };
 
