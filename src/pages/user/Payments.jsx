@@ -1,5 +1,4 @@
 import useRealtimeRefresh from '../../hooks/useRealtimeRefresh';
-import { confirmDialog } from '../../components/confirmDialog';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import supabase from '../../supabaseClient';
@@ -51,7 +50,6 @@ export default function Payments() {
   const [selectedPackage, setSelectedPackage] = useState(TOPUP_PACKAGES[1]);
   const [customAmount, setCustomAmount] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
-  const [cancellingTopupId, setCancellingTopupId] = useState(null);
   const [paymentNotice, setPaymentNotice] = useState(null);
  
   useEffect(() => {
@@ -101,7 +99,6 @@ export default function Payments() {
         topups.forEach(t => {
           combinedLedger.push({
             id: `topup-${t.id}`,
-            transactionId: t.id,
             type: 'TOPUP',
             title:
   t.payment_method === 'gcash' ? 'GCash top-up'
@@ -290,7 +287,7 @@ export default function Payments() {
   // or cancellation from PayMongo. Always restore the button and show a clear
   // notice, without changing the payment record or wallet automatically.
   useEffect(() => {
-    const restoreAfterCheckout = () => {
+    const restoreAfterCheckout = (event) => {
       const params = new URLSearchParams(window.location.search);
       if (params.has('status') && params.has('tx')) return;
 
@@ -300,12 +297,15 @@ export default function Payments() {
         if (stored) attempt = JSON.parse(stored);
         window.sessionStorage.removeItem(CHECKOUT_ATTEMPT_KEY);
       } catch { /* storage unavailable */ }
-      if (!attempt?.transactionId || !attempt?.timestamp || Date.now() - attempt.timestamp > 2 * 60 * 60 * 1000) return;
+      // A bfcache restore can retain a disabled button even when browser
+      // session storage was unavailable. Reset presentation state only.
+      if (event?.persisted) setIsProcessing(false);
+      if (!attempt?.timestamp || Date.now() - attempt.timestamp > 2 * 60 * 60 * 1000) return;
 
       setIsProcessing(false);
       setPaymentNotice({
         kind: 'pending',
-        text: 'You returned from PayMongo before payment was confirmed. No credits are counted yet. Check Transactions to cancel this pending attempt or await verification.',
+        text: 'You returned from PayMongo before payment was confirmed. No credits are counted yet. You can check Transactions for any later payment confirmation.',
       });
       setLiveRefreshKey(key => key + 1);
     };
@@ -315,43 +315,6 @@ export default function Payments() {
     window.addEventListener('pageshow', restoreAfterCheckout);
     return () => window.removeEventListener('pageshow', restoreAfterCheckout);
   }, []);
-
-  // The existing deployed Edge Function validates ownership and only changes
-  // PENDING to CANCELLED. This DOES NOT cancel a transaction at PayMongo.
-  // A later signed PAID webhook still takes priority and credits the wallet.
-  const handleCancelPendingAttempt = async (transactionId) => {
-    if (!transactionId || cancellingTopupId) return;
-    const confirmed = await confirmDialog(
-      'Mark this pending checkout attempt as cancelled in SkillCredit? This does not cancel it at PayMongo. If PayMongo later confirms a successful payment, the credits will still be added.',
-      'Cancel pending top-up?'
-    );
-    if (!confirmed) return;
-
-    setCancellingTopupId(transactionId);
-    try {
-      const { data, error } = await supabase.functions.invoke('create-paymongo-checkout', {
-        body: { action: 'cancel_checkout', transaction_id: transactionId },
-      });
-      if (error || data?.error) throw error || new Error(data.error);
-
-      const status = data?.status;
-      if (status === 'cancelled') {
-        setPaymentNotice({ kind: 'cancelled', text: 'Pending checkout marked cancelled in SkillCredit. No credits were added.' });
-      } else if (status === 'paid') {
-        setPaymentNotice({ kind: 'success', text: 'Payment was already confirmed. Your credits will be reflected in your wallet.' });
-      } else if (status === 'failed') {
-        setPaymentNotice({ kind: 'cancelled', text: 'Payment is recorded as failed. No credits were added.' });
-      } else {
-        setPaymentNotice({ kind: 'pending', text: 'Payment is still pending verification. No credits have been added yet.' });
-      }
-      setLiveRefreshKey(key => key + 1);
-    } catch (error) {
-      console.error('Could not cancel pending top-up:', error);
-      setPaymentNotice({ kind: 'pending', text: 'Could not update this top-up. Please check the transaction again before retrying.' });
-    } finally {
-      setCancellingTopupId(null);
-    }
-  };
 
   const getActiveAmountPHP = () => {
     if (customAmount) return Number(customAmount);
@@ -510,17 +473,6 @@ export default function Payments() {
                       : tx.status === 'failed' ? 'Failed — not credited'
                       : `${tx.status || 'Unconfirmed'} — not credited`}
                   </span>
-                )}
-                {tx.type === 'TOPUP' && tx.status === 'pending' && tx.transactionId && (
-                  <button
-                    type="button"
-                    disabled={Boolean(cancellingTopupId)}
-                    onClick={() => handleCancelPendingAttempt(tx.transactionId)}
-                    className="mt-1 rounded-md px-2 py-1 text-[10px] font-bold text-rose-700 underline decoration-rose-300 underline-offset-2 hover:bg-rose-50 disabled:opacity-50"
-                    title="Mark an unpaid attempt cancelled in SkillCredit; a later verified PayMongo payment can still be credited"
-                  >
-                    {cancellingTopupId === tx.transactionId ? 'Cancelling...' : 'Cancel attempt'}
-                  </button>
                 )}
                 {tx.type !== 'TOPUP' && tx.status === 'pending' && <span className="text-[9px] font-semibold uppercase tracking-wider text-amber-600">Pending</span>}
                 {tx.type !== 'TOPUP' && tx.status === 'failed' && <span className="text-[9px] font-semibold uppercase tracking-wider text-rose-600">Failed</span>}
