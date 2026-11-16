@@ -983,11 +983,11 @@ export default function UserLayout() {
             {/* ✨ BAGONG CREDITS BALANCE PILL ✨ */}
             <Link
               to="/payments"
-              className="hidden sm:flex items-center gap-1.5 bg-amber-50 border border-amber-100 px-3 py-1.5 rounded-full text-amber-700 hover:bg-amber-100 transition cursor-pointer mr-2"
+              className="flex shrink-0 items-center gap-1 sm:gap-1.5 bg-amber-50 border border-amber-100 px-2 sm:px-3 py-1.5 rounded-full text-amber-700 hover:bg-amber-100 transition cursor-pointer sm:mr-2"
               title="View Wallet"
             >
-              <Coins className="w-4 h-4 text-amber-500" />
-              <span className="text-[13px] font-bold">{profile.credits_balance || 0} <span className="font-semibold text-amber-600">CR</span></span>
+              <Coins className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-500 shrink-0" />
+              <span className="text-[11px] min-[360px]:text-xs sm:text-[13px] font-bold whitespace-nowrap tabular-nums">{profile.credits_balance ?? 0} <span className="font-semibold text-amber-600">CR</span></span>
             </Link>
 
             {/* ── PROFILE PILL */}
