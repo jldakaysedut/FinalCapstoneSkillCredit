@@ -105,6 +105,19 @@ function parseBookingRequest(content) {
   } catch { return null; }
 }
 
+// Match the local scheduled-date/time convention already used by Sessions.jsx.
+// Missing/invalid dates fail closed: they must not enable a confirmation.
+function isBookingScheduleExpired(dateStr, timeStr, nowMs = Date.now()) {
+  if (!dateStr || !timeStr) return true;
+  const [year, month, day] = String(dateStr).split('-').map(Number);
+  const [hours, minutes] = String(timeStr).split(':').map(Number);
+  if (![year, month, day, hours, minutes].every(Number.isInteger)) return true;
+  const date = new Date(year, month - 1, day, hours, minutes);
+  if (date.getFullYear() !== year || date.getMonth() !== month - 1 ||
+      date.getDate() !== day || date.getHours() !== hours || date.getMinutes() !== minutes) return true;
+  return nowMs > date.getTime();
+}
+
 // one-line preview for the chat list (never show raw JSON)
 const previewText = (content, fileUrl) => {
   if (parseBookingRequest(content)) return 'Booking request';
@@ -151,6 +164,8 @@ export default function Messages() {
   const [mutedContacts,      setMutedContacts]      = useState({});
   const [replyingTo,         setReplyingTo]         = useState(null); 
   const [isProcessingDone,   setIsProcessingDone]   = useState(false);
+  const [isConfirmingSchedule, setIsConfirmingSchedule] = useState(false);
+  const [scheduleNowMs,       setScheduleNowMs]       = useState(() => Date.now());
   const [liveMeta,           setLiveMeta]           = useState({}); // { [contactId]: { preview, at, unread } }
   const contactsRef   = useRef([]);
   const selectedIdRef = useRef(null);
@@ -160,6 +175,12 @@ export default function Messages() {
   const focusedMessageRef = useRef(null);
   const focusMessageId = new URLSearchParams(location.search).get('message');
 
+  // Keep the Chat confirmation buttons in sync when a booking time passes.
+  useEffect(() => {
+    const timerId = window.setInterval(() => setScheduleNowMs(Date.now()), 30_000);
+    return () => window.clearInterval(timerId);
+  }, []);
+
   useEffect(() => {
     const initUserAndContacts = async () => {
       setLoadingContacts(true);
@@ -168,7 +189,7 @@ export default function Messages() {
       setCurrentUserId(user.id);
       
       const { data: sessionData } = await supabase.from('sessions')
-        .select(`id, status, created_at, skill:skills(title,category), student_id, instructor_id, instructor_completed, student_completed,
+        .select(`id, status, created_at, scheduled_date, scheduled_time, skill:skills(title,category), student_id, instructor_id, instructor_completed, student_completed,
           student:user_profiles!student_id(id,full_name,avatar_url),
           instructor:user_profiles!instructor_id(id,full_name,avatar_url)`)
         .or(`student_id.eq.${user.id},instructor_id.eq.${user.id}`)
@@ -190,6 +211,8 @@ export default function Messages() {
             role: isInstructor ? 'Student' : 'Teacher',
             skillCategory: session.skill?.category || 'Uncategorized',
             sessionStatus: session.status,
+            scheduledDate: session.scheduled_date,
+            scheduledTime: session.scheduled_time,
             sortDate: session.created_at || new Date().toISOString(),
             instructorCompleted: session.instructor_completed,
             studentCompleted: session.student_completed,
@@ -255,6 +278,8 @@ export default function Messages() {
               return {
                 ...c,
                 sessionStatus: updatedSession.status,
+                scheduledDate: updatedSession.scheduled_date,
+                scheduledTime: updatedSession.scheduled_time,
                 instructorCompleted: updatedSession.instructor_completed,
                 studentCompleted: updatedSession.student_completed
               };
@@ -267,6 +292,8 @@ export default function Messages() {
               return {
                 ...prev,
                 sessionStatus: updatedSession.status,
+                scheduledDate: updatedSession.scheduled_date,
+                scheduledTime: updatedSession.scheduled_time,
                 instructorCompleted: updatedSession.instructor_completed,
                 studentCompleted: updatedSession.student_completed
               };
@@ -606,25 +633,58 @@ export default function Messages() {
   };
 
   const quickUpdateStatus = async (newStatus) => {
-    if (!selectedContact || selectedContact.type !== 'session') return;
-    const { data: session } = await supabase.from('sessions').select(`*, instructor:user_profiles!instructor_id(id,full_name), student:user_profiles!student_id(id,full_name)`).eq('id', selectedContact.id).single();
-    
-    const { error } = await supabase.from('sessions').update({ status: newStatus }).eq('id', selectedContact.id);
-    if (!error) {
-      if (newStatus === 'upcoming' && session) {
-        const isInstructorAction = session.instructor_id === currentUserId;
-        const targetUserId = isInstructorAction ? session.student_id : session.instructor_id;
-        const actorName = isInstructorAction ? session.instructor?.full_name || 'The teacher' : session.student?.full_name || 'The learner';
-        
-        await supabase.from('notifications').insert([{
-          user_id: targetUserId,
-          type: 'booking_accepted', 
-          content: `${actorName} has confirmed the schedule for the session. It is now upcoming!`,
-          link_url: `/sessions?session=${session.id}`
-        }]);
+    if (!selectedContact || selectedContact.type !== 'session' || isConfirmingSchedule) return;
+    if (newStatus !== 'upcoming') return;
+    setIsConfirmingSchedule(true);
+    try {
+      // Recheck the actual session before writing: the Chat contact may be stale.
+      const { data: session, error: loadError } = await supabase.from('sessions')
+        .select(`*, instructor:user_profiles!instructor_id(id,full_name), student:user_profiles!student_id(id,full_name)`)
+        .eq('id', selectedContact.id).single();
+      if (loadError) throw loadError;
+      if (!session) throw new Error('Session not found. Please refresh.');
+
+      const canConfirm = (session.status === 'pending' && session.instructor_id === currentUserId) ||
+        (session.status === 'reschedule_proposed' && session.student_id === currentUserId);
+      if (!canConfirm) throw new Error('This schedule can no longer be confirmed from Chat. Please check Sessions.');
+      if (isBookingScheduleExpired(session.scheduled_date, session.scheduled_time)) {
+        throw new Error('The schedule has expired. Open Sessions to claim or return the booking credits.');
       }
-    } else {
-      alert('Failed to update status.');
+
+      // Conditional write prevents a stale Chat tab from overwriting a changed
+      // booking state/schedule. This is a Web UI guard, not a DB security policy.
+      const { data: updated, error: updateError } = await supabase.from('sessions')
+        .update({ status: 'upcoming' })
+        .eq('id', session.id)
+        .eq('status', session.status)
+        .eq('scheduled_date', session.scheduled_date)
+        .eq('scheduled_time', session.scheduled_time)
+        .select('id, status')
+        .maybeSingle();
+      if (updateError) throw updateError;
+      if (!updated) throw new Error('The schedule changed or was already handled. Please refresh Sessions.');
+
+      setContacts(prev => prev.map(c => c.id === session.id ? { ...c, sessionStatus: 'upcoming' } : c));
+      setSelectedContact(prev => prev?.id === session.id ? { ...prev, sessionStatus: 'upcoming' } : prev);
+
+      const isInstructorAction = session.instructor_id === currentUserId;
+      const targetUserId = isInstructorAction ? session.student_id : session.instructor_id;
+      const actorName = isInstructorAction
+        ? session.instructor?.full_name || 'The teacher'
+        : session.student?.full_name || 'The learner';
+      const { error: noticeError } = await supabase.from('notifications').insert([{
+        user_id: targetUserId,
+        type: 'booking_accepted',
+        content: `${actorName} has confirmed the schedule for the session. It is now upcoming!`,
+        link_url: `/sessions?session=${session.id}`
+      }]);
+      // A notification error must not cause a retry of a completed state change.
+      if (noticeError) console.error('Schedule confirmation notification failed:', noticeError);
+    } catch (error) {
+      console.error('Chat schedule confirmation failed:', error);
+      alert(error?.message || 'Failed to confirm schedule. Please check Sessions.');
+    } finally {
+      setIsConfirmingSchedule(false);
     }
   };
 
@@ -864,6 +924,9 @@ export default function Messages() {
   );
 
   const isClosed = ['completed','resolved','cancelled'].includes(selectedContact?.sessionStatus);
+  const selectedBookingExpired = selectedContact?.type === 'session' &&
+    ['pending', 'reschedule_proposed'].includes(selectedContact.sessionStatus) &&
+    isBookingScheduleExpired(selectedContact.scheduledDate, selectedContact.scheduledTime, scheduleNowMs);
   const isMuted  = selectedContact ? mutedContacts[selectedContact.id] : false;
 
   const Avatar = ({ contact, size = 'md' }) => {
@@ -1050,10 +1113,11 @@ export default function Messages() {
                 <div className="flex items-center gap-2 text-[12px]">
                   <CalendarDays className="w-4 h-4 shrink-0" />
                   <p>
-                    {selectedContact.sessionStatus === 'pending' && selectedContact.role === 'Teacher' && "⏳ Waiting for Teacher's Confirmation."}
-                    {selectedContact.sessionStatus === 'pending' && selectedContact.role === 'Student' && "📅 Booking Request: Confirm Schedule?"}
-                    {selectedContact.sessionStatus === 'reschedule_proposed' && selectedContact.role === 'Teacher' && "📅 Teacher proposed a new time."}
-                    {selectedContact.sessionStatus === 'reschedule_proposed' && selectedContact.role === 'Student' && "⏳ Waiting for Learner's Confirmation on new time."}
+                    {selectedBookingExpired && '⏰ Schedule Expired. Open Sessions to claim or return the booking credits.'}
+                    {!selectedBookingExpired && selectedContact.sessionStatus === 'pending' && selectedContact.role === 'Teacher' && "⏳ Waiting for Teacher's Confirmation."}
+                    {!selectedBookingExpired && selectedContact.sessionStatus === 'pending' && selectedContact.role === 'Student' && "📅 Booking Request: Confirm Schedule?"}
+                    {!selectedBookingExpired && selectedContact.sessionStatus === 'reschedule_proposed' && selectedContact.role === 'Teacher' && "📅 Teacher proposed a new time."}
+                    {!selectedBookingExpired && selectedContact.sessionStatus === 'reschedule_proposed' && selectedContact.role === 'Student' && "⏳ Waiting for Learner's Confirmation on new time."}
                     
                     {selectedContact.sessionStatus === 'active' && otherCompleted && !myCompleted && `✨ ${selectedContact.name} marked this session as done. Please confirm to finalize.`}
                     {selectedContact.sessionStatus === 'active' && myCompleted && `⏳ Waiting for ${selectedContact.name} to confirm completion.`}
@@ -1061,15 +1125,15 @@ export default function Messages() {
                 </div>
                 
                 <div className="flex flex-wrap items-center gap-2 shrink-0">
-                  {selectedContact.sessionStatus === 'pending' && selectedContact.role === 'Student' && (
-                    <button onClick={() => quickUpdateStatus('upcoming')} className="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-bold rounded-lg shadow-sm transition cursor-pointer">
-                      Confirm Schedule
+                  {!selectedBookingExpired && selectedContact.sessionStatus === 'pending' && selectedContact.role === 'Student' && (
+                    <button onClick={() => quickUpdateStatus('upcoming')} disabled={isConfirmingSchedule} className="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-bold rounded-lg shadow-sm transition cursor-pointer disabled:opacity-50">
+                      {isConfirmingSchedule ? 'Confirming...' : 'Confirm Schedule'}
                     </button>
                   )}
 
-                  {selectedContact.sessionStatus === 'reschedule_proposed' && selectedContact.role === 'Teacher' && (
-                    <button onClick={() => quickUpdateStatus('upcoming')} className="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-bold rounded-lg shadow-sm transition cursor-pointer">
-                      Accept Schedule
+                  {!selectedBookingExpired && selectedContact.sessionStatus === 'reschedule_proposed' && selectedContact.role === 'Teacher' && (
+                    <button onClick={() => quickUpdateStatus('upcoming')} disabled={isConfirmingSchedule} className="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-bold rounded-lg shadow-sm transition cursor-pointer disabled:opacity-50">
+                      {isConfirmingSchedule ? 'Confirming...' : 'Accept Schedule'}
                     </button>
                   )}
 
