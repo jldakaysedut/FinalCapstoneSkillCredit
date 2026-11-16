@@ -1,5 +1,5 @@
 import useRealtimeRefresh from '../../hooks/useRealtimeRefresh';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import supabase from '../../supabaseClient';
 import {
   Ban,
@@ -291,6 +291,7 @@ export default function UserManagement() {
   const [creditAmount, setCreditAmount] = useState('');
   const [creditError, setCreditError] = useState('');
   const [savingUserId, setSavingUserId] = useState(null);
+  const creditAdjustInFlightRef = useRef(false);
   const [pageError, setPageError] = useState('');
   const [notice, setNotice] = useState('');
 
@@ -361,35 +362,64 @@ export default function UserManagement() {
   };
 
   const handleCreditAdjust = async user => {
-    const parsedAmount = Number.parseInt(creditAmount, 10);
-    if (!creditAmount.trim() || !Number.isFinite(parsedAmount) || parsedAmount === 0) {
-      setCreditError('Enter a whole number other than zero. Use a negative number to deduct credits.');
+    // Prevent a double click from issuing two non-idempotent admin adjustments.
+    if (creditAdjustInFlightRef.current) return;
+
+    const inputAmount = creditAmount.trim();
+    const parsedAmount = Number(inputAmount);
+    if (!/^[+-]?\d+$/.test(inputAmount) || !Number.isSafeInteger(parsedAmount) || parsedAmount === 0 ||
+        parsedAmount < -2147483648 || parsedAmount > 2147483647) {
+      setCreditError('Enter a non-zero whole number within the allowed credit range. Use a negative number to deduct credits.');
       return;
     }
 
-    const currentCredits = Number(user.credits_balance) || 0;
-    const newBalance = currentCredits + parsedAmount;
+    creditAdjustInFlightRef.current = true;
     setSavingUserId(user.id);
     setCreditError('');
     setNotice('');
-    const { error } = await supabase.from('user_profiles').update({ credits_balance: newBalance }).eq('id', user.id);
-    if (error) {
-      setCreditError('Credits could not be updated. Please try again.');
-      setSavingUserId(null);
-      return;
-    }
 
-    updateLocalUser(user.id, { credits_balance: newBalance });
-    await logAdminAction(user.id, 'CREDIT_ADJUST', `Adjusted credits for ${userName(user)} by ${parsedAmount}. New balance: ${newBalance}`);
-    const actionWord = parsedAmount >= 0 ? 'added to' : 'deducted from';
-    await supabase.from('notifications').insert({
-      user_id: user.id,
-      type: 'system_alert',
-      content: `Admin has ${actionWord} your account by ${Math.abs(parsedAmount)} credits. Your new balance is ${newBalance} CR.`,
-    });
-    setNotice(`Credits updated for ${userName(user)}. New balance: ${formatNumber(newBalance)} CR.`);
-    setSavingUserId(null);
-    closeModal();
+    try {
+      // The server checks Admin role, locks the wallet row, performs the adjustment,
+      // and writes the CREDIT_ADJUST admin log in the SAME transaction.
+      const { data, error } = await supabase.rpc('skillcredit_admin_adjust_credits', {
+        p_target_user_id: user.id,
+        p_delta: parsedAmount,
+      });
+      if (error) {
+        console.error('Admin credit adjustment failed:', error);
+        setCreditError(`Credits could not be updated. ${error.message}`);
+        return;
+      }
+
+      // Never use a stale UI balance for the new wallet balance.
+      // If the RPC response is unexpected, verify the database before retrying.
+      if (data?.state !== 'adjusted' || data?.target_user_id !== user.id ||
+          !Number.isInteger(data?.new_balance)) {
+        setCreditError('Could not verify the updated balance. Refresh the account before attempting another adjustment.');
+        await fetchUsers();
+        return;
+      }
+
+      const newBalance = data.new_balance;
+      updateLocalUser(user.id, { credits_balance: newBalance });
+      // Do NOT call logAdminAction here; the RPC already inserts the audit log.
+      const actionWord = parsedAmount >= 0 ? 'added to' : 'deducted from';
+      const { error: notificationError } = await supabase.from('notifications').insert({
+        user_id: user.id,
+        type: 'system_alert',
+        content: `Admin has ${actionWord} your account by ${Math.abs(parsedAmount)} credits. Your new balance is ${newBalance} CR.`,
+      });
+      if (notificationError) console.warn('Credits were updated, but notification failed:', notificationError);
+      setNotice(`Credits updated for ${userName(user)}. New balance: ${formatNumber(newBalance)} CR.${notificationError ? ' Notification could not be sent.' : ''}`);
+      closeModal();
+    } catch (unexpectedError) {
+      console.error('Could not confirm admin credit adjustment:', unexpectedError);
+      setCreditError('Could not confirm the wallet update. Check the current balance before retrying to avoid double credits.');
+      await fetchUsers();
+    } finally {
+      creditAdjustInFlightRef.current = false;
+      setSavingUserId(null);
+    }
   };
 
   // One atomic database operation updates account access, linked escalation cases,
