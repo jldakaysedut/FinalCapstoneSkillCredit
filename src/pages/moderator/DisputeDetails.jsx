@@ -274,22 +274,28 @@ export default function DisputeDetails() {
     const decision = resolutionModal.decision;
     setResolutionModal({ isOpen: false, decision: null });
     setIsProcessing(true);
+    let escrowResolved = false;
 
     try {
       const winnerId = decision === 'Learner' ? session.student_id : session.instructor_id;
       const loserId = decision === 'Learner' ? session.instructor_id : session.student_id;
       
-      const newSessionStatus = decision === 'Learner' ? 'cancelled' : 'completed';
       const adjustmentAmount = Number(session.credit_amount || 0);
 
-      const { error: balanceErr } = await supabase.rpc('process_escrow_refund', { 
-        target_user_id: winnerId, 
-        amount: adjustmentAmount 
+      // Credit transfer, session outcome, and report resolution now commit together.
+      // This RPC validates the staff member and report assignment, and prevents
+      // replaying a payout for the same resolved dispute.
+      const { data: resolution, error: resolutionErr } = await supabase.rpc('skillcredit_secure_resolve_dispute', {
+        p_report_id: report.id,
+        p_decision: decision,
       });
-      if (balanceErr) throw balanceErr;
-
-      const { error: sessionUpdateErr } = await supabase.from('sessions').update({ status: newSessionStatus }).eq('id', session.id);
-      if (sessionUpdateErr) throw sessionUpdateErr;
+      if (resolutionErr) throw resolutionErr;
+      // Once the RPC has succeeded, never tell the moderator to retry payout:
+      // a later log/notification failure must not trigger another credit transfer.
+      escrowResolved = true;
+      if (resolution?.state !== 'resolved' || resolution?.awarded !== true) {
+        throw new Error('Unexpected response after the dispute resolution request. Check the case before taking further action.');
+      }
 
       const autoNote = getDisputeAutoNote(disciplinaryAction);
       const timestamp = new Date().toLocaleString();
@@ -353,10 +359,11 @@ export default function DisputeDetails() {
       }
       // ────────────────────────────────────────────────────────
 
-      const newReportStatus = 'resolved';
+      // The secure RPC already set report.status = 'resolved'.
+      // This follow-up only saves human-readable case notes.
       const updatedDetails = `${report.details}\n\n[RESOLVED - FAVOR ${decision.toUpperCase()} on ${timestamp}]: ${autoNote}`;
       
-      const { error: reportUpdateErr } = await supabase.from('reports').update({ status: newReportStatus, details: updatedDetails, mod_action_notes: autoNote }).eq('id', report.id);
+      const { error: reportUpdateErr } = await supabase.from('reports').update({ details: updatedDetails, mod_action_notes: autoNote }).eq('id', report.id);
       if (reportUpdateErr) throw reportUpdateErr;
 
       const logDetails = decision === 'Learner'
@@ -399,7 +406,13 @@ export default function DisputeDetails() {
       navigate('/moderator/disputes');
     } catch (err) {
       console.error(err);
-      alert('Error finalizing verdict: ' + err.message);
+      if (escrowResolved) {
+        // Credit payout and report status are already committed by the RPC.
+        alert('The dispute payout was already processed. A follow-up action (case notes, penalty, log, or notification) may be incomplete. Do NOT retry the payout; check the case and contact an administrator. Details: ' + err.message);
+        navigate('/moderator/disputes');
+      } else {
+        alert('Error finalizing verdict: ' + err.message);
+      }
     } finally {
       setIsProcessing(false);
     }
