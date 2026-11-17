@@ -1,8 +1,8 @@
-import { ArrowDownToLine, ArrowUpRight, Check, Download, GraduationCap, MessageCircle, ShieldCheck, Smartphone, Sparkles, Wifi } from 'lucide-react';
+import { ArrowDownToLine, Check, Download, GraduationCap, MessageCircle, ShieldCheck, Smartphone, Sparkles, Wifi } from 'lucide-react';
 
-// Update this link when you publish a new production APK or a permanent download URL.
-// This currently opens the previously supplied Expo EAS build page, not a direct APK binary.
-const ANDROID_BUILD_URL = 'https://expo.dev/accounts/jldakay/projects/skillcredit-mobile/builds/55b17488-a1a4-4ad5-8bdc-923ec6b1d90b';
+// The APK must exist in the Web project's public/SkillCredit.apk folder location.
+// Vite serves files in public/ at the site root (e.g., /SkillCredit.apk).
+const ANDROID_APK_URL = '/SkillCredit.apk';
 
 const perks = [
   { Icon: MessageCircle, label: 'Stay connected', detail: 'Keep up with your learning community.' },
@@ -56,12 +56,12 @@ export default function DownloadAppSection() {
             </div>)}
           </div>
           <div className="sc-download-actions">
-            <a className="sc-download-btn" href={ANDROID_BUILD_URL} target="_blank" rel="noopener noreferrer" aria-label="Open the SkillCredit Android APK build page">
-              <Download size={19} /> Get the Android APK <ArrowUpRight size={16}/>
+            <a className="sc-download-btn" href={ANDROID_APK_URL} download="SkillCredit.apk" aria-label="Download the SkillCredit Android APK directly">
+              <Download size={19} /> Get the Android APK
             </a>
             <span style={{ display:'inline-flex', alignItems:'center', gap:6, color:'#3e7555', fontWeight:700, fontSize:13 }}><Check size={17}/> Free to download</span>
           </div>
-          <p className="sc-download-note">Android APK • Opens the Expo build page. Android may ask you to allow installation from your browser. Download only from the official link.</p>
+          <p className="sc-download-note">Android APK • Downloads directly from SkillCredit. Android may ask you to allow installation from your browser. Download only from the official website.</p>
         </div>
         <div className="sc-phone-scene reveal" aria-label="Illustration of SkillCredit mobile app" role="img">
           <div className="sc-phone-aura"/>
