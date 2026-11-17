@@ -849,7 +849,7 @@ export default function UserLayout() {
           {/* Logo */}
           <Link to="/dashboard" className="flex min-w-0 items-center gap-2.5 shrink-0">
             <img src="/logo.png" alt="SkillCredit" className="w-8 h-8 object-contain" />
-            <span className="font-bold text-xl text-emerald-900 tracking-tight hidden sm:block">SkillCredit</span>
+            <span className="hidden sm:inline-flex items-baseline tracking-tight" style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: 22, fontWeight: 900, lineHeight: 1.2 }}><span style={{ color: darkMode ? '#80e5b6' : '#2d6a4f' }}>Skill</span><span style={{ color: darkMode ? '#f4f8fa' : '#111' }}>Credit</span></span>
           </Link>
 
           {/* Desktop nav links */}

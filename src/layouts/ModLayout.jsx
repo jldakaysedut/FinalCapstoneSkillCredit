@@ -163,7 +163,7 @@ export default function ModLayout() {
           <div className="flex min-w-0 items-center gap-3">
             <Link to="/moderator" className={`flex shrink-0 items-center gap-2.5 rounded-lg ${FOCUS_RING}`}>
               <img src="/logo.png" alt="SkillCredit" className="h-8 w-8 object-contain" />
-              <span className="hidden text-xl font-bold tracking-tight text-emerald-900 sm:block">SkillCredit</span>
+              <span className="hidden sm:inline-flex items-baseline tracking-tight" style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: 22, fontWeight: 900, lineHeight: 1.2 }}><span style={{ color: '#2d6a4f' }}>Skill</span><span style={{ color: '#111' }}>Credit</span></span>
             </Link>
             <span className="hidden h-6 w-px bg-gray-200 sm:block" aria-hidden="true" />
             <div className="flex min-w-0 items-center gap-2">
