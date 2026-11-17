@@ -24,14 +24,47 @@ export default function Login() {
 
       if (authError) throw authError;
 
-      // 2. Fetch ang role, is_banned, deleted status, at has_set_interests
-      const { data: profile, error: profileError } = await supabase
+      // 2. Fetch the existing profile. Confirmed-email signup does not yet
+      // have a public profile because signUp had no authenticated session.
+      let { data: profile, error: profileError } = await supabase
         .from('user_profiles')
         .select('role, is_banned, is_deleted, is_active, has_set_interests')
         .eq('id', authData.user.id)
-        .single();
+        .maybeSingle();
 
       if (profileError) throw profileError;
+
+      if (!profile) {
+        // No verification UI is added to Login. Supabase Auth is responsible
+        // for rejecting unconfirmed emails when Confirm Email is enabled.
+        // Use the authenticated user's ID/email, never the typed-in email.
+        const verifiedEmail = authData.user.email;
+        if (!verifiedEmail) throw new Error('Could not finish setting up your account. Please contact support.');
+
+        const metadataName = authData.user.user_metadata?.full_name;
+        const safeName = typeof metadataName === 'string' && metadataName.trim()
+          ? metadataName.trim()
+          : verifiedEmail.split('@')[0];
+
+        const { error: createError } = await supabase.from('user_profiles').insert([{
+          id: authData.user.id,
+          full_name: safeName,
+          email: verifiedEmail,
+          credits_balance: 20,
+          has_set_interests: false,
+        }]);
+        // A second tab may have just created the same profile. Never upsert,
+        // reset credits, or overwrite an existing profile.
+        if (createError && createError.code !== '23505') throw createError;
+
+        const result = await supabase
+          .from('user_profiles')
+          .select('role, is_banned, is_deleted, is_active, has_set_interests')
+          .eq('id', authData.user.id)
+          .single();
+        if (result.error) throw result.error;
+        profile = result.data;
+      }
 
       // 🚨 BOUNCER CHECK
       if (profile.is_banned) {

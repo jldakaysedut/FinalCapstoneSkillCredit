@@ -11,10 +11,14 @@ export default function Register() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [verificationEmail, setVerificationEmail] = useState('');
+  const [resendLoading, setResendLoading] = useState(false);
+  const [resendMessage, setResendMessage] = useState('');
 
   const handleRegister = async (e) => {
     e.preventDefault();
     setErrorMsg('');
+    setResendMessage('');
 
     if (!fullName.trim() || !email.trim() || !password || !confirmPassword) {
       return setErrorMsg('Please fill in all fields.');
@@ -36,6 +40,12 @@ export default function Register() {
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: normalizedEmail,
         password,
+        options: {
+          // Store this until the first *verified* login creates user_profiles.
+          data: { full_name: fullName.trim() },
+          // Keep the normal Login UI; no separate verification page is needed.
+          emailRedirectTo: `${window.location.origin}/login`,
+        },
       });
 
       const duplicateEmailError =
@@ -63,7 +73,9 @@ export default function Register() {
       // With email confirmation enabled, Supabase may create the Auth user
       // without a session. Never treat this as a signed-in account.
       if (!authData.session) {
-        setErrorMsg('Please check your email to confirm your account before logging in.');
+        // Pending verification is a successful signup request, not a failure.
+        // Do not insert a public profile before the user has authenticated.
+        setVerificationEmail(normalizedEmail);
         return;
       }
 
@@ -89,6 +101,25 @@ export default function Register() {
       setErrorMsg(error.message || 'Something went wrong. Please try again.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleResendVerification = async () => {
+    if (!verificationEmail || resendLoading) return;
+    setResendLoading(true);
+    setResendMessage('');
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: verificationEmail,
+        options: { emailRedirectTo: `${window.location.origin}/login` },
+      });
+      if (error) throw error;
+      setResendMessage('If verification is still pending, a new email will arrive shortly. Check Spam too.');
+    } catch (error) {
+      setResendMessage(error.message || 'Could not resend the email. Please try again later.');
+    } finally {
+      setResendLoading(false);
     }
   };
 
@@ -121,6 +152,32 @@ export default function Register() {
           </div>
         )}
 
+        {verificationEmail ? (
+          <div className="space-y-4 text-center" role="status" aria-live="polite">
+            <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-5 text-emerald-900">
+              <p className="font-bold text-lg">Check your email</p>
+              <p className="mt-2 text-sm leading-6">
+                We've sent a confirmation link to <strong className="break-all">{verificationEmail}</strong>.
+                Open the link first, then log in normally to finish setting up SkillCredit.
+              </p>
+              <p className="mt-2 text-xs">No credits are added until your account is set up after verification.</p>
+            </div>
+            {resendMessage && (
+              <p className="text-sm text-gray-700" role="status">{resendMessage}</p>
+            )}
+            <button
+              type="button"
+              onClick={handleResendVerification}
+              disabled={resendLoading}
+              className="w-full rounded-xl border border-[#2d6a4f] px-4 py-3 text-sm font-bold text-[#2d6a4f] hover:bg-emerald-50 disabled:opacity-50"
+            >
+              {resendLoading ? 'Sending...' : 'Resend verification email'}
+            </button>
+            <Link to="/login" className="block font-bold text-[#2d6a4f] hover:underline">
+              Continue to Log In
+            </Link>
+          </div>
+        ) : (
         <form onSubmit={handleRegister} className="space-y-4">
           <div>
             <label className="block text-sm font-bold text-gray-700 mb-1">Full Name</label>
@@ -178,6 +235,7 @@ export default function Register() {
             {loading ? 'Creating account...' : <><Rocket size={18} /> Sign Up & Get 20 Credits</>}
           </button>
         </form>
+        )}
 
         <p className="mt-8 text-center text-sm text-gray-600">
           Already have an account?{' '}
