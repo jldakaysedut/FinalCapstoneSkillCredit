@@ -1,3 +1,4 @@
+import useRealtimeRefresh from '../../hooks/useRealtimeRefresh';
 import { useState, useEffect } from 'react';
 import {
   ArrowLeft, ArrowRight, CalendarDays, CheckCircle2, Clock, Coins,
@@ -23,6 +24,13 @@ export default function SkillDetails() {
   const [preferredDate,       setPreferredDate]       = useState('');
   const [preferredTime,       setPreferredTime]       = useState('');
   const [bookingMessage,      setBookingMessage]      = useState('');
+  const [liveReloadKey, setLiveReloadKey] = useState(0);
+  useRealtimeRefresh(() => setLiveReloadKey(key => key + 1), [
+    { table: 'skills', filter: `id=eq.${id}` },
+    { table: 'reviews', filter: `skill_id=eq.${id}` },
+    { table: 'sessions', filter: `skill_id=eq.${id}` },
+    ...(currentUserId ? [{ table: 'user_profiles', filter: `id=eq.${currentUserId}` }] : []),
+  ], `web_skill_details_${id}_${currentUserId || 'guest'}`);
 
   const getLocalDateString = () => {
     const today = new Date();
@@ -47,7 +55,7 @@ export default function SkillDetails() {
         }
         
         const { data: sessionData } = await supabase.from('sessions').select('status, id').eq('skill_id', id).eq('student_id', user.id).in('status', ['pending', 'reschedule_proposed', 'active', 'upcoming', 'confirmed']).limit(1);
-        if (sessionData && sessionData.length > 0) setExistingSession(sessionData[0]);
+        setExistingSession(sessionData?.[0] || null);
       }
       
       const { data: skillData, error: skillError } = await supabase
@@ -72,7 +80,7 @@ export default function SkillDetails() {
       setLoading(false);
     };
     fetchSkillDetails();
-  }, [id]);
+  }, [id, liveReloadKey]);
 
   const handleConfirmBooking = async () => {
     if (!preferredDate || !preferredTime) { setBookingError('Please select a preferred date and time.'); return; }

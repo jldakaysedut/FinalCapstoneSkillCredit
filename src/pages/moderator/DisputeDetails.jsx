@@ -1,3 +1,4 @@
+import useRealtimeRefresh from '../../hooks/useRealtimeRefresh';
 import { useState, useEffect, Fragment } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import supabase from '../../supabaseClient';
@@ -251,6 +252,15 @@ export default function DisputeDetails() {
     };
     init();
   }, [id]);
+  useRealtimeRefresh(() => {
+    if (!isProcessing && !resolutionModal.isOpen) fetchDisputeData(currentUserId);
+  }, [
+    { table: 'reports', filter: `id=eq.${id}` },
+    ...(session?.id ? [
+      { table: 'sessions', filter: `id=eq.${session.id}` },
+      { table: 'messages', filter: `session_id=eq.${session.id}` },
+    ] : []),
+  ], `web_dispute_details_${id}_${session?.id || 'initial'}`);
 
   const isParticipant = Boolean(currentUserId && session && (currentUserId === session.student_id || currentUserId === session.instructor_id));
 

@@ -1,3 +1,4 @@
+import useRealtimeRefresh from '../../hooks/useRealtimeRefresh';
 import { useState, useEffect, useMemo } from 'react';
 import supabase from '../../supabaseClient';
 import {
@@ -21,6 +22,8 @@ export default function RepeatOffenders() {
   const [historyModal, setHistoryModal] = useState({ isOpen: false, user: null, logs: [], loading: false });
 
   const STRIKE_LIMIT = 3;
+  const [liveReloadKey, setLiveReloadKey] = useState(0);
+  useRealtimeRefresh(() => setLiveReloadKey(key => key + 1), ['user_profiles', 'repeat_offenders'], 'web_repeat_offenders');
 
   useEffect(() => {
     const fetchOffenders = async () => {
@@ -54,7 +57,7 @@ export default function RepeatOffenders() {
     };
 
     fetchOffenders();
-  }, []);
+  }, [liveReloadKey]);
 
   const handleOpenEscalateModal = (targetUser) => {
     setManageModal({ isOpen: false, user: null });

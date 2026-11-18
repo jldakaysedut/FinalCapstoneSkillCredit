@@ -1,3 +1,4 @@
+import useRealtimeRefresh from '../../hooks/useRealtimeRefresh';
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import supabase from '../../supabaseClient';
@@ -35,6 +36,8 @@ export default function Leaderboard() {
 
   const [error, setError] = useState('');
   const [reloadKey, setReloadKey] = useState(0);
+  useRealtimeRefresh(() => setReloadKey(key => key + 1),
+    ['user_profiles', 'reviews', 'sessions'], 'web_refresh_global_leaderboard');
 
   useEffect(() => {
     let cancelled = false;

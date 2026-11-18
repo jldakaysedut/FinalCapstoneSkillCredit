@@ -1,3 +1,4 @@
+import useRealtimeRefresh from '../../hooks/useRealtimeRefresh';
 import { useState, useEffect } from 'react';
 import {
   ChevronDown, ChevronLeft, ChevronRight, X, ArrowLeft, AlertTriangle, Scale,
@@ -328,6 +329,13 @@ export default function ReportDetails() {
   useEffect(() => {
     fetchReportData();
   }, [id]);
+  useRealtimeRefresh(() => { if (!isProcessing) fetchReportData(); }, [
+    { table: 'reports', filter: `id=eq.${id}` },
+    ...(report?.reference_type?.toLowerCase().includes('comment') && report?.reference_id ?
+      [{ table: 'community_comments', filter: `id=eq.${report.reference_id}` }] : []),
+    ...(report?.reference_id && !report?.reference_type?.toLowerCase().includes('comment') ?
+      [{ table: 'community_posts', filter: `id=eq.${report.reference_id}` }] : []),
+  ], `web_report_details_${id}_${report?.reference_id || 'initial'}`);
 
   const isParticipant = Boolean(currentUserId && report && (clusteredReports.some(r => r.reporter_id === currentUserId) || currentUserId === report.reported_user_id));
 

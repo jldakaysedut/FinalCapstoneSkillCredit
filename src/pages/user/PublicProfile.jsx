@@ -1,3 +1,4 @@
+import useRealtimeRefresh from '../../hooks/useRealtimeRefresh';
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import supabase from '../../supabaseClient';
@@ -29,6 +30,14 @@ export default function PublicProfile() {
   const [stats,          setStats]          = useState({ avgRating:0,totalReviews:0,sessionsTaught:null,avgClarity:0,avgPatience:0,avgRelevance:0,avgProfessionalism:0 });
   const [activeTab,      setActiveTab]      = useState('Listings');
   const [selectedProject,setSelectedProject]= useState(null);
+  const [liveReloadKey, setLiveReloadKey] = useState(0);
+  useRealtimeRefresh(() => setLiveReloadKey(key => key + 1), [
+    { table: 'user_profiles', filter: `id=eq.${id}` },
+    { table: 'skills', filter: `instructor_id=eq.${id}` },
+    { table: 'reviews', filter: `instructor_id=eq.${id}` },
+    { table: 'portfolio_items', filter: `user_id=eq.${id}` },
+    { table: 'sessions', filter: `instructor_id=eq.${id}` },
+  ], `web_public_profile_${id}`);
 
   useEffect(() => {
     const fetchPublicData = async () => {
@@ -72,6 +81,7 @@ export default function PublicProfile() {
         });
         avgR = parseFloat((avgR / reviewData.length).toFixed(1));
       }
+      if (!reviewData?.length) setReviews([]);
       const tc = reviewData?.length || 0;
 
       // A different signed-in user may not be allowed to read this instructor's
@@ -118,7 +128,7 @@ export default function PublicProfile() {
       setLoading(false);
     };
     fetchPublicData();
-  }, [id, navigate]);
+  }, [id, navigate, liveReloadKey]);
 
   const renderStars = (r) => (
     <div className="flex gap-0.5">{[1,2,3,4,5].map(s => <Star key={s} className={`h-3.5 w-3.5 ${s <= r ? 'fill-amber-400 text-amber-400' : 'text-gray-200'}`} />)}</div>

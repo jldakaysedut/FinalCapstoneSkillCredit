@@ -792,8 +792,12 @@ export default function Community() {
       
       // 2. Kapag ginawang is_active = false (Soft delete)
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'community_posts' }, (payload) => {
-        if (payload.new && payload.new.is_active === false) {
+        if (!payload.new) return;
+        if (payload.new.is_active === false) {
           setPosts(prev => prev.filter(post => post.id !== payload.new.id));
+        } else {
+          setPosts(prev => prev.map(post => post.id === payload.new.id ? { ...post, ...payload.new } : post));
+          setCommentModal(prev => prev?.id === payload.new.id ? { ...prev, ...payload.new } : prev);
         }
       })
       
@@ -808,6 +812,51 @@ export default function Community() {
           ...post,
           comments: post.comments.filter(c => c.id !== payload.old.id)
         })));
+        setCommentModal(prev => prev ? { ...prev, comments: prev.comments.filter(c => c.id !== payload.old.id) } : prev);
+      })
+      // Targeted cross-device activity sync; do not refetch the whole community feed per event.
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'community_comments' }, async (payload) => {
+        const id = payload.new?.id;
+        if (!id) return;
+        const { data: comment } = await supabase.from('community_comments')
+          .select('*, author:user_profiles!community_comments_user_id_fkey(full_name, avatar_url)')
+          .eq('id', id).maybeSingle();
+        if (!comment) return;
+        const include = (items = []) => items.some(item => item.id === id) ? items : [...items, comment];
+        setPosts(prev => prev.map(post => post.id === comment.post_id ? { ...post, comments: include(post.comments) } : post));
+        setCommentModal(prev => prev?.id === comment.post_id ? { ...prev, comments: include(prev.comments) } : prev);
+      })
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'community_comments' }, async (payload) => {
+        const id = payload.new?.id;
+        if (!id) return;
+        const { data: comment } = await supabase.from('community_comments')
+          .select('*, author:user_profiles!community_comments_user_id_fkey(full_name, avatar_url)')
+          .eq('id', id).maybeSingle();
+        if (!comment) return;
+        const update = (items = []) => items.map(item => item.id === id ? comment : item);
+        setPosts(prev => prev.map(post => post.id === comment.post_id ? { ...post, comments: update(post.comments) } : post));
+        setCommentModal(prev => prev?.id === comment.post_id ? { ...prev, comments: update(prev.comments) } : prev);
+      })
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'community_post_likes' }, (payload) => {
+        const like = payload.new;
+        if (!like) return;
+        const include = (items = []) => items.some(item => item.id === like.id) ? items : [...items, like];
+        setPosts(prev => prev.map(post => post.id === like.post_id ? { ...post, likes: include(post.likes) } : post));
+        setCommentModal(prev => prev?.id === like.post_id ? { ...prev, likes: include(prev.likes) } : prev);
+      })
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'community_post_likes' }, (payload) => {
+        const like = payload.new;
+        if (!like) return;
+        const update = (items = []) => items.map(item => item.id === like.id ? like : item);
+        setPosts(prev => prev.map(post => post.id === like.post_id ? { ...post, likes: update(post.likes) } : post));
+        setCommentModal(prev => prev?.id === like.post_id ? { ...prev, likes: update(prev.likes) } : prev);
+      })
+      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'community_post_likes' }, (payload) => {
+        const id = payload.old?.id;
+        if (!id) return;
+        const remove = (items = []) => items.filter(item => item.id !== id);
+        setPosts(prev => prev.map(post => ({ ...post, likes: remove(post.likes) })));
+        setCommentModal(prev => prev ? { ...prev, likes: remove(prev.likes) } : prev);
       })
       .subscribe();
 

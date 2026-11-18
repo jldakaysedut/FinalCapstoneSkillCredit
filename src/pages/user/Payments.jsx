@@ -41,7 +41,7 @@ export default function Payments() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [liveRefreshKey, setLiveRefreshKey] = useState(0);
-  useRealtimeRefresh(() => setLiveRefreshKey(key => key + 1), ['user_profiles', 'topup_transactions', 'sessions'], 'web_refresh_payment_display');
+  useRealtimeRefresh(() => setLiveRefreshKey(key => key + 1), ['user_profiles', 'topup_transactions', 'sessions', 'daily_reward_claims'], 'web_refresh_payment_display');
   const [currentUser, setCurrentUser] = useState(null);
   const [balance, setBalance] = useState(0);
   const [ledger, setLedger] = useState([]);

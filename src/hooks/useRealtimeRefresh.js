@@ -16,8 +16,13 @@ export default function useRealtimeRefresh(load, tables, channelName) {
       timer = setTimeout(() => { if (!disposed) Promise.resolve(loader.current()).catch(console.error); }, 300);
     };
     const channel = supabase.channel(channelName);
-    for (const table of tables) {
-      channel.on('postgres_changes', { event: '*', schema: 'public', table }, refresh);
+    for (const entry of tables) {
+      const { table, filter } = typeof entry === 'string' ? { table: entry } : entry;
+      if (!table) continue;
+      channel.on('postgres_changes', { event: '*', schema: 'public', table, ...(filter ? { filter } : {}) }, refresh);
+      // Supabase DELETE payloads may carry only the primary key, so row filters
+      // cannot reliably match deletes. Listen unfiltered for those changes.
+      if (filter) channel.on('postgres_changes', { event: 'DELETE', schema: 'public', table }, refresh);
     }
     channel.subscribe();
     const onFocus = () => refresh();
@@ -31,6 +36,6 @@ export default function useRealtimeRefresh(load, tables, channelName) {
       document.removeEventListener('visibilitychange', onVisibility);
       supabase.removeChannel(channel);
     };
-  // Channel/table configuration is constant for each mounted page.
-  }, []);
+  // A route-specific channel name allows safely resubscribing when its record ID changes.
+  }, [channelName]);
 }

@@ -1,3 +1,4 @@
+import useRealtimeRefresh from '../../hooks/useRealtimeRefresh';
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import supabase from '../../supabaseClient';
@@ -126,6 +127,8 @@ export default function SupportLogs() {
   
   // ── MODAL STATE ──
   const [selectedLog, setSelectedLog] = useState(null);
+  const [liveReloadKey, setLiveReloadKey] = useState(0);
+  useRealtimeRefresh(() => setLiveReloadKey(key => key + 1), ['support_logs'], 'web_support_logs');
 
   useEffect(() => {
     const handleEscape = (e) => {
@@ -173,7 +176,7 @@ export default function SupportLogs() {
     };
 
     fetchSupportLogs();
-  }, [navigate]);
+  }, [navigate, liveReloadKey]);
 
   // ── FILTERING LOGIC ──
   const filteredLogs = useMemo(() => {

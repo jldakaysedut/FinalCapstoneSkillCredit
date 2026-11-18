@@ -1,4 +1,5 @@
 import { confirmDialog } from '../../components/confirmDialog';
+import useRealtimeRefresh from '../../hooks/useRealtimeRefresh';
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import supabase from '../../supabaseClient';
@@ -36,6 +37,8 @@ export default function SkillReview() {
   const [processing, setProcessing] = useState(false);
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
+  useRealtimeRefresh(() => { if (!processing && !showRejectModal) fetchData(); },
+    [{ table: 'skills', filter: `id=eq.${id}` }], `web_skill_review_${id}`);
 
   useEffect(() => {
     fetchData();

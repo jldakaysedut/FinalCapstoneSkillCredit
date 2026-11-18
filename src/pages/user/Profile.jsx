@@ -1,3 +1,4 @@
+import useRealtimeRefresh from '../../hooks/useRealtimeRefresh';
 import { confirmDialog } from '../../components/confirmDialog';
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -49,11 +50,25 @@ export default function Profile() {
   const [newProject,              setNewProject]              = useState({ title: '', description: '', project_url: '', coverFile: null, attachmentFiles: [] });
   const [uploadingProject,        setUploadingProject]        = useState(false);
   const [selectedProject,         setSelectedProject]         = useState(null);
+  const [liveReloadKey, setLiveReloadKey] = useState(0);
+  useRealtimeRefresh(() => {
+    // Don't overwrite any unsaved profile or portfolio form while it is open.
+    if (!isEditing && !showAddPortfolioModal && !saving && !uploadingAvatar && !uploadingProject) {
+      setLiveReloadKey(key => key + 1);
+    }
+  }, [
+    ...(user?.id ? [
+      { table: 'reviews', filter: `instructor_id=eq.${user.id}` },
+      { table: 'sessions', filter: `instructor_id=eq.${user.id}` },
+      { table: 'skills', filter: `instructor_id=eq.${user.id}` },
+      { table: 'portfolio_items', filter: `user_id=eq.${user.id}` },
+    ] : []),
+  ], `web_own_profile_${user?.id || 'initial'}`);
 
   useEffect(() => {
     let profileChannel = null;
     const fetchAllData = async () => {
-      setLoading(true);
+      if (liveReloadKey === 0) setLoading(true);
       const { data: { user: currentUser } } = await supabase.auth.getUser();
       if (!currentUser) { navigate('/login'); return; }
       setUser(currentUser);
@@ -80,6 +95,7 @@ export default function Profile() {
         calculatedAvg = parseFloat((totalOverallSum / reviewData.length).toFixed(1));
       }
 
+      if (!reviewData?.length) setReviews([]);
       const totalRevCount = reviewData?.length || 0;
       const { count: taughtCount, error: taughtCountError } = await supabase
         .from('sessions')
@@ -112,7 +128,7 @@ export default function Profile() {
     };
     fetchAllData();
     return () => { if (profileChannel) supabase.removeChannel(profileChannel); };
-  }, [navigate]);
+  }, [navigate, liveReloadKey]);
 
   const handleAvatarSelect = (e) => {
     const file = e.target.files[0];

@@ -301,6 +301,10 @@ export default function PlatformViewer() {
     fetchData();
   }, [tab, reloadKey, subFilter]); 
 
+  useEffect(() => {
+    setSelectedItem(current => current ? (data.find(item => item.id === current.id) || current) : null);
+  }, [data]);
+
   const filteredData = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
     if (!query) return data;

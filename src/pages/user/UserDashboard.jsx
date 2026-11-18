@@ -370,7 +370,12 @@ export default function UserDashboard() {
       fetchSaved(currentUser.id);
       fetchProfile(currentUser.id);
     }
-  }, ['skills', 'reviews', 'sessions', 'saved_skills'], 'web_refresh_user_dashboard');
+  }, ['skills', 'reviews', 'sessions',
+    ...(currentUser?.id ? [
+      { table: 'saved_skills', filter: `user_id=eq.${currentUser.id}` },
+      { table: 'user_profiles', filter: `id=eq.${currentUser.id}` },
+    ] : []),
+  ], `web_refresh_user_dashboard_${currentUser?.id || 'guest'}`);
 
   const closeWelcomeModal = () => {
     setShowWelcomeModal(false);
