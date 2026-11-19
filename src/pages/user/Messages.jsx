@@ -670,8 +670,8 @@ export default function Messages() {
       const isInstructorAction = session.instructor_id === currentUserId;
       const targetUserId = isInstructorAction ? session.student_id : session.instructor_id;
       const actorName = isInstructorAction
-        ? session.instructor?.full_name || 'The teacher'
-        : session.student?.full_name || 'The learner';
+        ? session.instructor?.full_name || 'The provider'
+        : session.student?.full_name || 'The seeker';
       const { error: noticeError } = await supabase.from('notifications').insert([{
         user_id: targetUserId,
         type: 'booking_accepted',
@@ -728,20 +728,20 @@ export default function Messages() {
           {
             user_id: session.student_id,
             type: 'session_completed',
-            content: `Your session with ${session.instructor?.full_name || 'the teacher'} is officially completed!`,
+            content: `Your session with ${session.instructor?.full_name || 'the provider'} is officially completed!`,
             link_url: `/sessions?session=${session.id}`
           },
           {
             user_id: session.instructor_id,
             type: 'session_completed',
-            content: `Your session with ${session.student?.full_name || 'the learner'} is officially completed! ${session.credit_amount} CR added.`,
+            content: `Your session with ${session.student?.full_name || 'the seeker'} is officially completed! ${session.credit_amount} CR added.`,
             link_url: `/sessions?session=${session.id}`
           }
         ]);
         if (notificationError) console.error('Completion notification failed (credits already awarded):', notificationError);
       } else if (outcome.state === 'waiting' && outcome.new_confirmation === true) {
         const targetUserId = isInstructor ? session.student_id : session.instructor_id;
-        const actorName = isInstructor ? session.instructor?.full_name || 'The teacher' : session.student?.full_name || 'The learner';
+        const actorName = isInstructor ? session.instructor?.full_name || 'The provider' : session.student?.full_name || 'The seeker';
         const { error: notificationError } = await supabase.from('notifications').insert([{
           user_id: targetUserId,
           type: 'session_update',
@@ -995,7 +995,7 @@ export default function Messages() {
               className={`px-4 py-1.5 rounded-full text-[13px] font-bold whitespace-nowrap transition cursor-pointer ${
                 activeTab === tab ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}>
-              {tab}
+              {tab === 'Teachers' ? 'Providers' : tab === 'Students' ? 'Seekers' : tab}
             </button>
           ))}
         </div>
@@ -1114,10 +1114,10 @@ export default function Messages() {
                   <CalendarDays className="w-4 h-4 shrink-0" />
                   <p>
                     {selectedBookingExpired && '⏰ Schedule Expired. Open Sessions to claim or return the booking credits.'}
-                    {!selectedBookingExpired && selectedContact.sessionStatus === 'pending' && selectedContact.role === 'Teacher' && "⏳ Waiting for Teacher's Confirmation."}
+                    {!selectedBookingExpired && selectedContact.sessionStatus === 'pending' && selectedContact.role === 'Teacher' && "⏳ Waiting for Provider's Confirmation."}
                     {!selectedBookingExpired && selectedContact.sessionStatus === 'pending' && selectedContact.role === 'Student' && "📅 Booking Request: Confirm Schedule?"}
-                    {!selectedBookingExpired && selectedContact.sessionStatus === 'reschedule_proposed' && selectedContact.role === 'Teacher' && "📅 Teacher proposed a new time."}
-                    {!selectedBookingExpired && selectedContact.sessionStatus === 'reschedule_proposed' && selectedContact.role === 'Student' && "⏳ Waiting for Learner's Confirmation on new time."}
+                    {!selectedBookingExpired && selectedContact.sessionStatus === 'reschedule_proposed' && selectedContact.role === 'Teacher' && "📅 Provider proposed a new time."}
+                    {!selectedBookingExpired && selectedContact.sessionStatus === 'reschedule_proposed' && selectedContact.role === 'Student' && "⏳ Waiting for Seeker's Confirmation on new time."}
                     
                     {selectedContact.sessionStatus === 'active' && otherCompleted && !myCompleted && `✨ ${selectedContact.name} marked this session as done. Please confirm to finalize.`}
                     {selectedContact.sessionStatus === 'active' && myCompleted && `⏳ Waiting for ${selectedContact.name} to confirm completion.`}
@@ -1513,7 +1513,7 @@ export default function Messages() {
                 <Avatar contact={selectedContact} size="sm" />
                 <div>
                   <p className="font-bold text-[12px] text-gray-800">{selectedContact.name}</p>
-                  <p className="text-[10px] text-gray-400">{selectedContact.role}</p>
+                  <p className="text-[10px] text-gray-400">{selectedContact.role === 'Teacher' ? 'Provider' : selectedContact.role === 'Student' ? 'Seeker' : selectedContact.role}</p>
                 </div>
               </div>
             ),

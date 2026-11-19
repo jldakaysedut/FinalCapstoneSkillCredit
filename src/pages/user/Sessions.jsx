@@ -192,8 +192,8 @@ export default function Sessions() {
           const isTeacherAction = session.instructor_id === currentUserId;
           const recipientId = isTeacherAction ? session.student_id : session.instructor_id;
           const actorName = isTeacherAction
-            ? session.instructor?.full_name || 'Your teacher'
-            : session.student?.full_name || 'Your learner';
+            ? session.instructor?.full_name || 'Your provider'
+            : session.student?.full_name || 'Your seeker';
           const sessionLabel = session.skill?.title ? ` for "${session.skill.title}"` : '';
           let noticeContent;
 
@@ -228,7 +228,7 @@ export default function Sessions() {
           await supabase.from('notifications').insert([{
             user_id: session.instructor_id,
             type: 'session_cancelled',
-            content: `Your session was cancelled and the credits were refunded to the learner due to inactivity (Missed Schedule).`,
+            content: `Your session was cancelled and the credits were refunded to the seeker due to inactivity (Missed Schedule).`,
             link_url: `/sessions?session=${session.id}`
           }]);
         }
@@ -238,7 +238,7 @@ export default function Sessions() {
         
         const isInstructorAction = session.instructor_id === currentUserId;
         const targetUserId = isInstructorAction ? session.student_id : session.instructor_id;
-        const actorName = isInstructorAction ? session.instructor?.full_name || 'The teacher' : session.student?.full_name || 'The learner';
+        const actorName = isInstructorAction ? session.instructor?.full_name || 'The provider' : session.student?.full_name || 'The seeker';
         
         await supabase.from('notifications').insert([{
           user_id: targetUserId,
@@ -261,7 +261,7 @@ export default function Sessions() {
         await supabase.from('notifications').insert([{
           user_id: session.student_id,
           type: 'session_started',
-          content: `${session.instructor?.full_name || 'The teacher'} has started the session. The countdown has begun!`,
+          content: `${session.instructor?.full_name || 'The provider'} has started the session. The countdown has begun!`,
           link_url: `/sessions?session=${session.id}`
         }]);
       } 
@@ -279,7 +279,7 @@ export default function Sessions() {
 
         const isInstructor = session.instructor_id === currentUserId;
         const targetUserId = isInstructor ? session.student_id : session.instructor_id;
-        const actorName = isInstructor ? session.instructor?.full_name || 'The teacher' : session.student?.full_name || 'The learner';
+        const actorName = isInstructor ? session.instructor?.full_name || 'The provider' : session.student?.full_name || 'The seeker';
 
         if (outcome.state === 'completed' && outcome.awarded === true) {
           window.dispatchEvent(new Event('credit_updated'));
@@ -288,13 +288,13 @@ export default function Sessions() {
             {
               user_id: session.student_id,
               type: 'session_completed',
-              content: `Your session with ${session.instructor?.full_name || 'the teacher'} is officially completed!`,
+              content: `Your session with ${session.instructor?.full_name || 'the provider'} is officially completed!`,
               link_url: `/sessions?session=${session.id}`
             },
             {
               user_id: session.instructor_id,
               type: 'session_completed',
-              content: `Your session with ${session.student?.full_name || 'the learner'} is officially completed! ${session.credit_amount} CR added.`,
+              content: `Your session with ${session.student?.full_name || 'the seeker'} is officially completed! ${session.credit_amount} CR added.`,
               link_url: `/sessions?session=${session.id}`
             }
           ]);
@@ -315,8 +315,8 @@ export default function Sessions() {
         if (!undoError) {
           const recipientId = isInstructor ? session.student_id : session.instructor_id;
           const actorName = isInstructor
-            ? session.instructor?.full_name || 'The teacher'
-            : session.student?.full_name || 'The learner';
+            ? session.instructor?.full_name || 'The provider'
+            : session.student?.full_name || 'The seeker';
           if (recipientId && recipientId !== currentUserId) {
             const { error: noticeError } = await supabase.from('notifications').insert([{
               user_id: recipientId,
@@ -349,11 +349,11 @@ export default function Sessions() {
       await supabase.from('notifications').insert([{
         user_id: s.student_id,
         type: 'session_disputed', 
-        content: `Your Teacher proposed a new time for your session: ${newDate} at ${newTime}. Please Accept or Decline.`,
+        content: `Your Provider proposed a new time for your session: ${newDate} at ${newTime}. Please Accept or Decline.`,
         link_url: `/sessions?session=${s.id}`
       }]);
 
-      alert('New time proposed to the learner successfully!');
+      alert('New time proposed to the seeker successfully!');
       setProposeModal({ isOpen: false, session: null });
       fetchSessions(currentUserId);
     } catch (error) {
@@ -374,7 +374,7 @@ export default function Sessions() {
       await supabase.from('notifications').insert([{
         user_id: s.instructor_id,
         type: 'new_rating',
-        content: `${s.student?.full_name || 'A learner'} evaluated your session and left a rating!`,
+        content: `${s.student?.full_name || 'A seeker'} evaluated your session and left a rating!`,
         link_url: `/sessions?session=${s.id}`
       }]);
 
@@ -399,7 +399,7 @@ export default function Sessions() {
       
       const isInstructorAction = s.instructor_id === currentUserId;
       const targetUserId = isInstructorAction ? s.student_id : s.instructor_id;
-      const actorName = isInstructorAction ? s.instructor?.full_name || 'The teacher' : s.student?.full_name || 'The learner';
+      const actorName = isInstructorAction ? s.instructor?.full_name || 'The provider' : s.student?.full_name || 'The seeker';
 
       await supabase.from('notifications').insert([{
         user_id: targetUserId,
@@ -760,7 +760,7 @@ export default function Sessions() {
                                       className="min-w-0 max-w-full break-words leading-4 font-bold text-[12px] sm:text-[15px] text-gray-900 cursor-pointer hover:text-emerald-700 transition">{displayName}</span>
                                     <span className={`text-[10px] font-semibold uppercase tracking-wider border px-2 py-0.5 rounded-full ${
                                       isInstructor ? 'bg-sky-50 text-sky-700 border-sky-100' : 'bg-purple-50 text-purple-700 border-purple-100'
-                                    }`}>{isInstructor ? 'Learner' : 'Teacher'}</span>
+                                    }`}>{isInstructor ? 'Seeker' : 'Provider'}</span>
                                     <span className={`text-[10px] font-bold border px-2 py-0.5 rounded-full ${meta.chip}`}>{meta.label}</span>
                                   </div>
 
@@ -796,8 +796,8 @@ export default function Sessions() {
                                   {/* STATUS TEXT MESSAGES */}
                                   <div className="mr-auto text-[10px] font-bold italic">
                                     {isExpired && ['pending', 'reschedule_proposed'].includes(session.status) && <span className="text-rose-500">⏰ Schedule Expired</span>}
-                                    {!isExpired && session.status === 'reschedule_proposed' && isInstructor && <span className="text-purple-600">⏳ Waiting for Learner to confirm new time</span>}
-                                    {!isExpired && session.status === 'reschedule_proposed' && !isInstructor && <span className="text-purple-600">📅 Teacher proposed a new schedule</span>}
+                                    {!isExpired && session.status === 'reschedule_proposed' && isInstructor && <span className="text-purple-600">⏳ Waiting for Seeker to confirm new time</span>}
+                                    {!isExpired && session.status === 'reschedule_proposed' && !isInstructor && <span className="text-purple-600">📅 Provider proposed a new schedule</span>}
                                     {session.status === 'upcoming' && <span className="text-indigo-600">📅 Schedule confirmed. Wait for the day.</span>}
                                     {session.status === 'active' && !isSessionFinished && <span className="text-gray-400 hidden sm:block">Dispute unlocks after session</span>}
                                   </div>
@@ -814,7 +814,7 @@ export default function Sessions() {
 
                                     {/* EXPIRED PENDING / PROPOSED (TEACHER) — same atomic refund as learner Claim Refund */}
                                     {isExpired && ['pending', 'reschedule_proposed'].includes(session.status) && isInstructor && (
-                                      <button onClick={async () => { if (await confirmDialog('Schedule expired. Return the booking credits to the learner? This will cancel the booking.')) handleUpdateStatus(session, 'decline'); }} disabled={isProcessing} className="px-3 py-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 font-semibold rounded-lg text-[11px] hover:bg-emerald-100 transition shadow-sm inline-flex items-center gap-1.5 cursor-pointer">
+                                      <button onClick={async () => { if (await confirmDialog('Schedule expired. Return the booking credits to the seeker? This will cancel the booking.')) handleUpdateStatus(session, 'decline'); }} disabled={isProcessing} className="px-3 py-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 font-semibold rounded-lg text-[11px] hover:bg-emerald-100 transition shadow-sm inline-flex items-center gap-1.5 cursor-pointer">
                                         <RefreshCw className="w-3.5 h-3.5" /> Return Credit
                                       </button>
                                     )}
@@ -860,7 +860,7 @@ export default function Sessions() {
                                     {session.status === 'upcoming' && isInstructor && (
                                       !isNoShow ? (
                                         <>
-                                          <button onClick={async () => { if (await confirmDialog('Emergency: Cancel this upcoming session? Credits will be refunded to the learner.')) handleUpdateStatus(session, 'cancel'); }} disabled={isProcessing} className="px-3 py-1.5 bg-rose-50 text-rose-600 border border-rose-200 font-bold rounded-lg text-[11px] transition cursor-pointer">
+                                          <button onClick={async () => { if (await confirmDialog('Emergency: Cancel this upcoming session? Credits will be refunded to the seeker.')) handleUpdateStatus(session, 'cancel'); }} disabled={isProcessing} className="px-3 py-1.5 bg-rose-50 text-rose-600 border border-rose-200 font-bold rounded-lg text-[11px] transition cursor-pointer">
                                             Cancel Booking
                                           </button>
                                           <button onClick={async () => { if(await confirmDialog("Start session now? This will begin the duration countdown.")) handleUpdateStatus(session, 'start_session'); }} disabled={isProcessing} className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-[11px] shadow-sm transition cursor-pointer flex items-center gap-1">
@@ -879,7 +879,7 @@ export default function Sessions() {
                                       <>
                                         {!isNoShow 
                                           ? <button onClick={async () => { if (await confirmDialog('Cancel booking?')) handleUpdateStatus(session, 'cancel'); }} disabled={isProcessing} className="px-3 py-1.5 bg-rose-50 text-rose-600 border border-rose-200 font-bold rounded-lg text-[11px] transition cursor-pointer">Cancel & Refund</button>
-                                          : <button onClick={async () => { if (await confirmDialog('Teacher is a no-show. Claim your refund now?')) handleUpdateStatus(session, 'cancel_no_show'); }} disabled={isProcessing} className="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-lg text-[11px] shadow-sm transition cursor-pointer flex items-center gap-1">
+                                          : <button onClick={async () => { if (await confirmDialog('Provider is a no-show. Claim your refund now?')) handleUpdateStatus(session, 'cancel_no_show'); }} disabled={isProcessing} className="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-lg text-[11px] shadow-sm transition cursor-pointer flex items-center gap-1">
                                               <RefreshCw className="w-3.5 h-3.5" /> Claim Refund (No-Show)
                                             </button>
                                         }
@@ -1075,7 +1075,7 @@ export default function Sessions() {
           <div className="absolute inset-0 bg-gray-900/60 backdrop-blur-sm" onClick={() => setRatingModal({ isOpen: false, session: null })} />
           <div className="bg-white rounded-2xl sm:rounded-[2rem] p-4 sm:p-6 md:p-8 w-full max-w-xl relative z-10 shadow-[0_8px_30px_rgb(0,0,0,0.12)] animate-in zoom-in-95 duration-200 max-h-[calc(100dvh-1rem)] sm:max-h-[90vh] overflow-y-auto">
             <div className="text-center mb-6">
-              <h2 className="text-2xl font-bold tracking-tight text-gray-900">Teacher Evaluation</h2>
+              <h2 className="text-2xl font-bold tracking-tight text-gray-900">Provider Evaluation</h2>
               <p className="text-gray-400 text-[13px] mt-1">Rank <span className="font-bold text-gray-800">{ratingModal.session.instructor?.full_name}</span> on the leaderboard.</p>
             </div>
             <div className="space-y-1 mb-6">
