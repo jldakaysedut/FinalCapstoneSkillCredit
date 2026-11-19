@@ -111,6 +111,14 @@ export default function Escalations() {
     setHistoryModal({ isOpen: true, user: targetUser, logs: [], loading: true });
 
     if (targetUser?.id) {
+      // Display existing moderator notes only in this administrator view.
+      const { data: internalNotes, error: notesError } = await supabase
+        .from('mod_logs')
+        .select('id, created_at, details')
+        .eq('target_user_id', targetUser.id)
+        .eq('action_type', 'ESCALATED_TO_ADMIN')
+        .order('created_at', { ascending: false });
+      if (notesError) console.warn('Internal moderator notes unavailable:', notesError);
       const { data, error } = await supabase
         .from('reports')
         .select('id, created_at, reason, details, status, reference_type')
@@ -118,9 +126,9 @@ export default function Escalations() {
         .order('created_at', { ascending: false });
 
       if (!error && data) {
-        setHistoryModal({ isOpen: true, user: targetUser, logs: data, loading: false });
+        setHistoryModal({ isOpen: true, user: targetUser, logs: data, internalNotes: internalNotes || [], loading: false });
       } else {
-        setHistoryModal(prev => ({ ...prev, loading: false }));
+        setHistoryModal(prev => ({ ...prev, internalNotes: internalNotes || [], loading: false }));
       }
     } else {
       setHistoryModal(prev => ({ ...prev, loading: false }));
@@ -603,6 +611,17 @@ export default function Escalations() {
                     </div>
                   </div>
 
+                  {historyModal.internalNotes?.length > 0 && (
+                    <section className="rounded-xl border-2 border-rose-400 bg-rose-50 p-4 shadow-sm">
+                      <h4 className="mb-3 text-sm font-extrabold uppercase tracking-wide text-rose-900">Internal Moderator Messages — Admin Only</h4>
+                      {historyModal.internalNotes.map(note => (
+                        <div key={note.id} className="mb-3 border-t border-rose-200 pt-3 first:border-0 first:pt-0 last:mb-0">
+                          <p className="mb-1 text-[11px] font-semibold text-rose-700">{new Date(note.created_at).toLocaleString()}</p>
+                          <p className="whitespace-pre-wrap text-sm font-medium leading-relaxed text-gray-900">{note.details}</p>
+                        </div>
+                      ))}
+                    </section>
+                  )}
                   <div>
                     <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Associated Reports</h4>
                     {validHistoryLogs.length === 0 ? (

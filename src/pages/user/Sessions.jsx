@@ -179,7 +179,7 @@ export default function Sessions() {
         );
         if (cancellationError) throw cancellationError;
         if (cancellationResult?.state === 'already_cancelled') {
-          throw new Error('This booking was already cancelled. Check the learner wallet or contact support before attempting another refund.');
+          throw new Error('This booking was already cancelled. Check the seeker wallet or contact support before attempting another refund.');
         }
         if (cancellationResult?.state !== 'cancelled' || cancellationResult?.refunded !== true) {
           throw new Error('Cancellation refund could not be confirmed. The booking was not marked cancelled by this page.');

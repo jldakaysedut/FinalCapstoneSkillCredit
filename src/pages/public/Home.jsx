@@ -616,7 +616,7 @@ export default function Home() {
           </div>
           <div className="footer-signature" style={{ textAlign: "center", transform: "translateX(35px)" }}>
             <p style={{ fontSize: 12, color: "#444", marginBottom: 6 }}>
-              Built with ❤️ for learners and teachers
+              Built with ❤️ for seekers and providers
             </p>
 
             <div

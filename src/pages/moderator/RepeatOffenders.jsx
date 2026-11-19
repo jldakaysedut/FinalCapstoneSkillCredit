@@ -148,7 +148,7 @@ export default function RepeatOffenders() {
 
       if (logErr) throw logErr;
 
-      const notifContent = `Your account behavior has been escalated to an Administrator for severe review due to accumulating ${targetUser.violation_count} policy strikes.\n\nModerator Note: ${escalationNote.trim()}`;
+      const notifContent = `Your account behavior has been escalated to an Administrator for severe review due to accumulating ${targetUser.violation_count} policy strikes.`;
 
       await supabase.from('notifications').insert([{
         user_id: targetUser.id,
