@@ -41,7 +41,7 @@ export default function Payments() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [liveRefreshKey, setLiveRefreshKey] = useState(0);
-  useRealtimeRefresh(() => setLiveRefreshKey(key => key + 1), ['user_profiles', 'topup_transactions', 'sessions', 'daily_reward_claims'], 'web_refresh_payment_display');
+  useRealtimeRefresh(() => setLiveRefreshKey(key => key + 1), ['user_profiles', 'topup_transactions', 'sessions'], 'web_refresh_payment_display');
   const [currentUser, setCurrentUser] = useState(null);
   const [balance, setBalance] = useState(0);
   const [ledger, setLedger] = useState([]);
@@ -521,7 +521,7 @@ export default function Payments() {
   const cardClass = 'rounded-2xl border border-gray-200 bg-white shadow-sm';
  
   return (
-    <div className="min-h-[calc(100vh-64px)] bg-[#faf9f6] text-[#202522]">
+    <div className="sc-wallet-page min-h-[calc(100vh-64px)] bg-[#faf9f6] text-[#202522]">
       <main className="mx-auto max-w-[1000px] min-w-0 space-y-3.5 px-3 py-4 sm:px-6 sm:py-6 md:px-8">
         
         <header
@@ -553,7 +553,7 @@ export default function Payments() {
           </div>
         )}
  
-        <nav aria-label="Payments sections" className="flex w-full min-w-0 max-w-full flex-nowrap gap-1 overflow-x-auto overscroll-x-contain rounded-xl border border-gray-100 bg-gray-100/80 p-1 sm:w-fit sm:flex-wrap">
+        <nav aria-label="Payments sections" className="sc-wallet-tabs flex w-full min-w-0 max-w-full flex-nowrap gap-1 overflow-x-auto overscroll-x-contain rounded-xl border border-gray-100 bg-gray-100/80 p-1 sm:w-fit sm:flex-wrap">
           {tabs.map(({ key, label, icon: Icon }) => {
             const isActive = activePaymentTab === key;
             return (
@@ -584,7 +584,7 @@ export default function Payments() {
                 </div>
               </div>
               <div className="p-3 sm:p-5">
-                <div className="min-w-0 rounded-xl bg-emerald-50/80 p-3 sm:p-4">
+                <div className="sc-wallet-balance min-w-0 rounded-xl bg-emerald-50/80 p-3 sm:p-4">
                   <p className="text-[9px] font-bold uppercase tracking-widest text-emerald-800/65">Available</p>
                   <p className="mt-1 break-words text-[22px] min-[360px]:text-[27px] font-bold leading-tight tracking-tight text-emerald-800">{balance.toLocaleString()} <span className="text-[13px]">credits</span></p>
                   <p className="mt-2 text-[10px] text-emerald-800/65">Equivalent to approximately ₱{(balance * 10).toLocaleString()}.</p>

@@ -344,3 +344,57 @@ body[data-skillcredit-user-dark="true"] [role="alertdialog"] .bg-slate-100 { bac
 [data-sc-user-theme="dark"] .sc-notification-dropdown__footer button:hover {
   color: #b1f7d7;
 }
+
+/* Wallet & Payments — user DARK mode contrast only.
+   The tab container uses bg-gray-100/80, and balance captions use
+   text-emerald-800/65; neither utility is fully handled by generic overrides.
+   Never affect the public routes, staff layouts, other user pages, or light mode. */
+[data-sc-user-theme="dark"] .sc-wallet-page .sc-wallet-tabs {
+  background-color: #263b45;
+  border-color: #46616b;
+}
+[data-sc-user-theme="dark"] .sc-wallet-page .sc-wallet-tabs > button {
+  background-color: transparent;
+  color: #d4e4e8;
+}
+[data-sc-user-theme="dark"] .sc-wallet-page .sc-wallet-tabs > button:hover {
+  background-color: #375360;
+  color: #f4faf9;
+}
+[data-sc-user-theme="dark"] .sc-wallet-page .sc-wallet-tabs > button[aria-current="page"] {
+  background-color: #3c5a63;
+  color: #ffffff;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 18%);
+}
+[data-sc-user-theme="dark"] .sc-wallet-page .sc-wallet-tabs > button[aria-current="page"] svg {
+  color: #9ef2c6;
+}
+[data-sc-user-theme="dark"] .sc-wallet-page .sc-wallet-tabs > button > span {
+  background-color: #3f5862;
+  color: #eaf7f5;
+}
+[data-sc-user-theme="dark"] .sc-wallet-page .sc-wallet-balance {
+  background-color: #214b3d;
+  border: 1px solid #407561;
+}
+[data-sc-user-theme="dark"] .sc-wallet-page .sc-wallet-balance > p {
+  color: #eafff4;
+}
+[data-sc-user-theme="dark"] .sc-wallet-page .sc-wallet-balance > p:first-child,
+[data-sc-user-theme="dark"] .sc-wallet-page .sc-wallet-balance > p:last-child {
+  color: #c2edda;
+}
+[data-sc-user-theme="dark"] .sc-wallet-page .sc-wallet-balance span {
+  color: #eafff4;
+}
+/* Similar fractional tint in the Add credits summary section. */
+[data-sc-user-theme="dark"] .sc-wallet-page [class~="bg-emerald-50/70"] {
+  background-color: #214b3d;
+  border-color: #407561;
+}
+[data-sc-user-theme="dark"] .sc-wallet-page :is(
+  [class~="text-emerald-800/65"],
+  [class~="text-emerald-800/75"]
+) {
+  color: #c2edda;
+}
