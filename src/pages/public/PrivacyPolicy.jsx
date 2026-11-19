@@ -49,7 +49,7 @@ const sections = [
     id: 'security', title: 'Security, retention, and updates',
     paragraphs: [
       'SkillCredit uses account authentication and database access controls. No online service can promise absolute security.',
-      'Records may need to be retained for platform operations, dispute handling, or other applicable requirements. Team SkillCredit should confirm specific retention periods and formal request procedures before publishing this as its definitive policy.',
+      'Records may need to be retained for platform operations, dispute handling, or other applicable requirements. Team BuildSync should confirm specific retention periods and formal request procedures before publishing this as its definitive policy.',
       'This policy may be revised as the platform changes. The revision date is shown above.',
     ],
   },
@@ -99,7 +99,7 @@ export default function PrivacyPolicy() {
             <div className="mb-4 border-b border-[#ebf0e9] pb-7">
               <p className="text-xs font-extrabold uppercase tracking-[.14em] text-[#2d6a4f]">At a glance</p>
               <h2 className="mt-2 font-['Fraunces'] text-2xl font-bold text-[#193a29] sm:text-3xl">Your information matters.</h2>
-              <p className="mt-3 text-sm leading-7 text-[#607363]">This notice describes the current SkillCredit application's data practices. The final policy should be reviewed by Team SkillCredit against its deployed configuration and applicable requirements before official publication.</p>
+              <p className="mt-3 text-sm leading-7 text-[#607363]">This notice describes the current SkillCredit application's data practices. The final policy should be reviewed by Team  BuildSync against its deployed configuration and applicable requirements before official publication.</p>
               <div className="mt-5 grid gap-3 sm:grid-cols-3">
                 {[
                   { Icon: Database, title: 'Platform records', text: 'Accounts, bookings & credits' },
@@ -116,7 +116,7 @@ export default function PrivacyPolicy() {
 
           </article>
         </div>
-        <footer className="mt-9 border-t border-[#e2eade] pt-6 text-xs text-[#6e806f] sm:text-sm">© 2026 SkillCredit · Team SkillCredit</footer>
+        <footer className="mt-9 border-t border-[#e2eade] pt-6 text-xs text-[#6e806f] sm:text-sm">© 2026 SkillCredit · Team  BuildSync</footer>
       </div>
     </div>
   );

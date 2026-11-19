@@ -636,7 +636,7 @@ export default function Home() {
                 Developed by
               </span>
               <span style={{ fontSize: 13, color: "#fff", fontWeight: 700 }}>
-                Team Build Sync
+                Team BuildSync
               </span>
             </div>
           </div>
