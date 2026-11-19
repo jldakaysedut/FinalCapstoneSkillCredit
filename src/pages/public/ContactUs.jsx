@@ -91,7 +91,7 @@ export default function ContactUs() {
           </section>
         </aside>
       </div>
-      <footer className="mt-9 border-t border-[#e2eade] pt-6 text-xs text-[#6e806f] sm:text-sm">© 2026 SkillCredit · Team SkillCredit</footer>
+      <footer className="mt-9 border-t border-[#e2eade] pt-6 text-xs text-[#6e806f] sm:text-sm">© 2026 SkillCredit · Team BuildSync</footer>
     </div>
   </div>;
 }

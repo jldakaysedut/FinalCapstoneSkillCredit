@@ -286,7 +286,7 @@ This patch is prepared locally only. No Supabase deployment or live cross-accoun
 
 1. Open Home at browser widths 320, 360, 390, 480, 768, and desktop (1280+). Check page has no horizontal scroll.
 2. Final green signup area: CTA text is legible, button is centered and compact rather than taking nearly the full width.
-3. Footer: SkillCredit wordmark, “Built with ❤️...”, Team SkillCredit attribution, Privacy/Terms/Contact links, and copyright are horizontally centered on mobile.
+3. Footer: SkillCredit wordmark, “Built with ❤️...”, Team BuildSync attribution, Privacy/Terms/Contact links, and copyright are horizontally centered on mobile.
 4. Hero: “Get 20 free credits — join now” and “Log in” buttons fit narrow mobile widths, still navigate to the original routes.
 5. Android section: download CTA is touch-friendly but no longer forced to stretch full-width on mobile.
 6. Desktop navigation/footer arrangement remain as before; all links and data flows still work.

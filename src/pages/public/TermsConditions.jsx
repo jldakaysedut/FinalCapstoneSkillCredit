@@ -33,7 +33,7 @@ const sections = [
     'Generated skill descriptions and suggested details do not publish a listing automatically. Users are responsible for checking and manually confirming any final submission.'
   ]},
   { id:'updates', title:'Updates and getting assistance', paragraphs:[
-    'SkillCredit may revise these terms as features and procedures change. Team SkillCredit should review this text, including any final dispute, payment, eligibility, and legal provisions, before treating it as definitive production terms.',
+    'SkillCredit may revise these terms as features and procedures change. Team BuildSync should review this text, including any final dispute, payment, eligibility, and legal provisions, before treating it as definitive production terms.',
     'For help with accounts, bookings, credits, or reporting concerns, use the public Contact page. Signed-in users can also access the in-app Support workflow.'
   ]},
 ];
@@ -69,7 +69,7 @@ export default function TermsConditions() {
         <article className="min-w-0 rounded-[24px] border border-[#e1e9dd] bg-white px-5 py-6 shadow-sm sm:px-9 sm:py-10">
           <div className="border-b border-[#ebf0e9] pb-7">
             <p className="text-xs font-extrabold uppercase tracking-[.14em] text-[#2d6a4f]">Before you begin</p><h2 className="mt-2 font-['Fraunces'] text-2xl font-bold text-[#193a29] sm:text-3xl">Learn and teach responsibly.</h2>
-            <p className="mt-3 text-sm leading-7 text-[#607363]">This is a draft explaining the current SkillCredit workflows. It should be reviewed by Team SkillCredit before being presented as final legal terms.</p>
+            <p className="mt-3 text-sm leading-7 text-[#607363]">This is a draft explaining the current SkillCredit workflows. It should be reviewed by Team BuildSync before being presented as final legal terms.</p>
             <div className="mt-5 grid gap-3 sm:grid-cols-3">{[
               {Icon:BookOpenCheck,title:'Skills & sessions',text:'Review listings before booking'},
               {Icon:Wallet,title:'Credits & payments',text:'Check amounts and statuses'},
@@ -80,7 +80,7 @@ export default function TermsConditions() {
 
         </article>
       </div>
-      <footer className="mt-9 border-t border-[#e2eade] pt-6 text-xs text-[#6e806f] sm:text-sm">© 2026 SkillCredit · Team SkillCredit</footer>
+      <footer className="mt-9 border-t border-[#e2eade] pt-6 text-xs text-[#6e806f] sm:text-sm">© 2026 SkillCredit · Team BuildSync</footer>
     </div>
   </div>;
 }
