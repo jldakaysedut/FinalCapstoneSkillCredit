@@ -908,10 +908,10 @@ export default function UserLayout() {
 
 
               {isNotifOpen && (
-                <div className="fixed right-3 left-auto top-[4.25rem] w-[calc(100vw-24px)] max-w-[250px] sm:absolute sm:top-auto sm:right-0 mt-0 sm:mt-3 sm:w-[360px] sm:max-w-none max-h-[min(55dvh,380px)] sm:max-h-[min(75dvh,540px)] flex flex-col overflow-hidden rounded-2xl sm:rounded-3xl bg-white shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray-100 z-50">
+                <div className="fixed right-3 left-auto top-[4.25rem] w-[calc(100vw-24px)] max-w-[250px] sm:absolute sm:top-auto sm:right-0 mt-0 sm:mt-3 sm:w-[360px] sm:max-w-none max-h-[min(55dvh,380px)] sm:max-h-[min(75dvh,540px)] sc-notification-dropdown flex flex-col overflow-hidden rounded-2xl sm:rounded-3xl bg-white shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray-100 z-50">
 
                   {/* Notif header */}
-                  <div className="flex items-center justify-between px-3 py-2.5 sm:px-5 sm:py-4 border-b border-gray-100">
+                  <div className="sc-notification-dropdown__header flex items-center justify-between px-3 py-2.5 sm:px-5 sm:py-4 border-b border-gray-100">
                     <div className="flex items-center gap-2">
                       <span className="font-bold text-sm text-gray-900 tracking-tight">Notifications</span>
                       {unreadCount > 0 && (
@@ -929,7 +929,7 @@ export default function UserLayout() {
                   </div>
 
                   {/* Notif list */}
-                  <div className="min-h-0 flex-1 max-h-[min(33dvh,235px)] sm:max-h-[340px] overflow-y-auto overscroll-contain divide-y divide-gray-50">
+                  <div className="sc-notification-dropdown__list min-h-0 flex-1 max-h-[min(33dvh,235px)] sm:max-h-[340px] overflow-y-auto overscroll-contain divide-y divide-gray-50">
                     {notifications.length === 0 ? (
                       <div className="py-12 flex flex-col items-center gap-2">
                         <div className="w-12 h-12 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center">
@@ -945,7 +945,8 @@ export default function UserLayout() {
                           <div
                             key={n.id}
                             onClick={() => handleNotificationClick(n)}
-                            className={`flex items-start gap-2.5 sm:gap-3 px-3 sm:px-5 py-2.5 sm:py-3.5 cursor-pointer transition ${
+                            data-sc-unread={!n.is_read ? 'true' : 'false'}
+                            className={`sc-notification-dropdown__row flex items-start gap-2.5 sm:gap-3 px-3 sm:px-5 py-2.5 sm:py-3.5 cursor-pointer transition ${
                               !n.is_read ? meta.bgBox : 'hover:bg-gray-50'
                             }`}
                           >
@@ -977,7 +978,7 @@ export default function UserLayout() {
                   </div>
 
                   {/* Footer */}
-                  <div className="px-3 sm:px-5 py-1.5 sm:py-3 border-t border-gray-100 bg-gray-50/50">
+                  <div className="sc-notification-dropdown__footer px-3 sm:px-5 py-1.5 sm:py-3 border-t border-gray-100 bg-gray-50/50">
                     <button
                       onClick={() => { setIsNotifOpen(false); navigate('/notifications'); }}
                       className="w-full py-1.5 sm:py-2 text-[11px] sm:text-xs font-semibold text-emerald-700 hover:text-emerald-900 transition flex items-center justify-center gap-1 cursor-pointer"

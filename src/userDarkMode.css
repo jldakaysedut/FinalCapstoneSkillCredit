@@ -291,3 +291,56 @@ body[data-skillcredit-user-dark="true"] [role="alertdialog"] .bg-slate-100 { bac
 [data-sc-user-theme="dark"] .sc-create-skill [class~="text-gray-300"] {
   color: #c0d0d7;
 }
+
+/* User navbar notification popover — dark surfaces for ALL unread categories.
+   Its type-specific Tailwind tints include /40 and /50 opacity utilities, which
+   the generic dark selectors above do not cover. Keep light mode unchanged. */
+[data-sc-user-theme="dark"] .sc-notification-dropdown {
+  background-color: #233741;
+  border-color: #425c67;
+  color: #f4f8fa;
+}
+[data-sc-user-theme="dark"] .sc-notification-dropdown__header {
+  background-color: #263b45;
+  border-color: #425c67;
+}
+[data-sc-user-theme="dark"] .sc-notification-dropdown__header button {
+  color: #80e5b6;
+}
+[data-sc-user-theme="dark"] .sc-notification-dropdown__header button:hover {
+  color: #b1f7d7;
+}
+[data-sc-user-theme="dark"] .sc-notification-dropdown__list {
+  background-color: #233741;
+  scrollbar-color: #5f7d88 #233741;
+}
+[data-sc-user-theme="dark"] .sc-notification-dropdown__list > * + * {
+  border-color: #405863;
+}
+[data-sc-user-theme="dark"] .sc-notification-dropdown__row {
+  background-color: #263b45;
+  color: #f4f8fa;
+}
+[data-sc-user-theme="dark"] .sc-notification-dropdown__row[data-sc-unread="true"] {
+  background-color: #304b56;
+}
+[data-sc-user-theme="dark"] .sc-notification-dropdown__row:hover,
+[data-sc-user-theme="dark"] .sc-notification-dropdown__row[data-sc-unread="true"]:hover {
+  background-color: #3a5964;
+}
+[data-sc-user-theme="dark"] .sc-notification-dropdown__row p {
+  color: #edf5f6;
+}
+[data-sc-user-theme="dark"] .sc-notification-dropdown__row span.text-gray-400 {
+  color: #bdced6;
+}
+[data-sc-user-theme="dark"] .sc-notification-dropdown__footer {
+  background-color: #263b45;
+  border-color: #425c67;
+}
+[data-sc-user-theme="dark"] .sc-notification-dropdown__footer button {
+  color: #80e5b6;
+}
+[data-sc-user-theme="dark"] .sc-notification-dropdown__footer button:hover {
+  color: #b1f7d7;
+}
